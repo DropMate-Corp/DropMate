@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+
+  # Spring Boot API
+  api:
+    build:
+      context: DropMate_Backend
+      dockerfile: Dockerfile
+    ports: 
+      - "8080:8080"
+    restart: unless-stopped
+    depends_on:
+      - db
+    networks:
+      - net
+
+
+  # Database
+  db:
+    image: mysql
+    ports:
+      - "3306:3306"
+    restart: always
+    environment:
+      MYSQL_DATABASE: DropMate
+      MYSQL_USER: springuser
+      MYSQL_PASSWORD: password
+      MYSQL_ROOT_PASSWORD: root
+    volumes:
+      - ./database:/docker-entrypoint-initdb.d/:ro
+    networks:
+      - net
+
+      
+networks: 
+  net:
+    name: net
