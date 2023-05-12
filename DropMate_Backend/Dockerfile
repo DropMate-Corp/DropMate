@@ -1,15 +1,13 @@
-FROM maven:3.8.3-openjdk-17
+FROM eclipse-temurin:17-jdk-focal
+
 WORKDIR /app
-COPY . .      
 
-# At build time, only compile the application but do not run it
-RUN mvn clean install
+COPY .mvn/ .mvn
 
-# When you launch the container, this will be the main command
-CMD mvn spring-boot:run
+COPY mvnw pom.xml ./
 
+RUN ./mvnw dependency:go-offline
 
-#FROM openjdk:17-oracle
-#ARG JAR_FILE=target/*.jar
-#COPY ${JAR_FILE} app.jar
-#ENTRYPOINT ["java","-jar","/app.jar"]
+COPY src ./src
+
+CMD ["./mvnw", "spring-boot:run"]
