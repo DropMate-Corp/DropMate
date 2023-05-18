@@ -10,9 +10,13 @@ import org.mockito.Mockito;
 import org.mockito.internal.verification.VerificationModeFactory;
 import org.mockito.junit.jupiter.MockitoExtension;
 import tqs.dropmate.dropmate_backend.datamodel.AssociatedCollectionPoint;
+import tqs.dropmate.dropmate_backend.datamodel.Parcel;
+import tqs.dropmate.dropmate_backend.datamodel.Status;
 import tqs.dropmate.dropmate_backend.repositories.AssociatedCollectionPointRepository;
+import tqs.dropmate.dropmate_backend.repositories.ParcelRepository;
 import tqs.dropmate.dropmate_backend.services.AdminService;
 
+import java.sql.Date;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,12 +27,15 @@ import static org.mockito.Mockito.when;
 public class AdminService_UnitTest {
     @Mock(lenient = true)
     private AssociatedCollectionPointRepository acpRepository;
+    @Mock(lenient = true)
+    private ParcelRepository parcelRepository;
 
     @InjectMocks
     private AdminService adminService;
 
     // Expectations
     private List<AssociatedCollectionPoint> allACP;
+    private List<Parcel> allParcels;
 
     @BeforeEach
     public void setUp(){
@@ -59,6 +66,21 @@ public class AdminService_UnitTest {
         allACP.add(pickupPointOne);
         allACP.add(pickupPointTwo);
         allACP.add(pickupPointThree);
+
+        // Creating Fake Parcels
+        Parcel parcelDelOne = new Parcel("DEL123", "PCK123", 1.5, null, null, Status.IN_DELIVERY);
+        Parcel parcelDelTwo= new Parcel("DEL456", "PCK456", 3.2, null, null, Status.IN_DELIVERY);
+        Parcel parcelPickOne = new Parcel("DEL790", "PCK356", 1.5, new Date(2023, 5, 22), null, Status.WAITING_FOR_PICKUP);
+        Parcel parcelPickTwo = new Parcel("DEL367", "PCK803", 2.2, new Date(2023, 5, 22), null, Status.WAITING_FOR_PICKUP);
+        Parcel parcelOne = new Parcel("DEL000", "PCK257", 1.5, new Date(2023, 5, 22), new Date(2023, 5, 28), Status.DELIVERED);
+        Parcel parcelTwo = new Parcel("DEL843", "PCK497", 1.6, new Date(2023, 5, 22), new Date(2023, 5, 29), Status.DELIVERED);
+
+        allParcels.add(parcelDelOne);
+        allParcels.add(parcelDelTwo);
+        allParcels.add(parcelPickOne);
+        allParcels.add(parcelPickTwo);
+        allParcels.add(parcelOne);
+        allParcels.add(parcelTwo);
     }
 
     @AfterEach
@@ -69,7 +91,7 @@ public class AdminService_UnitTest {
     @Test
     public void whenGetAllAcp_thenReturnAllAcp(){
         // Set up Expectations
-        when(adminService.getAllACP()).thenReturn(allACP);
+        when(acpRepository.findAll()).thenReturn(allACP);
 
         // Verify the result is as expected
         List<AssociatedCollectionPoint> returnedACP = adminService.getAllACP();
@@ -79,5 +101,20 @@ public class AdminService_UnitTest {
 
         // Verify that the external API was called and Verify that the cache was called twice - to query and to add the new record
         Mockito.verify(acpRepository, VerificationModeFactory.times(1)).findAll();
+    }
+
+    @Test
+    public void whenGetAllParcelWaitDelivery_thenReturnOnlyDelivery(){
+        // Set up Expectations
+        when(parcelRepository.findAll()).thenReturn(allParcels);
+
+        // Verify the result is as expected
+        List<Parcel> returnedParcels = adminService.getAllParcelsWaitingDelivery();
+        assertThat(returnedParcels).hasSize(2);
+        assertThat(returnedParcels).extracting(Parcel::getParcelStatus).containsOnly(Status.IN_DELIVERY);
+
+        // Verify that the external API was called and Verify that the cache was called twice - to query and to add the new record
+        Mockito.verify(acpRepository, VerificationModeFactory.times(1)).findAll();
+
     }
 }

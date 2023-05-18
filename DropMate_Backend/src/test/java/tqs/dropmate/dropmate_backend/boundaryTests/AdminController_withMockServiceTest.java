@@ -10,6 +10,8 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import tqs.dropmate.dropmate_backend.controllers.AdminController;
 import tqs.dropmate.dropmate_backend.datamodel.AssociatedCollectionPoint;
+import tqs.dropmate.dropmate_backend.datamodel.Parcel;
+import tqs.dropmate.dropmate_backend.datamodel.Status;
 import tqs.dropmate.dropmate_backend.services.ACPService;
 import tqs.dropmate.dropmate_backend.services.AdminService;
 import tqs.dropmate.dropmate_backend.services.StoreService;
@@ -31,12 +33,10 @@ public class AdminController_withMockServiceTest {
 
     @MockBean
     private AdminService adminService;
-    @MockBean
-    private ACPService acpService;
-    @MockBean
-    private StoreService storeService;
 
     private List<AssociatedCollectionPoint> allACP;
+    private List<Parcel> parcelsWaitingDelivery;
+
 
     @BeforeEach
     public void setUp(){
@@ -67,6 +67,13 @@ public class AdminController_withMockServiceTest {
         allACP.add(pickupPointOne);
         allACP.add(pickupPointTwo);
         allACP.add(pickupPointThree);
+
+        // Parcels
+        Parcel parcelDelOne = new Parcel("DEL123", "PCK123", 1.5, null, null, Status.IN_DELIVERY);
+        Parcel parcelDelTwo= new Parcel("DEL456", "PCK456", 3.2, null, null, Status.IN_DELIVERY);
+
+        parcelsWaitingDelivery.add(parcelDelOne);
+        parcelsWaitingDelivery.add(parcelDelTwo);
     }
 
     @AfterEach
@@ -84,5 +91,17 @@ public class AdminController_withMockServiceTest {
                 .andExpect(jsonPath("$", hasSize(3)))
                 .andExpect(jsonPath("$[0].city", is("Aveiro")))
                 .andExpect(jsonPath("$[2].address", is("Fake address 3, Viseu")));
+    }
+
+    @Test
+    public void whenGetAllAParcelsWaitDelivery_thenReturn_statusOK() throws Exception {
+        when(adminService.getAllParcelsWaitingDelivery()).thenReturn(parcelsWaitingDelivery);
+
+        mockMvc.perform(
+                        get("/dropmate/admin/parcels/all/delivery").contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(2)))
+                .andExpect(jsonPath("$[0].deliveryCode", is("DEL123")))
+                .andExpect(jsonPath("$[1].parcelStatus", is(Status.IN_DELIVERY)));
     }
 }
