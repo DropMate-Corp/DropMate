@@ -75,6 +75,7 @@ public class AdminService_UnitTest {
         Parcel parcelOne = new Parcel("DEL000", "PCK257", 1.5, new Date(2023, 5, 22), new Date(2023, 5, 28), Status.DELIVERED);
         Parcel parcelTwo = new Parcel("DEL843", "PCK497", 1.6, new Date(2023, 5, 22), new Date(2023, 5, 29), Status.DELIVERED);
 
+        allParcels = new ArrayList<>();
         allParcels.add(parcelDelOne);
         allParcels.add(parcelDelTwo);
         allParcels.add(parcelPickOne);
@@ -86,6 +87,7 @@ public class AdminService_UnitTest {
     @AfterEach
     public void tearDown(){
         allACP = null;
+        allParcels = null;
     }
 
     @Test
@@ -114,7 +116,7 @@ public class AdminService_UnitTest {
         assertThat(returnedParcels).extracting(Parcel::getParcelStatus).containsOnly(Status.IN_DELIVERY);
 
         // Verify that the external API was called and Verify that the cache was called twice - to query and to add the new record
-        Mockito.verify(acpRepository, VerificationModeFactory.times(1)).findAll();
+        Mockito.verify(parcelRepository, VerificationModeFactory.times(1)).findAll();
 
     }
 }

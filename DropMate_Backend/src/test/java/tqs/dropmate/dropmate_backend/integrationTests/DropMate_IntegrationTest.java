@@ -18,8 +18,10 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import tqs.dropmate.dropmate_backend.datamodel.AssociatedCollectionPoint;
 import tqs.dropmate.dropmate_backend.datamodel.Parcel;
 import tqs.dropmate.dropmate_backend.datamodel.Status;
+import tqs.dropmate.dropmate_backend.datamodel.Store;
 import tqs.dropmate.dropmate_backend.repositories.AssociatedCollectionPointRepository;
 import tqs.dropmate.dropmate_backend.repositories.ParcelRepository;
+import tqs.dropmate.dropmate_backend.repositories.StoreRepository;
 
 import java.sql.Date;
 
@@ -46,6 +48,8 @@ public class DropMate_IntegrationTest {
     private AssociatedCollectionPointRepository acpRepository;
     @Autowired
     private ParcelRepository parcelRepository;
+    @Autowired
+    private StoreRepository storeRepository;
 
 
     @Container
@@ -84,19 +88,24 @@ public class DropMate_IntegrationTest {
 
     @Test
     public void whenGetAllAParcelsWaitDelivery_thenReturn_statusOK() throws Exception {
+        AssociatedCollectionPoint testACP = new AssociatedCollectionPoint("PickUpPointTwo", "pickuptwo@mail.pt", "Porto", "Fake address 2, Porto", "935264901", 15 );
+        acpRepository.saveAndFlush(testACP);
 
-        parcelRepository.saveAndFlush(new Parcel("DEL123", "PCK123", 1.5, null, null, Status.IN_DELIVERY));
-        parcelRepository.saveAndFlush(new Parcel("DEL456", "PCK456", 3.2, null, null, Status.IN_DELIVERY));
-        parcelRepository.saveAndFlush(new Parcel("DEL790", "PCK356", 1.5, new Date(2023, 5, 22), null, Status.WAITING_FOR_PICKUP));
-        parcelRepository.saveAndFlush(new Parcel("DEL367", "PCK803", 2.2, new Date(2023, 5, 22), null, Status.WAITING_FOR_PICKUP));
-        parcelRepository.saveAndFlush(new Parcel("DEL000", "PCK257", 1.5, new Date(2023, 5, 22), new Date(2023, 5, 28), Status.DELIVERED));
-        parcelRepository.saveAndFlush(new Parcel("DEL843", "PCK497", 1.6, new Date(2023, 5, 22), new Date(2023, 5, 29), Status.DELIVERED));
+        Store testStore = new Store("PickUpPointTwo", "pickuptwo@mail.pt", "Porto", "Fake address 2, Porto", "935264901");
+        storeRepository.saveAndFlush(testStore);
+
+        parcelRepository.saveAndFlush(new Parcel("DEL123", "PCK123", 1.5, null, null, Status.IN_DELIVERY, testACP, testStore));
+        parcelRepository.saveAndFlush(new Parcel("DEL456", "PCK456", 3.2, null, null, Status.IN_DELIVERY, testACP, testStore));
+        parcelRepository.saveAndFlush(new Parcel("DEL790", "PCK356", 1.5, new Date(2023, 5, 22), null, Status.WAITING_FOR_PICKUP, testACP, testStore));
+        parcelRepository.saveAndFlush(new Parcel("DEL367", "PCK803", 2.2, new Date(2023, 5, 22), null, Status.WAITING_FOR_PICKUP, testACP, testStore));
+        parcelRepository.saveAndFlush(new Parcel("DEL000", "PCK257", 1.5, new Date(2023, 5, 22), new Date(2023, 5, 28), Status.DELIVERED, testACP, testStore));
+        parcelRepository.saveAndFlush(new Parcel("DEL843", "PCK497", 1.6, new Date(2023, 5, 22), new Date(2023, 5, 29), Status.DELIVERED, testACP, testStore));
 
         RestAssured.with().contentType("application/json")
                 .when().get(BASE_URI + randomServerPort + "/dropmate/admin/parcels/all/delivery")
                 .then().statusCode(200)
                 .body("size()", is(2)).and()
-                .body("parcelStatus", hasItems(Status.IN_DELIVERY)).and()
+                .body("parcelStatus", hasItems(Status.IN_DELIVERY.toString())).and()
                 .body("deliveryCode", hasItems("DEL123", "DEL456"));
     }
 

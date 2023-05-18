@@ -72,6 +72,7 @@ public class AdminController_withMockServiceTest {
         Parcel parcelDelOne = new Parcel("DEL123", "PCK123", 1.5, null, null, Status.IN_DELIVERY);
         Parcel parcelDelTwo= new Parcel("DEL456", "PCK456", 3.2, null, null, Status.IN_DELIVERY);
 
+        parcelsWaitingDelivery = new ArrayList<>();
         parcelsWaitingDelivery.add(parcelDelOne);
         parcelsWaitingDelivery.add(parcelDelTwo);
     }
@@ -79,6 +80,7 @@ public class AdminController_withMockServiceTest {
     @AfterEach
     public void tearDown(){
         allACP = null;
+        parcelsWaitingDelivery = null;
     }
 
     @Test
@@ -102,6 +104,6 @@ public class AdminController_withMockServiceTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(2)))
                 .andExpect(jsonPath("$[0].deliveryCode", is("DEL123")))
-                .andExpect(jsonPath("$[1].parcelStatus", is(Status.IN_DELIVERY)));
+                .andExpect(jsonPath("$[1].parcelStatus", is(Status.IN_DELIVERY.toString())));
     }
 }
