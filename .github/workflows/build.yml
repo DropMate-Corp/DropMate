@@ -35,14 +35,5 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
-          if [ "${{ github.event_name }}" == "pull_request" ]; then
-            sonar-scanner \
-              -Dsonar.pullrequest.key="${{ github.event.pull_request.number }}" \
-              -Dsonar.pullrequest.branch="${{ github.head_ref }}" \
-              -Dsonar.pullrequest.base="${{ github.base_ref }}" \
-              -Dsonar.projectKey=DropMate-Corp_DropMate \
-              -Dmaven.compiler.release=17
-          else
-            cd DropMate_Backend  # Change directory to the "DropMate_Backend" folder
-            mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=DropMate-Corp_DropMate -Dmaven.compiler.release=17
-          fi
+          cd DropMate_Backend  # Change directory to the "DropMate_Backend" folder
+          mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=DropMate-Corp_DropMate -Dmaven.compiler.release=17
