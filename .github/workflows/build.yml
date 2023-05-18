@@ -36,4 +36,4 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
           cd DropMate_Backend  # Change directory to the "DropMate_Backend" folder
-          mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=DropMate-Corp_DropMate
+          mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=DropMate-Corp_DropMate -Dmaven.compiler.release=11  # Specify the target Java release as 11
