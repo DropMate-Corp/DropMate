@@ -49,9 +49,11 @@ public class AssociatedCollectionPoint {
     private Map<String, Integer> operationalStatistics = new HashMap<>();
 
     @OneToMany(mappedBy = "acpId", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @ToString.Exclude
     private List<ACPOperator> operators = new ArrayList<>();
 
     @OneToMany(mappedBy = "pickupACP", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @ToString.Exclude
     private List<Parcel> associatedParcels = new ArrayList<>();
 
     // Getter methods that need to be ignored on JSON replies

@@ -102,4 +102,17 @@ public class AdminController {
         return null;
     }
 
+    /** Adds a new ACP to the pending list */
+    @PostMapping("/acp/pending")
+    public ResponseEntity<SuccessfulRequest> addNewPendingACP(@RequestParam(name = "candidateACP") PendingACP candidateACP){return null;}
+
+    /** Gets all of the candidate ACP's  */
+    @GetMapping("/acp/pending")
+    public ResponseEntity<List<PendingACP>> getPendingACP(){return null;}
+
+    /** Changes the status of a candidate ACP */
+    @PostMapping("/acp/pending/{acpID}/status")
+    public ResponseEntity<SuccessfulRequest> changePendingACPStatus(@PathVariable(name = "candidateACP") PendingACP candidateACP,
+                                                                    @RequestParam(name = "oldStatus") Integer oldStatus,
+                                                                    @RequestParam(name = "newStatus") Integer newStatus) {return null;}
 }
