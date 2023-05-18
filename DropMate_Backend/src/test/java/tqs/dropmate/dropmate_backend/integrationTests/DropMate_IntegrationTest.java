@@ -5,7 +5,6 @@ import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
-import org.springframework.http.MediaType;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.TestPropertySource;
@@ -24,10 +23,6 @@ import java.sql.Date;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.*;
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -89,9 +84,9 @@ public class DropMate_IntegrationTest {
         RestAssured.with().contentType("application/json")
                 .when().get(BASE_URI + randomServerPort + "/dropmate/admin/acp")
                 .then().statusCode(200)
-                .body("size()", is(2)).and()
+                .body("size()", is(3)).and()
                 .body("city", hasItems("Aveiro", "Porto")).and()
-                .body("[1].email", is("pickuptwo@mail.pt"));
+                .body("[2].email", is("pickuptwo@mail.pt"));
 
     }
 
@@ -125,7 +120,7 @@ public class DropMate_IntegrationTest {
                 .when().get(BASE_URI + randomServerPort + "/dropmate/admin/parcels/all/pickup")
                 .then().statusCode(200)
                 .body("size()", is(2)).and()
-                .body("parcelStatus", hasItems(Status.IN_DELIVERY.toString())).and()
+                .body("parcelStatus", hasItems(Status.WAITING_FOR_PICKUP.toString())).and()
                 .body("pickupCode", hasItems("PCK356", "PCK803"));
     }
 

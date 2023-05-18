@@ -90,7 +90,7 @@ public class AdminController {
     /** This method returns all the parcels waiting for pickup */
     @GetMapping("/parcels/all/pickup")
     public ResponseEntity<List<Parcel>> getAllParcelsWaitingPickup(){
-        return null;
+        return ResponseEntity.ok().body(adminService.getAllParcelsWaitingPickup());
     }
 
     /** This method returns all the parcels waiting for delivery at a specific ACP */

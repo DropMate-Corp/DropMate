@@ -32,6 +32,8 @@ public class AdminService {
 
     /** This method returns all the parcels waiting for pickup */
     public List<Parcel> getAllParcelsWaitingPickup(){
-        return null;
+        return parcelRepository.findAll().stream()
+                .filter(parcel -> parcel.getParcelStatus().equals(Status.WAITING_FOR_PICKUP))
+                .collect(Collectors.toList());
     }
 }
