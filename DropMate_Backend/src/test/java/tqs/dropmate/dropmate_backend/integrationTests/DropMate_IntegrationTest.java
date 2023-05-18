@@ -1,10 +1,7 @@
 package tqs.dropmate.dropmate_backend.integrationTests;
 
 import io.restassured.RestAssured;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.MethodOrderer;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestMethodOrder;
+import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
@@ -51,6 +48,9 @@ public class DropMate_IntegrationTest {
     @Autowired
     private StoreRepository storeRepository;
 
+    private AssociatedCollectionPoint testACP;
+    private Store testStore;
+
 
     @Container
     public static MySQLContainer container = new MySQLContainer("mysql:latest")
@@ -65,11 +65,20 @@ public class DropMate_IntegrationTest {
         registry.add("spring.datasource.username", container::getUsername);
     }
 
+    @BeforeEach
+    public void setUp(){
+        testACP = new AssociatedCollectionPoint("PickUpPointTwo", "pickuptwo@mail.pt", "Porto", "Fake address 2, Porto", "935264901", 15 );
+        acpRepository.saveAndFlush(testACP);
+
+        testStore = new Store("PickUpPointTwo", "pickuptwo@mail.pt", "Porto", "Fake address 2, Porto", "935264901");
+        storeRepository.saveAndFlush(testStore);
+    }
 
     @AfterEach
     public void resetDB(){
         acpRepository.deleteAll();
         parcelRepository.deleteAll();
+        storeRepository.deleteAll();
     }
 
     @Test
@@ -88,12 +97,6 @@ public class DropMate_IntegrationTest {
 
     @Test
     public void whenGetAllAParcelsWaitDelivery_thenReturn_statusOK() throws Exception {
-        AssociatedCollectionPoint testACP = new AssociatedCollectionPoint("PickUpPointTwo", "pickuptwo@mail.pt", "Porto", "Fake address 2, Porto", "935264901", 15 );
-        acpRepository.saveAndFlush(testACP);
-
-        Store testStore = new Store("PickUpPointTwo", "pickuptwo@mail.pt", "Porto", "Fake address 2, Porto", "935264901");
-        storeRepository.saveAndFlush(testStore);
-
         parcelRepository.saveAndFlush(new Parcel("DEL123", "PCK123", 1.5, null, null, Status.IN_DELIVERY, testACP, testStore));
         parcelRepository.saveAndFlush(new Parcel("DEL456", "PCK456", 3.2, null, null, Status.IN_DELIVERY, testACP, testStore));
         parcelRepository.saveAndFlush(new Parcel("DEL790", "PCK356", 1.5, new Date(2023, 5, 22), null, Status.WAITING_FOR_PICKUP, testACP, testStore));
@@ -107,6 +110,23 @@ public class DropMate_IntegrationTest {
                 .body("size()", is(2)).and()
                 .body("parcelStatus", hasItems(Status.IN_DELIVERY.toString())).and()
                 .body("deliveryCode", hasItems("DEL123", "DEL456"));
+    }
+
+    @Test
+    public void whenGetAllAParcelsWaitPickup_thenReturn_statusOK() throws Exception {
+        parcelRepository.saveAndFlush(new Parcel("DEL123", "PCK123", 1.5, null, null, Status.IN_DELIVERY, testACP, testStore));
+        parcelRepository.saveAndFlush(new Parcel("DEL456", "PCK456", 3.2, null, null, Status.IN_DELIVERY, testACP, testStore));
+        parcelRepository.saveAndFlush(new Parcel("DEL790", "PCK356", 1.5, new Date(2023, 5, 22), null, Status.WAITING_FOR_PICKUP, testACP, testStore));
+        parcelRepository.saveAndFlush(new Parcel("DEL367", "PCK803", 2.2, new Date(2023, 5, 22), null, Status.WAITING_FOR_PICKUP, testACP, testStore));
+        parcelRepository.saveAndFlush(new Parcel("DEL000", "PCK257", 1.5, new Date(2023, 5, 22), new Date(2023, 5, 28), Status.DELIVERED, testACP, testStore));
+        parcelRepository.saveAndFlush(new Parcel("DEL843", "PCK497", 1.6, new Date(2023, 5, 22), new Date(2023, 5, 29), Status.DELIVERED, testACP, testStore));
+
+        RestAssured.with().contentType("application/json")
+                .when().get(BASE_URI + randomServerPort + "/dropmate/admin/parcels/all/pickup")
+                .then().statusCode(200)
+                .body("size()", is(2)).and()
+                .body("parcelStatus", hasItems(Status.IN_DELIVERY.toString())).and()
+                .body("pickupCode", hasItems("PCK356", "PCK803"));
     }
 
 }
