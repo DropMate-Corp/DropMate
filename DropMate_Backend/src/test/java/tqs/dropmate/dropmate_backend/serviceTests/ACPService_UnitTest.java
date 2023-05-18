@@ -13,6 +13,7 @@ import tqs.dropmate.dropmate_backend.datamodel.AssociatedCollectionPoint;
 import tqs.dropmate.dropmate_backend.repositories.AssociatedCollectionPointRepository;
 import tqs.dropmate.dropmate_backend.services.AdminService;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -55,6 +56,7 @@ public class ACPService_UnitTest {
         pickupPointThree.setTelephoneNumber("900000000");
 
         // Adding to ACP list
+        allACP = new ArrayList<>();
         allACP.add(pickupPointOne);
         allACP.add(pickupPointTwo);
         allACP.add(pickupPointThree);
@@ -77,6 +79,6 @@ public class ACPService_UnitTest {
         assertThat(returnedACP).extracting(AssociatedCollectionPoint::getCity).contains("Aveiro", "Porto", "Viseu");
 
         // Verify that the external API was called and Verify that the cache was called twice - to query and to add the new record
-        Mockito.verify(adminService, VerificationModeFactory.times(1)).getAllACP();
+        Mockito.verify(acpRepository, VerificationModeFactory.times(1)).findAll();
     }
 }

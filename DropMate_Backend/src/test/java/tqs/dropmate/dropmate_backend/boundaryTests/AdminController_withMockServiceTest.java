@@ -8,9 +8,13 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import tqs.dropmate.dropmate_backend.controllers.AdminController;
 import tqs.dropmate.dropmate_backend.datamodel.AssociatedCollectionPoint;
+import tqs.dropmate.dropmate_backend.services.ACPService;
 import tqs.dropmate.dropmate_backend.services.AdminService;
+import tqs.dropmate.dropmate_backend.services.StoreService;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.hamcrest.CoreMatchers.is;
@@ -20,13 +24,17 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest
+@WebMvcTest(controllers = AdminController.class)
 public class AdminController_withMockServiceTest {
     @Autowired
     private MockMvc mockMvc;
 
     @MockBean
     private AdminService adminService;
+    @MockBean
+    private ACPService acpService;
+    @MockBean
+    private StoreService storeService;
 
     private List<AssociatedCollectionPoint> allACP;
 
@@ -55,6 +63,7 @@ public class AdminController_withMockServiceTest {
         pickupPointThree.setTelephoneNumber("900000000");
 
         // Adding to ACP list
+        allACP = new ArrayList<>();
         allACP.add(pickupPointOne);
         allACP.add(pickupPointTwo);
         allACP.add(pickupPointThree);

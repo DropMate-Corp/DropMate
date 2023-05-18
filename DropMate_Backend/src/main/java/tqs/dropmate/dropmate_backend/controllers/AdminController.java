@@ -34,7 +34,7 @@ public class AdminController {
     }
 
     /** This method returns all the ACP's associated with the Platform */
-    @GetMapping("/acp/")
+    @GetMapping("/acp")
     public ResponseEntity<List<AssociatedCollectionPoint>> getAllACP(){
         return ResponseEntity.ok().body(adminService.getAllACP());
     }
