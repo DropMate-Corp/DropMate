@@ -17,13 +17,9 @@ import java.util.Map;
 @CrossOrigin
 public class AdminController {
     private AdminService adminService;
-    private ACPService acpService;
-    private StoreService storeService;
 
-    public AdminController(AdminService adminService, ACPService acpService, StoreService storeService) {
+    public AdminController(AdminService adminService) {
         this.adminService = adminService;
-        this.acpService = acpService;
-        this.storeService = storeService;
     }
 
     /** Method for the DropMate administrator login */
@@ -88,7 +84,7 @@ public class AdminController {
     /** This method returns all the parcels waiting for delivery */
     @GetMapping("/parcels/all/delivery")
     public ResponseEntity<List<Parcel>> getAllParcelsWaitingDelivery(){
-        return null;
+        return ResponseEntity.ok().body(adminService.getAllParcelsWaitingDelivery());
     }
 
     /** This method returns all the parcels waiting for pickup */

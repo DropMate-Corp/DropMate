@@ -8,6 +8,7 @@ import org.junit.jupiter.api.TestMethodOrder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.http.MediaType;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.TestPropertySource;
@@ -15,10 +16,21 @@ import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import tqs.dropmate.dropmate_backend.datamodel.AssociatedCollectionPoint;
+import tqs.dropmate.dropmate_backend.datamodel.Parcel;
+import tqs.dropmate.dropmate_backend.datamodel.Status;
+import tqs.dropmate.dropmate_backend.datamodel.Store;
 import tqs.dropmate.dropmate_backend.repositories.AssociatedCollectionPointRepository;
+import tqs.dropmate.dropmate_backend.repositories.ParcelRepository;
+import tqs.dropmate.dropmate_backend.repositories.StoreRepository;
+
+import java.sql.Date;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.*;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -34,6 +46,10 @@ public class DropMate_IntegrationTest {
 
     @Autowired
     private AssociatedCollectionPointRepository acpRepository;
+    @Autowired
+    private ParcelRepository parcelRepository;
+    @Autowired
+    private StoreRepository storeRepository;
 
 
     @Container
@@ -53,6 +69,7 @@ public class DropMate_IntegrationTest {
     @AfterEach
     public void resetDB(){
         acpRepository.deleteAll();
+        parcelRepository.deleteAll();
     }
 
     @Test
@@ -67,6 +84,29 @@ public class DropMate_IntegrationTest {
                 .body("city", hasItems("Aveiro", "Porto")).and()
                 .body("[1].email", is("pickuptwo@mail.pt"));
 
+    }
+
+    @Test
+    public void whenGetAllAParcelsWaitDelivery_thenReturn_statusOK() throws Exception {
+        AssociatedCollectionPoint testACP = new AssociatedCollectionPoint("PickUpPointTwo", "pickuptwo@mail.pt", "Porto", "Fake address 2, Porto", "935264901", 15 );
+        acpRepository.saveAndFlush(testACP);
+
+        Store testStore = new Store("PickUpPointTwo", "pickuptwo@mail.pt", "Porto", "Fake address 2, Porto", "935264901");
+        storeRepository.saveAndFlush(testStore);
+
+        parcelRepository.saveAndFlush(new Parcel("DEL123", "PCK123", 1.5, null, null, Status.IN_DELIVERY, testACP, testStore));
+        parcelRepository.saveAndFlush(new Parcel("DEL456", "PCK456", 3.2, null, null, Status.IN_DELIVERY, testACP, testStore));
+        parcelRepository.saveAndFlush(new Parcel("DEL790", "PCK356", 1.5, new Date(2023, 5, 22), null, Status.WAITING_FOR_PICKUP, testACP, testStore));
+        parcelRepository.saveAndFlush(new Parcel("DEL367", "PCK803", 2.2, new Date(2023, 5, 22), null, Status.WAITING_FOR_PICKUP, testACP, testStore));
+        parcelRepository.saveAndFlush(new Parcel("DEL000", "PCK257", 1.5, new Date(2023, 5, 22), new Date(2023, 5, 28), Status.DELIVERED, testACP, testStore));
+        parcelRepository.saveAndFlush(new Parcel("DEL843", "PCK497", 1.6, new Date(2023, 5, 22), new Date(2023, 5, 29), Status.DELIVERED, testACP, testStore));
+
+        RestAssured.with().contentType("application/json")
+                .when().get(BASE_URI + randomServerPort + "/dropmate/admin/parcels/all/delivery")
+                .then().statusCode(200)
+                .body("size()", is(2)).and()
+                .body("parcelStatus", hasItems(Status.IN_DELIVERY.toString())).and()
+                .body("deliveryCode", hasItems("DEL123", "DEL456"));
     }
 
 }

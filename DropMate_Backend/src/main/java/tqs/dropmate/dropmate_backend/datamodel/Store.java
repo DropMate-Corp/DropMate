@@ -43,6 +43,14 @@ public class Store {
     @Column(columnDefinition = "INT DEFAULT 0")
     private Integer ordersDelivered;
 
+    public Store(String name, String email, String city, String address, String telephoneNumber) {
+        this.name = name;
+        this.email = email;
+        this.city = city;
+        this.address = address;
+        this.telephoneNumber = telephoneNumber;
+    }
+
     @OneToMany(mappedBy = "store", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Parcel> associatedParcels = new ArrayList<>();
 

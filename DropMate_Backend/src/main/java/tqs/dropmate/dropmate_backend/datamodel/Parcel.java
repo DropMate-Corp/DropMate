@@ -36,6 +36,26 @@ public class Parcel {
     @Convert(converter = StatusConverter.class)
     private Status parcelStatus;
 
+    public Parcel(String deliveryCode, String pickupCode, Double weight, Date deliveryDate, Date pickupDate, Status parcelStatus) {
+        this.deliveryCode = deliveryCode;
+        this.pickupCode = pickupCode;
+        this.weight = weight;
+        this.deliveryDate = deliveryDate;
+        this.pickupDate = pickupDate;
+        this.parcelStatus = parcelStatus;
+    }
+
+    public Parcel(String deliveryCode, String pickupCode, Double weight, Date deliveryDate, Date pickupDate, Status parcelStatus, AssociatedCollectionPoint pickupACP, Store store) {
+        this.deliveryCode = deliveryCode;
+        this.pickupCode = pickupCode;
+        this.weight = weight;
+        this.deliveryDate = deliveryDate;
+        this.pickupDate = pickupDate;
+        this.parcelStatus = parcelStatus;
+        this.pickupACP = pickupACP;
+        this.store = store;
+    }
+
     @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name ="acpId", nullable = false)
