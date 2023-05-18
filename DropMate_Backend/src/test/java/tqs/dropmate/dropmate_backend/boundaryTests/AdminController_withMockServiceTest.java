@@ -1,33 +1,33 @@
-package tqs.dropmate.dropmate_backend.serviceTests;
+package tqs.dropmate.dropmate_backend.boundaryTests;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.mockito.internal.verification.VerificationModeFactory;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
 import tqs.dropmate.dropmate_backend.datamodel.AssociatedCollectionPoint;
-import tqs.dropmate.dropmate_backend.repositories.AssociatedCollectionPointRepository;
 import tqs.dropmate.dropmate_backend.services.AdminService;
 
 import java.util.List;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.Matchers.hasSize;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@ExtendWith(MockitoExtension.class)
-public class ACPService_UnitTest {
+@WebMvcTest
+public class AdminController_withMockServiceTest {
+    @Autowired
+    private MockMvc mockMvc;
 
-    @Mock(lenient = true)
-    private AssociatedCollectionPointRepository acpRepository;
-
-    @InjectMocks
+    @MockBean
     private AdminService adminService;
 
-    // Expectations
     private List<AssociatedCollectionPoint> allACP;
 
     @BeforeEach
@@ -66,17 +66,14 @@ public class ACPService_UnitTest {
     }
 
     @Test
-    public void whenGetAllAcp_thenReturnAllAcp(){
-        // Set up Expectations
+    public void whenGetAllACP_thenReturn_statusOK() throws Exception {
         when(adminService.getAllACP()).thenReturn(allACP);
 
-        // Verify the result is as expected
-        List<AssociatedCollectionPoint> returnedACP = adminService.getAllACP();
-        assertThat(returnedACP).isEqualTo(allACP);
-        assertThat(returnedACP).hasSize(3);
-        assertThat(returnedACP).extracting(AssociatedCollectionPoint::getCity).contains("Aveiro", "Porto", "Viseu");
-
-        // Verify that the external API was called and Verify that the cache was called twice - to query and to add the new record
-        Mockito.verify(adminService, VerificationModeFactory.times(1)).getAllACP();
+        mockMvc.perform(
+                        get("/dropmate/admin/acp").contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(3)))
+                .andExpect(jsonPath("$[0].city", is("Aveiro")))
+                .andExpect(jsonPath("$[2].address", is("Fake address 3, Viseu")));
     }
 }

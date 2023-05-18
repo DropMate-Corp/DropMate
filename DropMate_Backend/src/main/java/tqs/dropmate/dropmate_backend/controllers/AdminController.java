@@ -1,8 +1,12 @@
 package tqs.dropmate.dropmate_backend.controllers;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import tqs.dropmate.dropmate_backend.datamodel.*;
+import tqs.dropmate.dropmate_backend.services.ACPService;
+import tqs.dropmate.dropmate_backend.services.AdminService;
+import tqs.dropmate.dropmate_backend.services.StoreService;
 import tqs.dropmate.dropmate_backend.utils.SuccessfulRequest;
 
 import java.util.List;
@@ -12,6 +16,15 @@ import java.util.Map;
 @RequestMapping("dropmate/admin")
 @CrossOrigin
 public class AdminController {
+    private AdminService adminService;
+    private ACPService acpService;
+    private StoreService storeService;
+
+    public AdminController(AdminService adminService, ACPService acpService, StoreService storeService) {
+        this.adminService = adminService;
+        this.acpService = acpService;
+        this.storeService = storeService;
+    }
 
     /** Method for the DropMate administrator login */
     @PostMapping("/login")
@@ -23,7 +36,7 @@ public class AdminController {
     /** This method returns all the ACP's associated with the Platform */
     @GetMapping("/acp/")
     public ResponseEntity<List<AssociatedCollectionPoint>> getAllACP(){
-        return null;
+        return ResponseEntity.ok().body(adminService.getAllACP());
     }
 
     /** This method is used to associate a new ACP with the platform */
