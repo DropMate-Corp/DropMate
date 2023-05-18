@@ -42,6 +42,15 @@ public class AssociatedCollectionPoint {
     @Column
     private String managerContact;
 
+    public AssociatedCollectionPoint(String name, String email, String city, String address, String telephoneNumber, Integer deliveryLimit) {
+        this.name = name;
+        this.email = email;
+        this.city = city;
+        this.address = address;
+        this.telephoneNumber = telephoneNumber;
+        this.deliveryLimit = deliveryLimit;
+    }
+
     @ElementCollection
     @CollectionTable(name = "acp_operational_details", joinColumns = @JoinColumn(name = "acpId"))
     @MapKeyColumn(name = "statistic_name")
