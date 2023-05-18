@@ -52,11 +52,11 @@ CREATE TABLE `associated_collection_points` (
   `acp_id` int NOT NULL AUTO_INCREMENT,
   `address` varchar(255) NOT NULL,
   `city` varchar(255) NOT NULL,
-  `delivery_limit` int NOT NULL DEFAULT '0',
   `email` varchar(255) NOT NULL,
   `manager_contact` varchar(255) DEFAULT NULL,
   `name` varchar(255) NOT NULL,
   `telephone_number` varchar(255) NOT NULL,
+  `delivery_limit` int DEFAULT '10',
   PRIMARY KEY (`acp_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -67,38 +67,8 @@ CREATE TABLE `associated_collection_points` (
 
 LOCK TABLES `associated_collection_points` WRITE;
 /*!40000 ALTER TABLE `associated_collection_points` DISABLE KEYS */;
-INSERT INTO `associated_collection_points` VALUES (1,'Av. Dom Frei Miguel de Bulhões e Sousa, 3810-164','Aveiro',0,'234195 919','Pracinha das Flores','234 195 919','10'),(2,'R. do Buragal 216, 3810-382 Aradas','Aveiro',0,'234427 229','Mercadão das Flores','234 427 229','22'),(3,'Praça do Marquês de Pombal, 3810-164 Aveiro','Aveiro',0,'234 420 043','D\'Art E Flor','234 420 043','30'),(4,'Av. Cap. Silva Pereira 151, 3500-102 Viseu','Viseu',0,'273 583 894','Crava E Canela','273 583 894','30'),(5,'Largo da Lapa 38, 4050-069 Porto','Porto',0,'22 550 8873','Porto Flores','22 550 8873','30'),(6,'R. Dr. António José de Almeida 327 A, 3000-045 Coimbra','Coimbra',0,'914 423 374','Florista Tina','914 423 374','30'),(7,'Urbanização Nova Leiria, R. Porto de Mós 19 loja c, 2415-784 Leiria','Leiria',0,'916 261 025','Floraria','916 261 025','30'),(8,'Av. António Macedo, Edifício Lyons Club nº242 - Loja 3, 4700-413 Braga','Braga',0,'253 271 534','Jardim da Celeste','253 271 534','30'),(9,'3740-255 Sever do Vouga','Sever do Vouga',0,'938 412 334','Petalas da Rosa','938 412 334','30');
+INSERT INTO `associated_collection_points` VALUES (1,'Av. Dom Frei Miguel de Bulhões e Sousa, 3810-164','Aveiro','pracinha@mail.com','234195 919','Pracinha das Flores','234 195 919',10),(2,'R. do Buragal 216, 3810-382 Aradas','Aveiro','mercadao@mail.com','234427 229','Mercadão das Flores','234 427 229',22),(3,'Praça do Marquês de Pombal, 3810-164 Aveiro','Aveiro','art@mail.pt','234 420 043','D\'Art E Flor','234 420 043',30),(4,'Av. Cap. Silva Pereira 151, 3500-102 Viseu','Viseu','crava@mail.pt','273 583 894','Crava E Canela','273 583 894',30),(5,'Largo da Lapa 38, 4050-069 Porto','Porto','portoflores@mail.pt','22 550 8873','Porto Flores','22 550 8873',30),(6,'R. Dr. António José de Almeida 327 A, 3000-045 Coimbra','Coimbra','tina@mail.pt','914 423 374','Florista Tina','914 423 374',30),(7,'Urbanização Nova Leiria, R. Porto de Mós 19 loja c, 2415-784 Leiria','Leiria','floraria@mail.pt','916 261 025','Floraria','916 261 025',30),(8,'Av. António Macedo, Edifício Lyons Club nº242 - Loja 3, 4700-413 Braga','Braga','celeste@mail.pt','253 271 534','Jardim da Celeste','253 271 534',30),(9,'3740-255 Sever do Vouga','Sever do Vouga','petalas@mail.pt','938 412 334','Petalas da Rosa','938 412 334',30);
 /*!40000 ALTER TABLE `associated_collection_points` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `candidate_associated_collection_points`
---
-
-DROP TABLE IF EXISTS `candidate_associated_collection_points`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `candidate_associated_collection_points` (
-  `acp_id` int NOT NULL AUTO_INCREMENT,
-  `address` varchar(255) NOT NULL,
-  `city` varchar(255) NOT NULL,
-  `description` varchar(255) NOT NULL,
-  `email` varchar(255) NOT NULL,
-  `name` varchar(255) NOT NULL,
-  `status` int NOT NULL DEFAULT '0',
-  `telephone_number` varchar(255) NOT NULL,
-  PRIMARY KEY (`acp_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `candidate_associated_collection_points`
---
-
-LOCK TABLES `candidate_associated_collection_points` WRITE;
-/*!40000 ALTER TABLE `candidate_associated_collection_points` DISABLE KEYS */;
-INSERT INTO `candidate_associated_collection_points` VALUES (1,'R. Dr. Celestino Gomes 34A, 3830-187 Ilhavo','Ilhavo','PLS LET ME ENTEEEEEEEEEER','florarte@mail.pt','Florarte',0,'374729373'),(2,'Rua Gago Coutinho-Armazém A4, Nº36, Santa Joana, 3810-269 Aveiro','Aveiro','Quero fazer mais dinheiro','tivaldi@mail.pt','Tivaldiflor',0,'234785335'),(3,'R. das Cardadeiras 2, 3800-125 Aveiro','Aveiro','Somos uma florista muito conceituada e profissional e vamos entregar todas as vossas encomendas com todo o respeito','multiflores@mail.pt','Multiflores',0,'234882993');
-/*!40000 ALTER TABLE `candidate_associated_collection_points` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -231,4 +201,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2023-05-18 14:23:40
+-- Dump completed on 2023-05-12 23:30:33

@@ -1,6 +1,5 @@
 package tqs.dropmate.dropmate_backend.datamodel;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
