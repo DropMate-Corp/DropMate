@@ -92,6 +92,7 @@ public class DropMate_IntegrationTest {
     }
 
     @Test
+    @Order(3)
     public void whenGetAllACP_thenReturn_statusOK() throws Exception {
         RestAssured.with().contentType("application/json")
                 .when().get(BASE_URI + randomServerPort + "/dropmate/admin/acp")
@@ -103,6 +104,7 @@ public class DropMate_IntegrationTest {
     }
 
     @Test
+    @Order(4)
     public void whenGetAllAParcelsWaitDelivery_thenReturn_statusOK() throws Exception {
         parcelRepository.saveAndFlush(new Parcel("DEL123", "PCK123", 1.5, null, null, Status.IN_DELIVERY, testACP, testStore));
         parcelRepository.saveAndFlush(new Parcel("DEL456", "PCK456", 3.2, null, null, Status.IN_DELIVERY, testACP, testStore));
@@ -120,6 +122,7 @@ public class DropMate_IntegrationTest {
     }
 
     @Test
+    @Order(5)
     public void whenGetAllAParcelsWaitPickup_thenReturn_statusOK() throws Exception {
         parcelRepository.saveAndFlush(new Parcel("DEL123", "PCK123", 1.5, null, null, Status.IN_DELIVERY, testACP, testStore));
         parcelRepository.saveAndFlush(new Parcel("DEL456", "PCK456", 3.2, null, null, Status.IN_DELIVERY, testACP, testStore));
@@ -137,6 +140,7 @@ public class DropMate_IntegrationTest {
     }
 
     @Test
+    @Order(6)
     public void whenGetAllACPOperationalStatistics_thenReturn_statusOK() throws Exception {
         // Doing the test
         io.restassured.path.json.JsonPath path  = RestAssured.with().contentType("application/json")
@@ -155,8 +159,9 @@ public class DropMate_IntegrationTest {
     }
 
     @Test
+    @Order(1)
     public void whenGetSpecificOperationStatistics_withValidID_thenReturn_statusOK() {
-        RestAssured.with().contentType("application/json")
+             RestAssured.with().contentType("application/json")
                 .when().get(BASE_URI + randomServerPort + "/dropmate/admin/acp/1/statistics")
                 .then().statusCode(200)
                 .body("total_parcels", is(10)).and()
@@ -166,6 +171,7 @@ public class DropMate_IntegrationTest {
     }
 
     @Test
+    @Order(2)
     public void whenGetSpecificOperationStatistics_withInvalidID_thenReturn_statusOK() {
         RestAssured.with().contentType("application/json")
                 .when().get(BASE_URI + randomServerPort + "/dropmate/admin/acp/-21/statistics")
