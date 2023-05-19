@@ -12,10 +12,9 @@ import tqs.dropmate.dropmate_backend.controllers.AdminController;
 import tqs.dropmate.dropmate_backend.datamodel.AssociatedCollectionPoint;
 import tqs.dropmate.dropmate_backend.datamodel.Parcel;
 import tqs.dropmate.dropmate_backend.datamodel.Status;
-import tqs.dropmate.dropmate_backend.services.ACPService;
 import tqs.dropmate.dropmate_backend.services.AdminService;
-import tqs.dropmate.dropmate_backend.services.StoreService;
 
+import java.sql.Date;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -36,7 +35,7 @@ public class AdminController_withMockServiceTest {
 
     private List<AssociatedCollectionPoint> allACP;
     private List<Parcel> parcelsWaitingDelivery;
-
+    private List<Parcel> parcelsWaitingPickup;
 
     @BeforeEach
     public void setUp(){
@@ -75,6 +74,13 @@ public class AdminController_withMockServiceTest {
         parcelsWaitingDelivery = new ArrayList<>();
         parcelsWaitingDelivery.add(parcelDelOne);
         parcelsWaitingDelivery.add(parcelDelTwo);
+
+        Parcel parcelPickOne = new Parcel("DEL790", "PCK356", 1.5, new Date(2023, 5, 22), null, Status.WAITING_FOR_PICKUP);
+        Parcel parcelPickTwo = new Parcel("DEL367", "PCK803", 2.2, new Date(2023, 5, 22), null, Status.WAITING_FOR_PICKUP);
+
+        parcelsWaitingPickup = new ArrayList<>();
+        parcelsWaitingPickup.add(parcelPickOne);
+        parcelsWaitingPickup.add(parcelPickTwo);
     }
 
     @AfterEach
@@ -105,5 +111,18 @@ public class AdminController_withMockServiceTest {
                 .andExpect(jsonPath("$", hasSize(2)))
                 .andExpect(jsonPath("$[0].deliveryCode", is("DEL123")))
                 .andExpect(jsonPath("$[1].parcelStatus", is(Status.IN_DELIVERY.toString())));
+    }
+
+    @Test
+    public void whenGetAllAParcelsWaitPickup_thenReturn_statusOK() throws Exception {
+        when(adminService.getAllParcelsWaitingPickup()).thenReturn(parcelsWaitingPickup);
+
+        mockMvc.perform(
+                        get("/dropmate/admin/parcels/all/pickup").contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(2)))
+                .andExpect(jsonPath("$[0].deliveryCode", is("DEL790")))
+                .andExpect(jsonPath("$[1].parcelStatus", is(Status.WAITING_FOR_PICKUP.toString())))
+                .andExpect(jsonPath("$[1].pickupCode", is("PCK803")));
     }
 }

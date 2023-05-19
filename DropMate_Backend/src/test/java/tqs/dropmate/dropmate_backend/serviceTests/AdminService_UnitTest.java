@@ -117,6 +117,19 @@ public class AdminService_UnitTest {
 
         // Verify that the external API was called and Verify that the cache was called twice - to query and to add the new record
         Mockito.verify(parcelRepository, VerificationModeFactory.times(1)).findAll();
+    }
 
+    @Test
+    public void whenGetAllParcelWaitPickup_thenReturnOnlyPickup(){
+        // Set up Expectations
+        when(parcelRepository.findAll()).thenReturn(allParcels);
+
+        // Verify the result is as expected
+        List<Parcel> returnedParcels = adminService.getAllParcelsWaitingPickup();
+        assertThat(returnedParcels).hasSize(2);
+        assertThat(returnedParcels).extracting(Parcel::getParcelStatus).containsOnly(Status.WAITING_FOR_PICKUP);
+
+        // Verify that the external API was called and Verify that the cache was called twice - to query and to add the new record
+        Mockito.verify(parcelRepository, VerificationModeFactory.times(1)).findAll();
     }
 }
