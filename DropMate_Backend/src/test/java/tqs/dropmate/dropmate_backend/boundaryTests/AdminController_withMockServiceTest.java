@@ -13,6 +13,7 @@ import tqs.dropmate.dropmate_backend.controllers.AdminController;
 import tqs.dropmate.dropmate_backend.datamodel.AssociatedCollectionPoint;
 import tqs.dropmate.dropmate_backend.datamodel.Parcel;
 import tqs.dropmate.dropmate_backend.datamodel.Status;
+import tqs.dropmate.dropmate_backend.exceptions.ResourceNotFoundException;
 import tqs.dropmate.dropmate_backend.services.AdminService;
 
 import java.sql.Date;
@@ -20,6 +21,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.*;
@@ -117,25 +119,6 @@ public class AdminController_withMockServiceTest {
     }
 
     @Test
-    public void whenGetAllACPOperationalStatistics_thenReturn_statusOK() throws Exception {
-        Map<String, Integer> statsMap = new HashMap<>();
-
-        statsMap.put("total_parcels", 10);
-        statsMap.put("parcels_in_delivery", 5);
-        statsMap.put("parcels_waiting_pickup", 3);
-
-        allACP.forEach(acp -> {acp.setOperationalStatistics(statsMap); acp.setDeliveryLimit(10);});
-
-        mockMvc.perform(
-                        get("/dropmate/admin/acp/statistics").contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.*", everyItem(hasKey("total_parcels"))))
-                .andExpect(jsonPath("$.*", everyItem(hasKey("parcels_waiting_pickup"))))
-                .andExpect(jsonPath("$.*", everyItem(hasKey("deliveryLimit"))))
-                .andExpect(jsonPath("$.*", everyItem(hasKey("parcels_in_delivery"))));
-    }
-
-
     public void whenGetAllAParcelsWaitPickup_thenReturn_statusOK() throws Exception {
         when(adminService.getAllParcelsWaitingPickup()).thenReturn(parcelsWaitingPickup);
 
@@ -146,5 +129,63 @@ public class AdminController_withMockServiceTest {
                 .andExpect(jsonPath("$[0].deliveryCode", is("DEL790")))
                 .andExpect(jsonPath("$[1].parcelStatus", is(Status.WAITING_FOR_PICKUP.toString())))
                 .andExpect(jsonPath("$[1].pickupCode", is("PCK803")));
+    }
+
+    @Test
+    public void whenGetAllACPOperationalStatistics_thenReturn_statusOK() throws Exception {
+        Map<String, Integer> statsMap = new HashMap<>();
+
+        statsMap.put("total_parcels", 10);
+        statsMap.put("parcels_in_delivery", 5);
+        statsMap.put("parcels_waiting_pickup", 3);
+
+        allACP.forEach(acp -> {acp.setOperationalStatistics(statsMap); acp.setDeliveryLimit(10);});
+
+        when(adminService.getAllACPStatistics()).thenReturn(allACP.stream()
+                .collect(Collectors.toMap(
+                        acp -> acp,
+                        acp -> {
+                            Map<String, Integer> statistics = new HashMap<>(acp.getOperationalStatistics());
+                            statistics.put("deliveryLimit", acp.getDeliveryLimit());
+                            return statistics;
+                        }
+                )));
+
+        mockMvc.perform(
+                        get("/dropmate/admin/acp/statistics").contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.*", everyItem(hasKey("total_parcels"))))
+                .andExpect(jsonPath("$.*", everyItem(hasKey("parcels_waiting_pickup"))))
+                .andExpect(jsonPath("$.*", everyItem(hasKey("deliveryLimit"))))
+                .andExpect(jsonPath("$.*", everyItem(hasKey("parcels_in_delivery"))));
+    }
+
+    @Test
+    public void whenGetSpecificACPOperationalStatistics_withValidID_thenReturn_statusOK() throws Exception {
+        Map<String, Integer> statsMap = new HashMap<>();
+
+        statsMap.put("total_parcels", 10);
+        statsMap.put("parcels_in_delivery", 5);
+        statsMap.put("parcels_waiting_pickup", 3);
+
+        allACP.forEach(acp -> {acp.setOperationalStatistics(statsMap); acp.setDeliveryLimit(10);});
+
+        when(adminService.getSpecificACPStatistics(2)).thenReturn(allACP.get(1).getOperationalStatistics());
+
+        mockMvc.perform(
+                        get("/dropmate/admin/acp/2/statistics").contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.total_parcels", is(10)))
+                .andExpect(jsonPath("$.parcels_waiting_pickup", is(3)))
+                .andExpect(jsonPath("$.parcels_in_delivery", is(5)));
+    }
+
+    @Test
+    public void whenGetSpecificACPOperationalStatistics_withInvalidID_thenReturn_statusOK() throws Exception {
+        when(adminService.getSpecificACPStatistics(-2)).thenThrow(new ResourceNotFoundException("Couldn't find ACP with the ID -2!"));
+
+        mockMvc.perform(
+                        get("/dropmate/admin/acp/-2/statistics").contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound());
     }
 }

@@ -3,6 +3,7 @@ package tqs.dropmate.dropmate_backend.controllers;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import tqs.dropmate.dropmate_backend.datamodel.*;
+import tqs.dropmate.dropmate_backend.exceptions.ResourceNotFoundException;
 import tqs.dropmate.dropmate_backend.services.AdminService;
 import tqs.dropmate.dropmate_backend.utils.SuccessfulRequest;
 
@@ -74,8 +75,8 @@ public class AdminController {
 
     /** This method returns the statistics associated with a specific ACP */
     @GetMapping("/acp/{acpID}/statistics")
-    public ResponseEntity<Map<String, String>> getACPStatistics(@PathVariable(name = "acpID") Long acpID){
-        return null;
+    public ResponseEntity<Map<String, Integer>> getACPStatistics(@PathVariable(name = "acpID") Integer acpID) throws ResourceNotFoundException {
+        return ResponseEntity.ok().body(adminService.getSpecificACPStatistics(acpID));
     }
 
     /** This method returns all the parcels waiting for delivery */
