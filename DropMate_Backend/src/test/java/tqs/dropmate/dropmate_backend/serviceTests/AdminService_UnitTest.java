@@ -1,5 +1,6 @@
 package tqs.dropmate.dropmate_backend.serviceTests;
 
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -18,7 +19,9 @@ import tqs.dropmate.dropmate_backend.services.AdminService;
 
 import java.sql.Date;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
@@ -36,11 +39,12 @@ public class AdminService_UnitTest {
     // Expectations
     private List<AssociatedCollectionPoint> allACP;
     private List<Parcel> allParcels;
+    private AssociatedCollectionPoint pickupPointOne;
 
     @BeforeEach
     public void setUp(){
         // Creating test pickup points
-        AssociatedCollectionPoint pickupPointOne = new AssociatedCollectionPoint();
+        pickupPointOne = new AssociatedCollectionPoint();
         pickupPointOne.setCity("Aveiro");
         pickupPointOne.setAddress("Fake address 1, Aveiro");
         pickupPointOne.setEmail("pickupone@mail.pt");
@@ -117,6 +121,33 @@ public class AdminService_UnitTest {
 
         // Verify that the external API was called and Verify that the cache was called twice - to query and to add the new record
         Mockito.verify(parcelRepository, VerificationModeFactory.times(1)).findAll();
+    }
 
+    @Test
+    public void whenGetAllOperationalStatistics_thenReturnAll(){
+        Map<String, Integer> statsMap = new HashMap<>();
+
+        statsMap.put("total_parcels", 10);
+        statsMap.put("parcels_in_delivery", 5);
+        statsMap.put("parcels_waiting_pickup", 3);
+
+        allACP.forEach(acp -> {acp.setOperationalStatistics(statsMap); acp.setDeliveryLimit(10);});
+
+        // Set up Expectations
+        when(acpRepository.findAll()).thenReturn(allACP);
+
+        // Verify the result is as expected
+        Map<AssociatedCollectionPoint, Map<String, Integer>> stats = adminService.getAllACPStatistics();
+        assertThat(stats).hasSize(3);
+        assertThat(stats.keySet()).extracting(AssociatedCollectionPoint::getCity).contains("Aveiro", "Porto", "Viseu");
+
+        assertThat(stats).containsKey(pickupPointOne)
+                .satisfies(map -> {
+                    Assertions.assertThat(map.get(pickupPointOne)).containsEntry("parcels_in_delivery", 5);
+                    Assertions.assertThat(map.get(pickupPointOne)).containsEntry("deliveryLimit", 10);
+                });
+
+        // Verify that the external API was called and Verify that the cache was called twice - to query and to add the new record
+        Mockito.verify(acpRepository, VerificationModeFactory.times(1)).findAll();
     }
 }

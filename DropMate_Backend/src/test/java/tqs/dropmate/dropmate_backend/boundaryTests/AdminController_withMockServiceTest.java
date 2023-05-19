@@ -2,6 +2,7 @@ package tqs.dropmate.dropmate_backend.boundaryTests;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -17,10 +18,12 @@ import tqs.dropmate.dropmate_backend.services.AdminService;
 import tqs.dropmate.dropmate_backend.services.StoreService;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.*;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -96,7 +99,7 @@ public class AdminController_withMockServiceTest {
     }
 
     @Test
-    public void whenGetAllAParcelsWaitDelivery_thenReturn_statusOK() throws Exception {
+    public void whenGetAllParcelsWaitDelivery_thenReturn_statusOK() throws Exception {
         when(adminService.getAllParcelsWaitingDelivery()).thenReturn(parcelsWaitingDelivery);
 
         mockMvc.perform(
@@ -105,5 +108,25 @@ public class AdminController_withMockServiceTest {
                 .andExpect(jsonPath("$", hasSize(2)))
                 .andExpect(jsonPath("$[0].deliveryCode", is("DEL123")))
                 .andExpect(jsonPath("$[1].parcelStatus", is(Status.IN_DELIVERY.toString())));
+    }
+
+    @Test
+    public void whenGetAllACPOperationalStatistics_thenReturn_statusOK() throws Exception {
+        Map<String, Integer> statsMap = new HashMap<>();
+
+        statsMap.put("total_parcels", 10);
+        statsMap.put("parcels_in_delivery", 5);
+        statsMap.put("parcels_waiting_pickup", 3);
+
+        allACP.forEach(acp -> {acp.setOperationalStatistics(statsMap); acp.setDeliveryLimit(10);});
+
+        mockMvc.perform(
+                        get("/dropmate/admin/acp/statistics").contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.*", everyItem(hasKey("total_parcels"))))
+                .andExpect(jsonPath("$.*", everyItem(hasKey("parcels_waiting_pickup"))))
+                .andExpect(jsonPath("$.*", everyItem(hasKey("deliveryLimit"))))
+                .andExpect(jsonPath("$.*", everyItem(hasKey("parcels_in_delivery"))));
+
     }
 }

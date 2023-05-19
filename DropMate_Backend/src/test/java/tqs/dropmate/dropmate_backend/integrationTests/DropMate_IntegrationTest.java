@@ -8,7 +8,6 @@ import org.junit.jupiter.api.TestMethodOrder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
-import org.springframework.http.MediaType;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.TestPropertySource;
@@ -24,13 +23,14 @@ import tqs.dropmate.dropmate_backend.repositories.ParcelRepository;
 import tqs.dropmate.dropmate_backend.repositories.StoreRepository;
 
 import java.sql.Date;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -109,4 +109,37 @@ public class DropMate_IntegrationTest {
                 .body("deliveryCode", hasItems("DEL123", "DEL456"));
     }
 
+    @Test
+    public void whenGetAllACPOperationalStatistics_thenReturn_statusOK() throws Exception {
+        // Saving test ACPs on the Repository
+        AssociatedCollectionPoint testACP = new AssociatedCollectionPoint("PickUpPointOne", "pickupone@mail.pt", "Aveiro", "Fake address 1, Aveiro", "953339994", 10 );
+        AssociatedCollectionPoint testACP2 = new AssociatedCollectionPoint("PickUpPointTwo", "pickuptwo@mail.pt", "Porto", "Fake address 2, Porto", "935264901", 15 );
+
+        Map<String, Integer> statsMap = new HashMap<>();
+
+        statsMap.put("total_parcels", 10);
+        statsMap.put("parcels_in_delivery", 5);
+        statsMap.put("parcels_waiting_pickup", 3);
+
+        testACP.setOperationalStatistics(statsMap);
+        testACP2.setOperationalStatistics(statsMap);
+
+        acpRepository.saveAndFlush(testACP);
+        acpRepository.saveAndFlush(testACP2);
+
+        // Doing the test
+        io.restassured.path.json.JsonPath path  = RestAssured.with().contentType("application/json")
+                .when().get(BASE_URI + randomServerPort + "/dropmate/admin/acp/statistics")
+                .then().statusCode(200)
+                .extract().response().jsonPath();
+
+        Map<String, Map<String, Object>> responseMap = path.getMap("$");
+        
+        for (Map<String, Object> value : responseMap.values()) {
+            assertThat(value.containsKey("total_parcels"), equalTo(true));
+            assertThat(value.containsKey("parcels_waiting_pickup"), equalTo(true));
+            assertThat(value.containsKey("deliveryLimit"), equalTo(true));
+            assertThat(value.containsKey("parcels_in_delivery"), equalTo(true));
+        }
+    }
 }
