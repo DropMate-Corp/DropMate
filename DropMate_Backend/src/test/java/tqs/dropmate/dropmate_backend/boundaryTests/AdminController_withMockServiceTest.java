@@ -133,6 +133,7 @@ public class AdminController_withMockServiceTest {
                 .andExpect(jsonPath("$.*", everyItem(hasKey("parcels_waiting_pickup"))))
                 .andExpect(jsonPath("$.*", everyItem(hasKey("deliveryLimit"))))
                 .andExpect(jsonPath("$.*", everyItem(hasKey("parcels_in_delivery"))));
+    }
 
 
     public void whenGetAllAParcelsWaitPickup_thenReturn_statusOK() throws Exception {
