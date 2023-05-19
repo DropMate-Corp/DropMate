@@ -120,6 +120,23 @@ public class DropMate_IntegrationTest {
     }
 
     @Test
+    public void whenGetAllAParcelsWaitPickup_thenReturn_statusOK() throws Exception {
+        parcelRepository.saveAndFlush(new Parcel("DEL123", "PCK123", 1.5, null, null, Status.IN_DELIVERY, testACP, testStore));
+        parcelRepository.saveAndFlush(new Parcel("DEL456", "PCK456", 3.2, null, null, Status.IN_DELIVERY, testACP, testStore));
+        parcelRepository.saveAndFlush(new Parcel("DEL790", "PCK356", 1.5, new Date(2023, 5, 22), null, Status.WAITING_FOR_PICKUP, testACP, testStore));
+        parcelRepository.saveAndFlush(new Parcel("DEL367", "PCK803", 2.2, new Date(2023, 5, 22), null, Status.WAITING_FOR_PICKUP, testACP, testStore));
+        parcelRepository.saveAndFlush(new Parcel("DEL000", "PCK257", 1.5, new Date(2023, 5, 22), new Date(2023, 5, 28), Status.DELIVERED, testACP, testStore));
+        parcelRepository.saveAndFlush(new Parcel("DEL843", "PCK497", 1.6, new Date(2023, 5, 22), new Date(2023, 5, 29), Status.DELIVERED, testACP, testStore));
+
+        RestAssured.with().contentType("application/json")
+                .when().get(BASE_URI + randomServerPort + "/dropmate/admin/parcels/all/pickup")
+                .then().statusCode(200)
+                .body("size()", is(2)).and()
+                .body("parcelStatus", hasItems(Status.WAITING_FOR_PICKUP.toString())).and()
+                .body("pickupCode", hasItems("PCK356", "PCK803"));
+    }
+
+    @Test
     public void whenGetAllACPOperationalStatistics_thenReturn_statusOK() throws Exception {
         // Doing the test
         io.restassured.path.json.JsonPath path  = RestAssured.with().contentType("application/json")
@@ -137,19 +154,15 @@ public class DropMate_IntegrationTest {
         }
     }
 
-    public void whenGetAllAParcelsWaitPickup_thenReturn_statusOK() throws Exception {
-        parcelRepository.saveAndFlush(new Parcel("DEL123", "PCK123", 1.5, null, null, Status.IN_DELIVERY, testACP, testStore));
-        parcelRepository.saveAndFlush(new Parcel("DEL456", "PCK456", 3.2, null, null, Status.IN_DELIVERY, testACP, testStore));
-        parcelRepository.saveAndFlush(new Parcel("DEL790", "PCK356", 1.5, new Date(2023, 5, 22), null, Status.WAITING_FOR_PICKUP, testACP, testStore));
-        parcelRepository.saveAndFlush(new Parcel("DEL367", "PCK803", 2.2, new Date(2023, 5, 22), null, Status.WAITING_FOR_PICKUP, testACP, testStore));
-        parcelRepository.saveAndFlush(new Parcel("DEL000", "PCK257", 1.5, new Date(2023, 5, 22), new Date(2023, 5, 28), Status.DELIVERED, testACP, testStore));
-        parcelRepository.saveAndFlush(new Parcel("DEL843", "PCK497", 1.6, new Date(2023, 5, 22), new Date(2023, 5, 29), Status.DELIVERED, testACP, testStore));
-
+    @Test
+    public void whenGetSpecificOperationStatistics_withValidID_thenReturn_statusOK() {
         RestAssured.with().contentType("application/json")
-                .when().get(BASE_URI + randomServerPort + "/dropmate/admin/parcels/all/pickup")
+                .when().get(BASE_URI + randomServerPort + "/dropmate/admin/acp/1/statistics")
                 .then().statusCode(200)
-                .body("size()", is(2)).and()
-                .body("parcelStatus", hasItems(Status.WAITING_FOR_PICKUP.toString())).and()
-                .body("pickupCode", hasItems("PCK356", "PCK803"));
+                .body("total_parcels", is(10)).and()
+                .body("parcels_waiting_pickup", is(3)).and()
+                .body("parcels_in_delivery", is(5)).and()
+                .body("deliveryLimit", is(10));
     }
+
 }

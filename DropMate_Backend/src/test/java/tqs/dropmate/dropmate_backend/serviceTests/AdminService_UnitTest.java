@@ -13,17 +13,16 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import tqs.dropmate.dropmate_backend.datamodel.AssociatedCollectionPoint;
 import tqs.dropmate.dropmate_backend.datamodel.Parcel;
 import tqs.dropmate.dropmate_backend.datamodel.Status;
+import tqs.dropmate.dropmate_backend.exceptions.ResourceNotFoundException;
 import tqs.dropmate.dropmate_backend.repositories.AssociatedCollectionPointRepository;
 import tqs.dropmate.dropmate_backend.repositories.ParcelRepository;
 import tqs.dropmate.dropmate_backend.services.AdminService;
 
 import java.sql.Date;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -124,6 +123,20 @@ public class AdminService_UnitTest {
     }
 
     @Test
+    public void whenGetAllParcelWaitPickup_thenReturnOnlyPickup(){
+        // Set up Expectations
+        when(parcelRepository.findAll()).thenReturn(allParcels);
+
+        // Verify the result is as expected
+        List<Parcel> returnedParcels = adminService.getAllParcelsWaitingPickup();
+        assertThat(returnedParcels).hasSize(2);
+        assertThat(returnedParcels).extracting(Parcel::getParcelStatus).containsOnly(Status.WAITING_FOR_PICKUP);
+
+        // Verify that the external API was called and Verify that the cache was called twice - to query and to add the new record
+        Mockito.verify(parcelRepository, VerificationModeFactory.times(1)).findAll();
+    }
+
+    @Test
     public void whenGetAllOperationalStatistics_thenReturnAll(){
         Map<String, Integer> statsMap = new HashMap<>();
 
@@ -151,16 +164,49 @@ public class AdminService_UnitTest {
         Mockito.verify(acpRepository, VerificationModeFactory.times(1)).findAll();
     }
 
-    public void whenGetAllParcelWaitPickup_thenReturnOnlyPickup(){
+    @Test
+    public void whenGetSpecificOperationalStatisics_withValidACP_thenReturnOnlySpecificACP() throws ResourceNotFoundException {
         // Set up Expectations
-        when(parcelRepository.findAll()).thenReturn(allParcels);
+        Map<String, Integer> statsMap = new HashMap<>();
+
+        statsMap.put("total_parcels", 10);
+        statsMap.put("parcels_in_delivery", 5);
+        statsMap.put("parcels_waiting_pickup", 3);
+
+        pickupPointOne.setOperationalStatistics(statsMap);
+
+        when(acpRepository.findById(5)).thenReturn(Optional.ofNullable(pickupPointOne));
 
         // Verify the result is as expected
-        List<Parcel> returnedParcels = adminService.getAllParcelsWaitingPickup();
-        assertThat(returnedParcels).hasSize(2);
-        assertThat(returnedParcels).extracting(Parcel::getParcelStatus).containsOnly(Status.WAITING_FOR_PICKUP);
+        Map<String, Integer> returnedStats = adminService.getSpecificACPStatistics(5);
+
+        assertThat(returnedStats).hasSize(4);
+        assertThat(returnedStats).containsKeys("total_parcels", "parcels_in_delivery", "parcels_waiting_pickup", "deliveryLimit");
+        assertThat(returnedStats.get("deliveryLimit")).isEqualTo(10);
 
         // Verify that the external API was called and Verify that the cache was called twice - to query and to add the new record
-        Mockito.verify(parcelRepository, VerificationModeFactory.times(1)).findAll();
+        Mockito.verify(acpRepository, VerificationModeFactory.times(1)).findById(Mockito.any());
+    }
+
+    @Test
+    public void whenGetSpecificOperationalStatisics_withInvalidACP_thenReturnOnlySpecificACP() throws ResourceNotFoundException {
+        // Set up Expectations
+        Map<String, Integer> statsMap = new HashMap<>();
+
+        statsMap.put("total_parcels", 10);
+        statsMap.put("parcels_in_delivery", 5);
+        statsMap.put("parcels_waiting_pickup", 3);
+
+        pickupPointOne.setOperationalStatistics(statsMap);
+
+        when(acpRepository.findById(-5)).thenReturn(Optional.empty());
+
+        // Verify the result is as expected
+        assertThatThrownBy(() -> {
+            adminService.getSpecificACPStatistics(-5);
+        }).isInstanceOf(ResourceNotFoundException.class).hasMessageContainingAll("Couldn't find ACP with the ID -5!");
+
+        // Verify that the external API was called and Verify that the cache was called twice - to query and to add the new record
+        Mockito.verify(acpRepository, VerificationModeFactory.times(1)).findById(Mockito.any());
     }
 }

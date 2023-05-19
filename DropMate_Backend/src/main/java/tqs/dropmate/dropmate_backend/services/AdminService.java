@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import tqs.dropmate.dropmate_backend.datamodel.AssociatedCollectionPoint;
 import tqs.dropmate.dropmate_backend.datamodel.Parcel;
 import tqs.dropmate.dropmate_backend.datamodel.Status;
+import tqs.dropmate.dropmate_backend.exceptions.ResourceNotFoundException;
 import tqs.dropmate.dropmate_backend.repositories.AssociatedCollectionPointRepository;
 import tqs.dropmate.dropmate_backend.repositories.ParcelRepository;
 
@@ -51,5 +52,14 @@ public class AdminService {
                             return statistics;
                         }
                 ));
+    }
+
+    public Map<String, Integer> getSpecificACPStatistics(Integer acpID) throws ResourceNotFoundException {
+        AssociatedCollectionPoint acp = acpRepository.findById(acpID).orElseThrow(() -> new ResourceNotFoundException("Couldn't find ACP with the ID " + acpID + "!"));
+
+        Map<String, Integer> stats = acp.getOperationalStatistics();
+        stats.put("deliveryLimit", acp.getDeliveryLimit());
+
+        return stats;
     }
 }
