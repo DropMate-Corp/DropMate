@@ -20,16 +20,26 @@ public class AdminService {
     @Autowired
     private ParcelRepository parcelRepository;
 
+    /** This method returns all the ACP's associated with the Platform */
     public List<AssociatedCollectionPoint> getAllACP(){
         return acpRepository.findAll();
     }
 
+    /** This method returns all the parcels waiting for delivery */
     public List<Parcel> getAllParcelsWaitingDelivery(){
         return parcelRepository.findAll().stream()
                 .filter(parcel -> parcel.getParcelStatus().equals(Status.IN_DELIVERY))
                 .collect(Collectors.toList());
     }
+  
+    /** This method returns all the parcels waiting for pickup */
+    public List<Parcel> getAllParcelsWaitingPickup(){
+        return parcelRepository.findAll().stream()
+                .filter(parcel -> parcel.getParcelStatus().equals(Status.WAITING_FOR_PICKUP))
+                .collect(Collectors.toList());
+    }
 
+    /** This method returns all the operational statistics of all ACP's */
     public Map<AssociatedCollectionPoint, Map<String, Integer>> getAllACPStatistics() {
         return acpRepository.findAll().stream()
                 .collect(Collectors.toMap(
@@ -41,6 +51,4 @@ public class AdminService {
                             return statistics;
                         }
                 ));
-
-    }
 }
