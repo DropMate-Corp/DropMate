@@ -20,8 +20,11 @@ import tqs.dropmate.dropmate_backend.repositories.ParcelRepository;
 import tqs.dropmate.dropmate_backend.repositories.StoreRepository;
 
 import java.sql.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 
 
@@ -62,8 +65,20 @@ public class DropMate_IntegrationTest {
 
     @BeforeEach
     public void setUp(){
-        testACP = new AssociatedCollectionPoint("PickUpPointTwo", "pickuptwo@mail.pt", "Porto", "Fake address 2, Porto", "935264901", 15 );
+        testACP = new AssociatedCollectionPoint("PickUpPointOne", "pickupone@mail.pt", "Aveiro", "Fake address 1, Aveiro", "953339994", 10 );
+        AssociatedCollectionPoint testACP2 = new AssociatedCollectionPoint("PickUpPointTwo", "pickuptwo@mail.pt", "Porto", "Fake address 2, Porto", "935264901", 15 );
+
+        Map<String, Integer> statsMap = new HashMap<>();
+
+        statsMap.put("total_parcels", 10);
+        statsMap.put("parcels_in_delivery", 5);
+        statsMap.put("parcels_waiting_pickup", 3);
+
+        testACP.setOperationalStatistics(statsMap);
+        testACP2.setOperationalStatistics(statsMap);
+
         acpRepository.saveAndFlush(testACP);
+        acpRepository.saveAndFlush(testACP2);
 
         testStore = new Store("PickUpPointTwo", "pickuptwo@mail.pt", "Porto", "Fake address 2, Porto", "935264901");
         storeRepository.saveAndFlush(testStore);
@@ -78,15 +93,12 @@ public class DropMate_IntegrationTest {
 
     @Test
     public void whenGetAllACP_thenReturn_statusOK() throws Exception {
-        acpRepository.saveAndFlush(new AssociatedCollectionPoint("PickUpPointOne", "pickupone@mail.pt", "Aveiro", "Fake address 1, Aveiro", "953339994", 10 ));
-        acpRepository.saveAndFlush(new AssociatedCollectionPoint("PickUpPointTwo", "pickuptwo@mail.pt", "Porto", "Fake address 2, Porto", "935264901", 15 ));
-
         RestAssured.with().contentType("application/json")
                 .when().get(BASE_URI + randomServerPort + "/dropmate/admin/acp")
                 .then().statusCode(200)
-                .body("size()", is(3)).and()
+                .body("size()", is(2)).and()
                 .body("city", hasItems("Aveiro", "Porto")).and()
-                .body("[2].email", is("pickuptwo@mail.pt"));
+                .body("[1].email", is("pickuptwo@mail.pt"));
 
     }
 
@@ -108,6 +120,23 @@ public class DropMate_IntegrationTest {
     }
 
     @Test
+    public void whenGetAllACPOperationalStatistics_thenReturn_statusOK() throws Exception {
+        // Doing the test
+        io.restassured.path.json.JsonPath path  = RestAssured.with().contentType("application/json")
+                .when().get(BASE_URI + randomServerPort + "/dropmate/admin/acp/statistics")
+                .then().statusCode(200)
+                .extract().response().jsonPath();
+
+        Map<String, Map<String, Object>> responseMap = path.getMap("$");
+        
+        for (Map<String, Object> value : responseMap.values()) {
+            assertThat(value.containsKey("total_parcels"), equalTo(true));
+            assertThat(value.containsKey("parcels_waiting_pickup"), equalTo(true));
+            assertThat(value.containsKey("deliveryLimit"), equalTo(true));
+            assertThat(value.containsKey("parcels_in_delivery"), equalTo(true));
+        }
+    }
+
     public void whenGetAllAParcelsWaitPickup_thenReturn_statusOK() throws Exception {
         parcelRepository.saveAndFlush(new Parcel("DEL123", "PCK123", 1.5, null, null, Status.IN_DELIVERY, testACP, testStore));
         parcelRepository.saveAndFlush(new Parcel("DEL456", "PCK456", 3.2, null, null, Status.IN_DELIVERY, testACP, testStore));
@@ -123,5 +152,4 @@ public class DropMate_IntegrationTest {
                 .body("parcelStatus", hasItems(Status.WAITING_FOR_PICKUP.toString())).and()
                 .body("pickupCode", hasItems("PCK356", "PCK803"));
     }
-
 }

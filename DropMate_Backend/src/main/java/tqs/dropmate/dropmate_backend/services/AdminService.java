@@ -8,7 +8,9 @@ import tqs.dropmate.dropmate_backend.datamodel.Status;
 import tqs.dropmate.dropmate_backend.repositories.AssociatedCollectionPointRepository;
 import tqs.dropmate.dropmate_backend.repositories.ParcelRepository;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -29,11 +31,25 @@ public class AdminService {
                 .filter(parcel -> parcel.getParcelStatus().equals(Status.IN_DELIVERY))
                 .collect(Collectors.toList());
     }
-
+  
     /** This method returns all the parcels waiting for pickup */
     public List<Parcel> getAllParcelsWaitingPickup(){
         return parcelRepository.findAll().stream()
                 .filter(parcel -> parcel.getParcelStatus().equals(Status.WAITING_FOR_PICKUP))
                 .collect(Collectors.toList());
+    }
+
+    /** This method returns all the operational statistics of all ACP's */
+    public Map<AssociatedCollectionPoint, Map<String, Integer>> getAllACPStatistics() {
+        return acpRepository.findAll().stream()
+                .collect(Collectors.toMap(
+                        acp -> acp,
+                        acp -> {
+
+                            Map<String, Integer> statistics = new HashMap<>(acp.getOperationalStatistics());
+                            statistics.put("deliveryLimit", acp.getDeliveryLimit());
+                            return statistics;
+                        }
+                ));
     }
 }

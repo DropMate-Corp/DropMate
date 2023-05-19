@@ -1,12 +1,9 @@
 package tqs.dropmate.dropmate_backend.controllers;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import tqs.dropmate.dropmate_backend.datamodel.*;
-import tqs.dropmate.dropmate_backend.services.ACPService;
 import tqs.dropmate.dropmate_backend.services.AdminService;
-import tqs.dropmate.dropmate_backend.services.StoreService;
 import tqs.dropmate.dropmate_backend.utils.SuccessfulRequest;
 
 import java.util.List;
@@ -71,8 +68,8 @@ public class AdminController {
 
     /** This method returns the statistics associated with all ACPs */
     @GetMapping("/acp/statistics")
-    public ResponseEntity<Map<AssociatedCollectionPoint, Map<String, String>>> getAllACPStatistics(){
-        return null;
+    public ResponseEntity<Map<AssociatedCollectionPoint, Map<String, Integer>>> getAllACPStatistics(){
+        return ResponseEntity.ok().body(adminService.getAllACPStatistics());
     }
 
     /** This method returns the statistics associated with a specific ACP */
