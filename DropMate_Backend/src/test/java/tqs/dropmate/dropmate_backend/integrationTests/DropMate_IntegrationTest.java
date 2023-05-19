@@ -165,4 +165,11 @@ public class DropMate_IntegrationTest {
                 .body("deliveryLimit", is(10));
     }
 
+    @Test
+    public void whenGetSpecificOperationStatistics_withInvalidID_thenReturn_statusOK() {
+        RestAssured.with().contentType("application/json")
+                .when().get(BASE_URI + randomServerPort + "/dropmate/admin/acp/-21/statistics")
+                .then().statusCode(404);
+    }
+
 }
