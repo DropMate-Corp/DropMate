@@ -51,4 +51,5 @@ public class AdminService {
                             return statistics;
                         }
                 ));
+    }
 }
