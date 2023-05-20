@@ -92,7 +92,46 @@ public class DropMate_IntegrationTest {
     }
 
     @Test
+    @Order(1)
+    public void whenGetSpecificOperationStatistics_withValidID_thenReturn_statusOK() {
+        RestAssured.with().contentType("application/json")
+                .when().get(BASE_URI + randomServerPort + "/dropmate/admin/acp/1/statistics")
+                .then().statusCode(200)
+                .body("total_parcels", is(10)).and()
+                .body("parcels_waiting_pickup", is(3)).and()
+                .body("parcels_in_delivery", is(5)).and()
+                .body("deliveryLimit", is(10));
+    }
+
+    @Test
+    @Order(2)
+    public void whenGetSpecificOperationStatistics_withInvalidID_thenReturn_statusOK() {
+        RestAssured.with().contentType("application/json")
+                .when().get(BASE_URI + randomServerPort + "/dropmate/admin/acp/-21/statistics")
+                .then().statusCode(404);
+    }
+
+    @Test
     @Order(3)
+    public void whenGetSpecificACPDetails_withValidID_thenReturn_statusOK() {
+        RestAssured.with().contentType("application/json")
+                .when().get(BASE_URI + randomServerPort + "/dropmate/admin/acp/5")
+                .then().statusCode(200)
+                .body("city", is("Aveiro")).and()
+                .body("address", is("Fake address 1, Aveiro")).and()
+                .body("deliveryLimit", is(10));
+    }
+
+    @Test
+    @Order(4)
+    public void whenGetSpecificACPDetails_withInvalidID_thenReturn_statusOK() {
+        RestAssured.with().contentType("application/json")
+                .when().get(BASE_URI + randomServerPort + "/dropmate/admin/acp/-21")
+                .then().statusCode(404);
+    }
+
+    @Test
+    @Order(5)
     public void whenGetAllACP_thenReturn_statusOK() throws Exception {
         RestAssured.with().contentType("application/json")
                 .when().get(BASE_URI + randomServerPort + "/dropmate/admin/acp")
@@ -104,7 +143,7 @@ public class DropMate_IntegrationTest {
     }
 
     @Test
-    @Order(4)
+    @Order(6)
     public void whenGetAllAParcelsWaitDelivery_thenReturn_statusOK() throws Exception {
         parcelRepository.saveAndFlush(new Parcel("DEL123", "PCK123", 1.5, null, null, Status.IN_DELIVERY, testACP, testStore));
         parcelRepository.saveAndFlush(new Parcel("DEL456", "PCK456", 3.2, null, null, Status.IN_DELIVERY, testACP, testStore));
@@ -122,7 +161,7 @@ public class DropMate_IntegrationTest {
     }
 
     @Test
-    @Order(5)
+    @Order(7)
     public void whenGetAllAParcelsWaitPickup_thenReturn_statusOK() throws Exception {
         parcelRepository.saveAndFlush(new Parcel("DEL123", "PCK123", 1.5, null, null, Status.IN_DELIVERY, testACP, testStore));
         parcelRepository.saveAndFlush(new Parcel("DEL456", "PCK456", 3.2, null, null, Status.IN_DELIVERY, testACP, testStore));
@@ -140,7 +179,7 @@ public class DropMate_IntegrationTest {
     }
 
     @Test
-    @Order(6)
+    @Order(8)
     public void whenGetAllACPOperationalStatistics_thenReturn_statusOK() throws Exception {
         // Doing the test
         io.restassured.path.json.JsonPath path  = RestAssured.with().contentType("application/json")
@@ -156,26 +195,6 @@ public class DropMate_IntegrationTest {
             assertThat(value.containsKey("deliveryLimit"), equalTo(true));
             assertThat(value.containsKey("parcels_in_delivery"), equalTo(true));
         }
-    }
-
-    @Test
-    @Order(1)
-    public void whenGetSpecificOperationStatistics_withValidID_thenReturn_statusOK() {
-             RestAssured.with().contentType("application/json")
-                .when().get(BASE_URI + randomServerPort + "/dropmate/admin/acp/1/statistics")
-                .then().statusCode(200)
-                .body("total_parcels", is(10)).and()
-                .body("parcels_waiting_pickup", is(3)).and()
-                .body("parcels_in_delivery", is(5)).and()
-                .body("deliveryLimit", is(10));
-    }
-
-    @Test
-    @Order(2)
-    public void whenGetSpecificOperationStatistics_withInvalidID_thenReturn_statusOK() {
-        RestAssured.with().contentType("application/json")
-                .when().get(BASE_URI + randomServerPort + "/dropmate/admin/acp/-21/statistics")
-                .then().statusCode(404);
     }
 
 }

@@ -62,4 +62,9 @@ public class AdminService {
 
         return stats;
     }
+
+    /** This method returns the details associated with a specific ACP */
+    public AssociatedCollectionPoint getACPDetails(Integer acpID) throws ResourceNotFoundException {
+        return acpRepository.findById(acpID).orElseThrow(() -> new ResourceNotFoundException("Couldn't find ACP with the ID " + acpID + "!"));
+    }
 }

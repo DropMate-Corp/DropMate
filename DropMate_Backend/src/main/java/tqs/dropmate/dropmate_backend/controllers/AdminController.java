@@ -46,18 +46,19 @@ public class AdminController {
                                                        @RequestParam(name = "telephone", required = false) String telephone,
                                                        @RequestParam(name = "city", required = false) String city,
                                                        @RequestParam(name = "address", required = false) String address){
+        //return ResponseEntity.ok().body(adminService.updateACPDetails(email, name, telephone, city, address));
         return null;
     }
 
     /** This method returns the details associated with a specific ACP */
     @GetMapping("/acp/{acpID}")
-    public ResponseEntity<AssociatedCollectionPoint> getACPDetails(@PathVariable(name = "acpID") Long acpID){
-        return null;
+    public ResponseEntity<AssociatedCollectionPoint> getACPDetails(@PathVariable(name = "acpID") Integer acpID) throws ResourceNotFoundException {
+        return ResponseEntity.ok().body(adminService.getACPDetails(acpID));
     }
 
     /** Deletes an ACP */
     @DeleteMapping ("/acp/{acpID}")
-    public ResponseEntity<SuccessfulRequest> deleteACP(@PathVariable(name = "acpID") Long acpID){
+    public ResponseEntity<SuccessfulRequest> deleteACP(@PathVariable(name = "acpID") Integer acpID){
         return null;
     }
 
@@ -93,13 +94,15 @@ public class AdminController {
 
     /** This method returns all the parcels waiting for delivery at a specific ACP */
     @GetMapping("/parcels/{acpID}/delivery")
-    public ResponseEntity<List<Parcel>> getAllParcelsWaitingDeliveryAtACP(@PathVariable(name = "acpID") Long acpID){
+    public ResponseEntity<List<Parcel>> getAllParcelsWaitingDeliveryAtACP(@PathVariable(name = "acpID") Integer acpID){
+        //return ResponseEntity.ok().body(adminService.getParcelsWaitingDeliveryAtACP(acpID));
         return null;
     }
 
     /** This method returns all the parcels waiting for pickup at a specific ACP */
     @GetMapping("/parcels/{acpID}/pickup")
-    public ResponseEntity<List<Parcel>> getAllParcelsWaitingPickupAtACP(@PathVariable(name = "acpID") Long acpID){
+    public ResponseEntity<List<Parcel>> getAllParcelsWaitingPickupAtACP(@PathVariable(name = "acpID") Integer acpID){
+        //return ResponseEntity.ok().body(adminService.getParcelsWaitingPickupAtACP(acpID));
         return null;
     }
 

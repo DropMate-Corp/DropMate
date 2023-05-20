@@ -189,21 +189,41 @@ public class AdminService_UnitTest {
     }
 
     @Test
-    public void whenGetSpecificOperationalStatisics_withInvalidACP_thenReturnOnlySpecificACP() throws ResourceNotFoundException {
+    public void whenGetSpecificOperationalStatisics_withInvalidACP_thenReturnException() throws ResourceNotFoundException {
         // Set up Expectations
-        Map<String, Integer> statsMap = new HashMap<>();
-
-        statsMap.put("total_parcels", 10);
-        statsMap.put("parcels_in_delivery", 5);
-        statsMap.put("parcels_waiting_pickup", 3);
-
-        pickupPointOne.setOperationalStatistics(statsMap);
-
         when(acpRepository.findById(-5)).thenReturn(Optional.empty());
 
         // Verify the result is as expected
         assertThatThrownBy(() -> {
             adminService.getSpecificACPStatistics(-5);
+        }).isInstanceOf(ResourceNotFoundException.class).hasMessageContainingAll("Couldn't find ACP with the ID -5!");
+
+        // Verify that the external API was called and Verify that the cache was called twice - to query and to add the new record
+        Mockito.verify(acpRepository, VerificationModeFactory.times(1)).findById(Mockito.any());
+    }
+
+    @Test
+    public void getACPDetails_withValidACP_thenReturnDetails() throws ResourceNotFoundException {
+        // Set up Expectations
+        when(acpRepository.findById(5)).thenReturn(Optional.ofNullable(pickupPointOne));
+
+        // Verify the result is as expected
+        AssociatedCollectionPoint acp = adminService.getACPDetails(5);
+
+        assertThat(acp).isEqualTo(pickupPointOne);
+
+        // Verify that the external API was called and Verify that the cache was called twice - to query and to add the new record
+        Mockito.verify(acpRepository, VerificationModeFactory.times(1)).findById(Mockito.any());
+    }
+
+    @Test
+    public void getACPDetails_withInvalidACP_thenReturnException() throws ResourceNotFoundException {
+        // Set up Expectations
+        when(acpRepository.findById(-5)).thenReturn(Optional.empty());
+
+        // Verify the result is as expected
+        assertThatThrownBy(() -> {
+            adminService.getACPDetails(-5);
         }).isInstanceOf(ResourceNotFoundException.class).hasMessageContainingAll("Couldn't find ACP with the ID -5!");
 
         // Verify that the external API was called and Verify that the cache was called twice - to query and to add the new record

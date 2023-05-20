@@ -2,7 +2,6 @@ package tqs.dropmate.dropmate_backend.boundaryTests;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -186,6 +185,27 @@ public class AdminController_withMockServiceTest {
 
         mockMvc.perform(
                         get("/dropmate/admin/acp/-2/statistics").contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    public void whenGetSpecificACPDetails_withValidID_thenReturn_statusOK() throws Exception {
+        when(adminService.getACPDetails(2)).thenReturn(allACP.get(1));
+
+        mockMvc.perform(
+                        get("/dropmate/admin/acp/2").contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.city", is("Porto")))
+                .andExpect(jsonPath("$.address", is("Fake address 2, Porto")))
+                .andExpect(jsonPath("$.deliveryLimit", is(15)));
+    }
+
+    @Test
+    public void whenGetSpecificACPDetails_withInvalidID_thenReturn_statusOK() throws Exception {
+        when(adminService.getACPDetails(-2)).thenThrow(new ResourceNotFoundException("Couldn't find ACP with the ID -2!"));
+
+        mockMvc.perform(
+                        get("/dropmate/admin/acp/-2").contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound());
     }
 }
