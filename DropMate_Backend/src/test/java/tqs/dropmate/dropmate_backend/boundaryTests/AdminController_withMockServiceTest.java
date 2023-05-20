@@ -40,18 +40,20 @@ public class AdminController_withMockServiceTest {
     private List<AssociatedCollectionPoint> allACP;
     private List<Parcel> parcelsWaitingDelivery;
     private List<Parcel> parcelsWaitingPickup;
+    private AssociatedCollectionPoint pickupPointOne;
+    private AssociatedCollectionPoint pickupPointTwo;
 
     @BeforeEach
     public void setUp(){
         // Creating test pickup points
-        AssociatedCollectionPoint pickupPointOne = new AssociatedCollectionPoint();
+        pickupPointOne = new AssociatedCollectionPoint();
         pickupPointOne.setCity("Aveiro");
         pickupPointOne.setAddress("Fake address 1, Aveiro");
         pickupPointOne.setEmail("pickupone@mail.pt");
         pickupPointOne.setDeliveryLimit(10);
         pickupPointOne.setTelephoneNumber("953339994");
 
-        AssociatedCollectionPoint pickupPointTwo = new AssociatedCollectionPoint();
+        pickupPointTwo = new AssociatedCollectionPoint();
         pickupPointTwo.setCity("Porto");
         pickupPointTwo.setAddress("Fake address 2, Porto");
         pickupPointTwo.setEmail("pickuptwo@mail.pt");
@@ -91,6 +93,7 @@ public class AdminController_withMockServiceTest {
     public void tearDown(){
         allACP = null;
         parcelsWaitingDelivery = null;
+        parcelsWaitingPickup = null;
     }
 
     @Test
@@ -128,6 +131,49 @@ public class AdminController_withMockServiceTest {
                 .andExpect(jsonPath("$[0].deliveryCode", is("DEL790")))
                 .andExpect(jsonPath("$[1].parcelStatus", is(Status.WAITING_FOR_PICKUP.toString())))
                 .andExpect(jsonPath("$[1].pickupCode", is("PCK803")));
+    }
+
+    @Test
+    public void whenGetParcelsWaitingDelivery_atSpecificACP_withValidID_thenReturn_StatusOK() throws Exception {
+        when(adminService.getParcelsWaitingDeliveryAtACP(0)).thenReturn(parcelsWaitingDelivery);
+
+        mockMvc.perform(
+                        get("/dropmate/admin/parcels/0/delivery").contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(2)))
+                .andExpect(jsonPath("$[0].deliveryCode", is("DEL123")))
+                .andExpect(jsonPath("$[1].parcelStatus", is(Status.IN_DELIVERY.toString())));
+    }
+
+    @Test
+    public void whenGetParcelsWaitingPickup_atSpecificACP_withValidID_thenReturn_StatusOK() throws Exception {
+            when(adminService.getParcelsWaitingPickupAtACP(0)).thenReturn(parcelsWaitingPickup);
+
+            mockMvc.perform(
+                            get("/dropmate/admin/parcels/0/pickup").contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$", hasSize(2)))
+                    .andExpect(jsonPath("$[0].deliveryCode", is("DEL790")))
+                    .andExpect(jsonPath("$[1].parcelStatus", is(Status.WAITING_FOR_PICKUP.toString())))
+                    .andExpect(jsonPath("$[1].pickupCode", is("PCK803")));
+    }
+
+    @Test
+    public void whenGetParcelsWaitingDelivery_atSpecificACP_withInvalidID_thenReturn_statusNotFound() throws Exception {
+        when(adminService.getParcelsWaitingDeliveryAtACP(-2)).thenThrow(new ResourceNotFoundException("Couldn't find ACP with the ID -2!"));
+
+        mockMvc.perform(
+                        get("/dropmate/admin/parcels/-2/delivery").contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    public void whenGetParcelsWaitingPickup_atSpecificACP_withInvalidID_thenReturn_statusNotFound() throws Exception {
+        when(adminService.getParcelsWaitingPickupAtACP(-2)).thenThrow(new ResourceNotFoundException("Couldn't find ACP with the ID -2!"));
+
+        mockMvc.perform(
+                        get("/dropmate/admin/parcels/-2/pickup").contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound());
     }
 
     @Test
@@ -180,7 +226,7 @@ public class AdminController_withMockServiceTest {
     }
 
     @Test
-    public void whenGetSpecificACPOperationalStatistics_withInvalidID_thenReturn_statusOK() throws Exception {
+    public void whenGetSpecificACPOperationalStatistics_withInvalidID_thenReturn_statusNotFound() throws Exception {
         when(adminService.getSpecificACPStatistics(-2)).thenThrow(new ResourceNotFoundException("Couldn't find ACP with the ID -2!"));
 
         mockMvc.perform(
@@ -201,7 +247,7 @@ public class AdminController_withMockServiceTest {
     }
 
     @Test
-    public void whenGetSpecificACPDetails_withInvalidID_thenReturn_statusOK() throws Exception {
+    public void whenGetSpecificACPDetails_withInvalidID_thenReturn_statusNotFound() throws Exception {
         when(adminService.getACPDetails(-2)).thenThrow(new ResourceNotFoundException("Couldn't find ACP with the ID -2!"));
 
         mockMvc.perform(

@@ -94,16 +94,14 @@ public class AdminController {
 
     /** This method returns all the parcels waiting for delivery at a specific ACP */
     @GetMapping("/parcels/{acpID}/delivery")
-    public ResponseEntity<List<Parcel>> getAllParcelsWaitingDeliveryAtACP(@PathVariable(name = "acpID") Integer acpID){
-        //return ResponseEntity.ok().body(adminService.getParcelsWaitingDeliveryAtACP(acpID));
-        return null;
+    public ResponseEntity<List<Parcel>> getAllParcelsWaitingDeliveryAtACP(@PathVariable(name = "acpID") Integer acpID) throws ResourceNotFoundException {
+        return ResponseEntity.ok().body(adminService.getParcelsWaitingDeliveryAtACP(acpID));
     }
 
     /** This method returns all the parcels waiting for pickup at a specific ACP */
     @GetMapping("/parcels/{acpID}/pickup")
-    public ResponseEntity<List<Parcel>> getAllParcelsWaitingPickupAtACP(@PathVariable(name = "acpID") Integer acpID){
-        //return ResponseEntity.ok().body(adminService.getParcelsWaitingPickupAtACP(acpID));
-        return null;
+    public ResponseEntity<List<Parcel>> getAllParcelsWaitingPickupAtACP(@PathVariable(name = "acpID") Integer acpID) throws ResourceNotFoundException {
+        return ResponseEntity.ok().body(adminService.getParcelsWaitingPickupAtACP(acpID));
     }
 
     /** Returns all the Operators associated with each ACP */

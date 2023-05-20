@@ -31,7 +31,7 @@ import static org.hamcrest.Matchers.*;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @Testcontainers
 @TestPropertySource(properties = "spring.jpa.hibernate.ddl-auto=create")
-//@TestPropertySource(locations = "classpath:application-integrationtest.properties")
+//@TestPropertySource(locations = "classpath:application-test.properties")
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class DropMate_IntegrationTest {
     private final static String BASE_URI = "http://localhost:";
@@ -47,6 +47,7 @@ public class DropMate_IntegrationTest {
     private StoreRepository storeRepository;
 
     private AssociatedCollectionPoint testACP;
+    private AssociatedCollectionPoint testACP2;
     private Store testStore;
 
 
@@ -66,7 +67,7 @@ public class DropMate_IntegrationTest {
     @BeforeEach
     public void setUp(){
         testACP = new AssociatedCollectionPoint("PickUpPointOne", "pickupone@mail.pt", "Aveiro", "Fake address 1, Aveiro", "953339994", 10 );
-        AssociatedCollectionPoint testACP2 = new AssociatedCollectionPoint("PickUpPointTwo", "pickuptwo@mail.pt", "Porto", "Fake address 2, Porto", "935264901", 15 );
+        testACP2 = new AssociatedCollectionPoint("PickUpPointTwo", "pickuptwo@mail.pt", "Porto", "Fake address 2, Porto", "935264901", 15 );
 
         Map<String, Integer> statsMap = new HashMap<>();
 
@@ -105,7 +106,7 @@ public class DropMate_IntegrationTest {
 
     @Test
     @Order(2)
-    public void whenGetSpecificOperationStatistics_withInvalidID_thenReturn_statusOK() {
+    public void whenGetSpecificOperationStatistics_withInvalidID_thenReturn_statusNotFound() {
         RestAssured.with().contentType("application/json")
                 .when().get(BASE_URI + randomServerPort + "/dropmate/admin/acp/-21/statistics")
                 .then().statusCode(404);
@@ -124,7 +125,7 @@ public class DropMate_IntegrationTest {
 
     @Test
     @Order(4)
-    public void whenGetSpecificACPDetails_withInvalidID_thenReturn_statusOK() {
+    public void whenGetSpecificACPDetails_withInvalidID_thenReturn_statusNotFound() {
         RestAssured.with().contentType("application/json")
                 .when().get(BASE_URI + randomServerPort + "/dropmate/admin/acp/-21")
                 .then().statusCode(404);
@@ -180,6 +181,58 @@ public class DropMate_IntegrationTest {
 
     @Test
     @Order(8)
+    public void whenGetParcelsWaitingDelivery_atSpecificACP_withValidID_thenReturn_StatusOK() throws Exception {
+        parcelRepository.saveAndFlush(new Parcel("DEL123", "PCK123", 1.5, null, null, Status.IN_DELIVERY, testACP, testStore));
+        parcelRepository.saveAndFlush(new Parcel("DEL456", "PCK456", 3.2, null, null, Status.IN_DELIVERY, testACP2, testStore));
+        parcelRepository.saveAndFlush(new Parcel("DEL790", "PCK356", 1.5, new Date(2023, 5, 22), null, Status.WAITING_FOR_PICKUP, testACP, testStore));
+        parcelRepository.saveAndFlush(new Parcel("DEL367", "PCK803", 2.2, new Date(2023, 5, 22), null, Status.WAITING_FOR_PICKUP, testACP2, testStore));
+        parcelRepository.saveAndFlush(new Parcel("DEL000", "PCK257", 1.5, new Date(2023, 5, 22), new Date(2023, 5, 28), Status.DELIVERED, testACP, testStore));
+        parcelRepository.saveAndFlush(new Parcel("DEL843", "PCK497", 1.6, new Date(2023, 5, 22), new Date(2023, 5, 29), Status.DELIVERED, testACP2, testStore));
+
+        RestAssured.with().contentType("application/json")
+                .when().get(BASE_URI + randomServerPort + "/dropmate/admin/parcels/15/delivery")
+                .then().statusCode(200)
+                .body("size()", is(1)).and()
+                .body("parcelStatus", hasItems(Status.IN_DELIVERY.toString())).and()
+                .body("pickupCode", hasItems("PCK123"));
+    }
+
+    @Test
+    @Order(9)
+    public void whenGetParcelsWaitingPickup_atSpecificACP_withValidID_thenReturn_StatusOK() throws Exception {
+        parcelRepository.saveAndFlush(new Parcel("DEL123", "PCK123", 1.5, null, null, Status.IN_DELIVERY, testACP, testStore));
+        parcelRepository.saveAndFlush(new Parcel("DEL456", "PCK456", 3.2, null, null, Status.IN_DELIVERY, testACP2, testStore));
+        parcelRepository.saveAndFlush(new Parcel("DEL790", "PCK356", 1.5, new Date(2023, 5, 22), null, Status.WAITING_FOR_PICKUP, testACP, testStore));
+        parcelRepository.saveAndFlush(new Parcel("DEL367", "PCK803", 2.2, new Date(2023, 5, 22), null, Status.WAITING_FOR_PICKUP, testACP2, testStore));
+        parcelRepository.saveAndFlush(new Parcel("DEL000", "PCK257", 1.5, new Date(2023, 5, 22), new Date(2023, 5, 28), Status.DELIVERED, testACP, testStore));
+        parcelRepository.saveAndFlush(new Parcel("DEL843", "PCK497", 1.6, new Date(2023, 5, 22), new Date(2023, 5, 29), Status.DELIVERED, testACP2, testStore));
+
+        RestAssured.with().contentType("application/json")
+                .when().get(BASE_URI + randomServerPort + "/dropmate/admin/parcels/17/pickup")
+                .then().statusCode(200)
+                .body("size()", is(1)).and()
+                .body("parcelStatus", hasItems(Status.WAITING_FOR_PICKUP.toString())).and()
+                .body("pickupCode", hasItems("PCK356"));
+    }
+
+    @Test
+    @Order(10)
+    public void whenGetParcelsWaitingDelivery_atSpecificACP_withInvalidID_thenReturn_statusNotFound() throws Exception {
+        RestAssured.with().contentType("application/json")
+                .when().get(BASE_URI + randomServerPort + "/dropmate/admin/parcels/-5/delivery")
+                .then().statusCode(404);
+    }
+
+    @Test
+    @Order(11)
+    public void whenGetParcelsWaitingPickup_atSpecificACP_withInvalidID_thenReturn_statusNotFound() throws Exception {
+        RestAssured.with().contentType("application/json")
+                .when().get(BASE_URI + randomServerPort + "/dropmate/admin/parcels/-5/pickup")
+                .then().statusCode(404);
+    }
+
+    @Test
+    @Order(12)
     public void whenGetAllACPOperationalStatistics_thenReturn_statusOK() throws Exception {
         // Doing the test
         io.restassured.path.json.JsonPath path  = RestAssured.with().contentType("application/json")
