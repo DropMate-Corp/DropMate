@@ -4,11 +4,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import tqs.dropmate.dropmate_backend.datamodel.AssociatedCollectionPoint;
 import tqs.dropmate.dropmate_backend.datamodel.Parcel;
+import tqs.dropmate.dropmate_backend.datamodel.PendingACP;
 import tqs.dropmate.dropmate_backend.datamodel.Status;
 import tqs.dropmate.dropmate_backend.exceptions.ResourceNotFoundException;
 import tqs.dropmate.dropmate_backend.repositories.AssociatedCollectionPointRepository;
 import tqs.dropmate.dropmate_backend.repositories.ParcelRepository;
-import tqs.dropmate.dropmate_backend.utils.SuccessfulRequest;
+import tqs.dropmate.dropmate_backend.repositories.PendingAssociatedCollectionPointRepository;
 
 import java.util.HashMap;
 import java.util.List;
@@ -21,6 +22,8 @@ public class AdminService {
     private AssociatedCollectionPointRepository acpRepository;
     @Autowired
     private ParcelRepository parcelRepository;
+    @Autowired
+    private PendingAssociatedCollectionPointRepository pendingACPRepository;
 
     /** This method returns all the ACP's associated with the Platform */
     public List<AssociatedCollectionPoint> getAllACP(){
@@ -117,7 +120,7 @@ public class AdminService {
      * @param telephone - Updated telephone for the ACP. Could be null
      * @param city - Updated city for the ACP. Could be null
      * @param address - Updated address for the ACP. Could be null
-     * @return a message stating the Request was Succesful
+     * @return the updated ACP
      * @throws ResourceNotFoundException - Exception raised when an ID doesn't exist in the database
      * */
     public AssociatedCollectionPoint updateACPDetails(Integer acpID, String email, String name, String telephone, String city, String address) throws ResourceNotFoundException {
@@ -132,6 +135,31 @@ public class AdminService {
         acpRepository.save(acp);
 
         return acp;
+    }
+
+    /** Adds a new ACP to the pending list
+     * @param email - Updated email for the ACP. Could be null
+     * @param name - Updated name for the ACP. Could be null
+     * @param telephoneNumber - Updated telephone for the ACP. Could be null
+     * @param city - Updated city for the ACP. Could be null
+     * @param address - Updated address for the ACP. Could be null
+     * @param description - A small text explaining why this store wants to be a Partner ACP
+     * @return the entity for the new Pending ACP, including its ID
+     * */
+    public PendingACP addNewPendingAcp(String name, String email, String city, String address, String telephoneNumber, String description){
+        PendingACP newCandidateACP = new PendingACP();
+
+        newCandidateACP.setName(name);
+        newCandidateACP.setEmail(email);
+        newCandidateACP.setCity(city);
+        newCandidateACP.setAddress(address);
+        newCandidateACP.setTelephoneNumber(telephoneNumber);
+        newCandidateACP.setDescription(description);
+        newCandidateACP.setStatus(0);
+
+        pendingACPRepository.save(newCandidateACP);
+
+        return pendingACPRepository.findFirstByName(name);
     }
 
 

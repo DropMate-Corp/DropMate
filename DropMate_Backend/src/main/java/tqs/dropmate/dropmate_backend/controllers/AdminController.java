@@ -33,12 +33,6 @@ public class AdminController {
         return ResponseEntity.ok().body(adminService.getAllACP());
     }
 
-    /** This method is used to associate a new ACP with the platform */
-    @PostMapping("/acp")
-    public ResponseEntity<SuccessfulRequest> addACP(@RequestParam(name = "acp") AssociatedCollectionPoint acp){
-        return null;
-    }
-
     /** Updates the details of an ACP */
     @PutMapping("/acp/{acpID}")
     public ResponseEntity<AssociatedCollectionPoint> updateACP(@PathVariable(name = "acpID") Integer acpID,
@@ -112,7 +106,15 @@ public class AdminController {
 
     /** Adds a new ACP to the pending list */
     @PostMapping("/acp/pending")
-    public ResponseEntity<SuccessfulRequest> addNewPendingACP(@RequestParam(name = "candidateACP") PendingACP candidateACP){return null;}
+    public ResponseEntity<PendingACP> addNewPendingACP(@RequestParam(name = "name") String name,
+                                                       @RequestParam(name = "email") String email,
+                                                       @RequestParam(name = "city") String city,
+                                                       @RequestParam(name = "address") String address,
+                                                       @RequestParam(name = "telephoneNumber") String telephoneNumber,
+                                                       @RequestParam(name = "description") String description) {
+
+        return ResponseEntity.ok().body(adminService.addNewPendingAcp(name, email, city, address, telephoneNumber, description));
+    }
 
     /** Gets all of the candidate ACP's  */
     @GetMapping("/acp/pending")

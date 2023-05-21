@@ -12,10 +12,12 @@ import org.mockito.internal.verification.VerificationModeFactory;
 import org.mockito.junit.jupiter.MockitoExtension;
 import tqs.dropmate.dropmate_backend.datamodel.AssociatedCollectionPoint;
 import tqs.dropmate.dropmate_backend.datamodel.Parcel;
+import tqs.dropmate.dropmate_backend.datamodel.PendingACP;
 import tqs.dropmate.dropmate_backend.datamodel.Status;
 import tqs.dropmate.dropmate_backend.exceptions.ResourceNotFoundException;
 import tqs.dropmate.dropmate_backend.repositories.AssociatedCollectionPointRepository;
 import tqs.dropmate.dropmate_backend.repositories.ParcelRepository;
+import tqs.dropmate.dropmate_backend.repositories.PendingAssociatedCollectionPointRepository;
 import tqs.dropmate.dropmate_backend.services.AdminService;
 
 import java.sql.Date;
@@ -31,6 +33,8 @@ public class AdminService_UnitTest {
     private AssociatedCollectionPointRepository acpRepository;
     @Mock(lenient = true)
     private ParcelRepository parcelRepository;
+    @Mock(lenient = true)
+    private PendingAssociatedCollectionPointRepository pendingACPRepository;
 
     @InjectMocks
     private AdminService adminService;
@@ -353,6 +357,29 @@ public class AdminService_UnitTest {
 
         // Mockito verifications
         this.verifyFindByIdIsCalled();
+    }
+
+    @Test
+    void addNewCandidateACP_thenReturnNewPendingACP() {
+        PendingACP candidateACP = new PendingACP();
+        candidateACP.setName("Test New ACP");
+        candidateACP.setEmail("newacp@mail.pt");
+        candidateACP.setCity("Aveiro");
+        candidateACP.setAddress("Fake Street no 1, Aveiro");
+        candidateACP.setTelephoneNumber("000000000");
+        candidateACP.setDescription("I am a totally legit pickup point");
+        candidateACP.setStatus(0);
+        candidateACP.setAcpId(1);
+
+        // Set up Expectations
+        when(pendingACPRepository.findFirstByName("Test New ACP")).thenReturn(candidateACP);
+
+        // Verify the result is as expected
+        assertThat(adminService.addNewPendingAcp("Test New ACP", "newacp@mail.pt", "Aveiro", "Fake Street no 1, Aveiro", "000000000", "I am a totally legit pickup point"))
+                .isEqualTo(candidateACP);
+
+        // Mockito verifications
+        Mockito.verify(pendingACPRepository, VerificationModeFactory.times(1)).findFirstByName(Mockito.any());
     }
 
     // Auxilliary functions

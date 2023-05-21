@@ -11,6 +11,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import tqs.dropmate.dropmate_backend.controllers.AdminController;
 import tqs.dropmate.dropmate_backend.datamodel.AssociatedCollectionPoint;
 import tqs.dropmate.dropmate_backend.datamodel.Parcel;
+import tqs.dropmate.dropmate_backend.datamodel.PendingACP;
 import tqs.dropmate.dropmate_backend.datamodel.Status;
 import tqs.dropmate.dropmate_backend.exceptions.ResourceNotFoundException;
 import tqs.dropmate.dropmate_backend.services.AdminService;
@@ -25,8 +26,7 @@ import java.util.stream.Collectors;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.*;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -296,7 +296,7 @@ public class AdminController_withMockServiceTest {
         when(adminService.updateACPDetails(2, null, null, null, "Lalaland", "Nevermore"))
                 .thenReturn(pickupPointTwo);
 
-
+        // Performing the call
         mockMvc.perform(
                         put("/dropmate/admin/acp/2").contentType(MediaType.APPLICATION_JSON)
                                 .param("city", "Lalaland")
@@ -310,14 +310,49 @@ public class AdminController_withMockServiceTest {
 
     @Test
     void whenUpdateACPDetails_withInvalidID_thenReturn_statusNotFound() throws Exception {
+        // Setting up expectations
         when(adminService.updateACPDetails(-2, null, null, null, "Lalaland", "Nevermore"))
                 .thenThrow(new ResourceNotFoundException("Couldn't find ACP with the ID -2!"));;
 
-
+        // Performing the call
         mockMvc.perform(
                         put("/dropmate/admin/acp/-2").contentType(MediaType.APPLICATION_JSON)
                                 .param("city", "Lalaland")
                                 .param("address", "Nevermore"))
                 .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void whenAddNewPendingACP_thenReturn_correspondingACP() throws Exception {
+        // Preparing for the test
+        PendingACP candidateACP = new PendingACP();
+        candidateACP.setName("Test New ACP");
+        candidateACP.setEmail("newacp@mail.pt");
+        candidateACP.setCity("Aveiro");
+        candidateACP.setAddress("Fake Street no 1, Aveiro");
+        candidateACP.setTelephoneNumber("000000000");
+        candidateACP.setDescription("I am a totally legit pickup point");
+        candidateACP.setStatus(0);
+        candidateACP.setAcpId(1);
+
+        // Setting up expectations
+        when(adminService.addNewPendingAcp("Test New ACP", "newacp@mail.pt", "Aveiro", "Fake Street no 1, Aveiro", "000000000", "I am a totally legit pickup point"))
+                .thenReturn(candidateACP);
+
+        // Performing the call
+        mockMvc.perform(
+                        post("/dropmate/admin/acp/pending").contentType(MediaType.APPLICATION_JSON)
+                                .param("city", "Aveiro")
+                                .param("address", "Fake Street no 1, Aveiro")
+                                .param("name", "Test New ACP")
+                                .param("email", "newacp@mail.pt")
+                                .param("telephoneNumber", "000000000")
+                                .param("description", "I am a totally legit pickup point"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.city", is("Aveiro")))
+                .andExpect(jsonPath("$.address", is("Fake Street no 1, Aveiro")))
+                .andExpect(jsonPath("$.email", is("newacp@mail.pt")))
+                .andExpect(jsonPath("$.acpId", is(1)))
+                .andExpect(jsonPath("$.status", is(0)));
     }
 }

@@ -291,4 +291,23 @@ public class DropMate_IntegrationTest {
                 .then().statusCode(404);
     }
 
+    @Test
+    @Disabled
+    void whenAddNewPendingACP_thenReturn_correspondingACP() throws Exception {
+        RestAssured.given().contentType("application/json")
+                .param("city", "Aveiro")
+                .param("address", "Fake Street no 1, Aveiro")
+                .param("name", "Test New ACP")
+                .param("email", "newacp@mail.pt")
+                .param("telephoneNumber", "000000000")
+                .param("description", "I am a totally legit pickup point")
+                .when().post(BASE_URI + randomServerPort + "/dropmate/admin/acp/pending")
+                .then().statusCode(200)
+                .body("city", is("Aveiro")).and()
+                .body("address", is("Fake Street no 1, Aveiro")).and()
+                .body("email", is("newacp@mail.pt")).and()
+                .body("acpId", is(1)).and()
+                .body("status", is(0));
+    }
+
 }
