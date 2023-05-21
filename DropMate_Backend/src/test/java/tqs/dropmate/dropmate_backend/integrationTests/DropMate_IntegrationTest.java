@@ -1,31 +1,36 @@
 package tqs.dropmate.dropmate_backend.integrationTests;
 
 import io.restassured.RestAssured;
+import io.restassured.http.ContentType;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.TestPropertySource;
 import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
-import tqs.dropmate.dropmate_backend.datamodel.AssociatedCollectionPoint;
-import tqs.dropmate.dropmate_backend.datamodel.Parcel;
-import tqs.dropmate.dropmate_backend.datamodel.Status;
-import tqs.dropmate.dropmate_backend.datamodel.Store;
+import tqs.dropmate.dropmate_backend.datamodel.*;
 import tqs.dropmate.dropmate_backend.repositories.AssociatedCollectionPointRepository;
 import tqs.dropmate.dropmate_backend.repositories.ParcelRepository;
+import tqs.dropmate.dropmate_backend.repositories.PendingAssociatedCollectionPointRepository;
 import tqs.dropmate.dropmate_backend.repositories.StoreRepository;
 
 import java.sql.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -45,6 +50,10 @@ public class DropMate_IntegrationTest {
     private ParcelRepository parcelRepository;
     @Autowired
     private StoreRepository storeRepository;
+    @Autowired
+    private PendingAssociatedCollectionPointRepository pendingACPRepository;
+    @Autowired
+    private TestRestTemplate restTemplate;
 
     private AssociatedCollectionPoint testACP;
     private AssociatedCollectionPoint testACP2;
@@ -90,6 +99,7 @@ public class DropMate_IntegrationTest {
         acpRepository.deleteAll();
         parcelRepository.deleteAll();
         storeRepository.deleteAll();
+        pendingACPRepository.deleteAll();
     }
 
     @Test
@@ -293,15 +303,105 @@ public class DropMate_IntegrationTest {
 
     @Test
     @Disabled
-    void whenAddNewPendingACP_thenReturn_correspondingACP() throws Exception {
+    void reviewCandidateACP_withValidID_notReviewedBefore_thenAcceptACP() throws Exception {
+        // Preparing the test
+        PendingACP candidateACP = new PendingACP();
+
+        candidateACP.setName("Test New ACP");
+        candidateACP.setEmail("newacp@mail.pt");
+        candidateACP.setCity("Aveiro");
+        candidateACP.setAddress("Fake Street no 1, Aveiro");
+        candidateACP.setTelephoneNumber("000000000");
+        candidateACP.setDescription("I am a totally legit pickup point");
+        candidateACP.setStatus(0);
+
+
+        pendingACPRepository.saveAndFlush(candidateACP);
+
+        int param1 = 2;
+
+        ResponseEntity<String> response = restTemplate.exchange(BASE_URI + randomServerPort + "/dropmate/admin/acp/pending/1/status?newStatus={param1}", HttpMethod.POST, null, String.class, param1);
+
+        assertEquals(200, response.getStatusCodeValue());
+
+        // Verifying that the new ACP was added to the repository
+        List<AssociatedCollectionPoint> allACP = acpRepository.findAll();
+        Assertions.assertThat(allACP).extracting(AssociatedCollectionPoint::getName).contains("Test New ACP");
+    }
+
+    @Test
+    @Order(16)
+    void reviewCandidateACP_withValidID_notReviewedBefore_rejectACP() throws Exception {
+        // Preparing the test
+        PendingACP candidateACP = new PendingACP();
+
+        candidateACP.setName("Test New ACP");
+        candidateACP.setEmail("newacp@mail.pt");
+        candidateACP.setCity("Aveiro");
+        candidateACP.setAddress("Fake Street no 1, Aveiro");
+        candidateACP.setTelephoneNumber("000000000");
+        candidateACP.setDescription("I am a totally legit pickup point");
+        candidateACP.setStatus(0);
+
+
+        pendingACPRepository.saveAndFlush(candidateACP);
+
+        // Performing the call
         RestAssured.given().contentType("application/json")
-                .param("city", "Aveiro")
-                .param("address", "Fake Street no 1, Aveiro")
-                .param("name", "Test New ACP")
-                .param("email", "newacp@mail.pt")
-                .param("telephoneNumber", "000000000")
-                .param("description", "I am a totally legit pickup point")
-                .when().post(BASE_URI + randomServerPort + "/dropmate/admin/acp/pending")
+                .param("newStatus", "1")
+                .when().put(BASE_URI + randomServerPort + "/dropmate/admin/acp/pending/1/status")
+                .then().statusCode(200)
+                .body("message", is("Request rejected!"));
+    }
+
+    @Test
+    @Order(17)
+    void reviewCandidateACP_withValidID_reviewedBefore_thenRejectNewEvaluation() throws Exception {
+        // Preparing the test
+        PendingACP candidateACP = new PendingACP();
+
+        candidateACP.setName("Test New ACP");
+        candidateACP.setEmail("newacp@mail.pt");
+        candidateACP.setCity("Aveiro");
+        candidateACP.setAddress("Fake Street no 1, Aveiro");
+        candidateACP.setTelephoneNumber("000000000");
+        candidateACP.setDescription("I am a totally legit pickup point");
+        candidateACP.setStatus(1);
+
+
+        pendingACPRepository.saveAndFlush(candidateACP);
+
+        // Performing the call
+        RestAssured.given().contentType("application/json")
+                .param("newStatus", "1")
+                .when().put(BASE_URI + randomServerPort + "/dropmate/admin/acp/pending/2/status")
+                .then().statusCode(200)
+                .body("message", is("Operation denied, as this candidate request has already been reviewed!"));
+    }
+
+    @Test
+    @Order(18)
+    void reviewCandidateACP_withInvalidID_thenReceiveException() throws Exception {
+        // Performing the call
+        RestAssured.given().contentType("application/json")
+                .param("newStatus", "1")
+                .when().put(BASE_URI + randomServerPort + "/dropmate/admin/acp/pending/-6/status")
+                .then().statusCode(404);
+    }
+
+    @Test
+    @Disabled
+    void whenAddNewPendingACP_thenReturn_correspondingACP() throws Exception {
+        RestAssured.given().log().all().contentType(ContentType.JSON)
+                .body("{"
+                        + "\"city\": \"Aveiro\","
+                        + "\"address\": \"Fake Street no 1, Aveiro\","
+                        + "\"name\": \"Test New ACP\","
+                        + "\"email\": \"newacp@mail.pt\","
+                        + "\"telephoneNumber\": \"000000000\","
+                        + "\"description\": \"I am a totally legit pickup point\""
+                        + "}"
+                ).when().post(BASE_URI + randomServerPort + "/dropmate/admin/acp/pending")
                 .then().statusCode(200)
                 .body("city", is("Aveiro")).and()
                 .body("address", is("Fake Street no 1, Aveiro")).and()

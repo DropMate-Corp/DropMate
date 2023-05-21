@@ -10,6 +10,7 @@ import tqs.dropmate.dropmate_backend.exceptions.ResourceNotFoundException;
 import tqs.dropmate.dropmate_backend.repositories.AssociatedCollectionPointRepository;
 import tqs.dropmate.dropmate_backend.repositories.ParcelRepository;
 import tqs.dropmate.dropmate_backend.repositories.PendingAssociatedCollectionPointRepository;
+import tqs.dropmate.dropmate_backend.utils.SuccessfulRequest;
 
 import java.util.HashMap;
 import java.util.List;
@@ -162,6 +163,41 @@ public class AdminService {
         return pendingACPRepository.findFirstByName(name);
     }
 
+    /** Changes the status of a candidate ACP
+     * @param candidateID - ID of the candidate ACP
+     * @param newStatus - New status for the candidate ACP. 0 means Pending, 1 means Rejected and 2 means Accepted.
+     *                  If accepted, a new related AssociatedCollectionPoint should be created.
+     * @return a message stating if the operation was successful
+     * @throws ResourceNotFoundException - Exception raised when an ID doesn't exist in the database
+     * */
+    public SuccessfulRequest changePendingACPStatus(Integer candidateID, Integer newStatus) throws ResourceNotFoundException {
+        PendingACP candidateACP = this.getCandidateACPFromID(candidateID);
+
+        if(!candidateACP.getStatus().equals(0)){
+            return new SuccessfulRequest("Operation denied, as this candidate request has already been reviewed!");
+        }
+
+        candidateACP.setStatus(newStatus);
+        pendingACPRepository.save(candidateACP);
+
+        // If the ACP was accepted, we create a new corresponding ACP entity
+        if(newStatus.equals(2)){
+            AssociatedCollectionPoint newACP = new AssociatedCollectionPoint();
+
+            newACP.setName(candidateACP.getName());
+            newACP.setEmail(candidateACP.getEmail());
+            newACP.setAddress(candidateACP.getAddress());
+            newACP.setTelephoneNumber(candidateACP.getTelephoneNumber());
+            newACP.setCity(candidateACP.getCity());
+
+            acpRepository.save(newACP);
+
+            return new SuccessfulRequest("Request accepted!");
+        }
+
+        return new SuccessfulRequest("Request rejected!");
+    }
+
 
 
     // Auxilliary functions
@@ -174,5 +210,15 @@ public class AdminService {
      */
     private AssociatedCollectionPoint getACPFromID(Integer acpID) throws ResourceNotFoundException {
         return acpRepository.findById(acpID).orElseThrow(() -> new ResourceNotFoundException("Couldn't find ACP with the ID " + acpID + "!"));
+    }
+
+    /** This method checks whether a candidate ACP exists or not on the pendingACPRepository, based on its ID. If it doesn't it throws
+     * an exception.
+     * @param acpID - ID of the ACP in the database
+     * @return corresponding ACP
+     * @throws ResourceNotFoundException - Exception raised when an ID doesn't exist in the database
+     */
+    private PendingACP getCandidateACPFromID(Integer acpID) throws ResourceNotFoundException {
+        return pendingACPRepository.findById(acpID).orElseThrow(() -> new ResourceNotFoundException("Couldn't find candidate ACP with the ID " + acpID + "!"));
     }
 }

@@ -15,12 +15,10 @@ import tqs.dropmate.dropmate_backend.datamodel.PendingACP;
 import tqs.dropmate.dropmate_backend.datamodel.Status;
 import tqs.dropmate.dropmate_backend.exceptions.ResourceNotFoundException;
 import tqs.dropmate.dropmate_backend.services.AdminService;
+import tqs.dropmate.dropmate_backend.utils.SuccessfulRequest;
 
 import java.sql.Date;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static org.hamcrest.CoreMatchers.is;
@@ -354,5 +352,56 @@ public class AdminController_withMockServiceTest {
                 .andExpect(jsonPath("$.email", is("newacp@mail.pt")))
                 .andExpect(jsonPath("$.acpId", is(1)))
                 .andExpect(jsonPath("$.status", is(0)));
+    }
+
+    @Test
+    void reviewCandidateACP_withValidID_notReviewedBefore_thenAcceptACP() throws Exception {
+        // Set up Expectations
+        when(adminService.changePendingACPStatus(1, 2)).thenReturn(new SuccessfulRequest("Request accepted!"));
+
+        // Performing the call
+        mockMvc.perform(
+                        put("/dropmate/admin/acp/pending/1/status").contentType(MediaType.APPLICATION_JSON)
+                                .param("newStatus", "2"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message", is("Request accepted!")));
+    }
+
+    @Test
+    void reviewCandidateACP_withValidID_notReviewedBefore_rejectACP() throws Exception {
+        // Set up Expectations
+        when(adminService.changePendingACPStatus(1, 1)).thenReturn(new SuccessfulRequest("Request rejected!"));
+
+        // Performing the call
+        mockMvc.perform(
+                        put("/dropmate/admin/acp/pending/1/status").contentType(MediaType.APPLICATION_JSON)
+                                .param("newStatus", "1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message", is("Request rejected!")));
+    }
+
+    @Test
+    void reviewCandidateACP_withValidID_reviewedBefore_thenRejectNewEvaluation() throws Exception {
+        // Set up Expectations
+        when(adminService.changePendingACPStatus(1, 2)).thenReturn(new SuccessfulRequest("Operation denied, as this candidate request has already been reviewed!"));
+
+        // Performing the call
+        mockMvc.perform(
+                        put("/dropmate/admin/acp/pending/1/status").contentType(MediaType.APPLICATION_JSON)
+                                .param("newStatus", "2"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message", is("Operation denied, as this candidate request has already been reviewed!")));
+    }
+
+    @Test
+    void reviewCandidateACP_withInvalidID_thenReceiveException() throws Exception {
+        // Set up Expectations
+        when(adminService.changePendingACPStatus(-1, 2)).thenThrow(new ResourceNotFoundException("Couldn't find candidate ACP with the ID -1!"));;
+
+        // Performing the call
+        mockMvc.perform(
+                        put("/dropmate/admin/acp/pending/-1/status").contentType(MediaType.APPLICATION_JSON)
+                                .param("newStatus", "2"))
+                .andExpect(status().isNotFound());
     }
 }

@@ -19,6 +19,7 @@ import tqs.dropmate.dropmate_backend.repositories.AssociatedCollectionPointRepos
 import tqs.dropmate.dropmate_backend.repositories.ParcelRepository;
 import tqs.dropmate.dropmate_backend.repositories.PendingAssociatedCollectionPointRepository;
 import tqs.dropmate.dropmate_backend.services.AdminService;
+import tqs.dropmate.dropmate_backend.utils.SuccessfulRequest;
 
 import java.sql.Date;
 import java.util.*;
@@ -361,6 +362,7 @@ public class AdminService_UnitTest {
 
     @Test
     void addNewCandidateACP_thenReturnNewPendingACP() {
+        // Preparing the test
         PendingACP candidateACP = new PendingACP();
         candidateACP.setName("Test New ACP");
         candidateACP.setEmail("newacp@mail.pt");
@@ -380,6 +382,81 @@ public class AdminService_UnitTest {
 
         // Mockito verifications
         Mockito.verify(pendingACPRepository, VerificationModeFactory.times(1)).findFirstByName(Mockito.any());
+    }
+
+    @Test
+    void reviewCandidateACP_notReviewedBefore_acceptACP() throws ResourceNotFoundException {
+        // Preparing the test
+        PendingACP candidateACP = new PendingACP();
+        candidateACP.setName("Test New ACP");
+        candidateACP.setEmail("newacp@mail.pt");
+        candidateACP.setCity("Aveiro");
+        candidateACP.setAddress("Fake Street no 1, Aveiro");
+        candidateACP.setTelephoneNumber("000000000");
+        candidateACP.setDescription("I am a totally legit pickup point");
+        candidateACP.setStatus(0);
+        candidateACP.setAcpId(1);
+
+        // Set up Expectations
+        when(pendingACPRepository.findById(1)).thenReturn(Optional.of(candidateACP));
+
+        // Verify the result is as expected
+        assertThat(adminService.changePendingACPStatus(1, 2))
+                .extracting(SuccessfulRequest::getMessage).isEqualTo("Request accepted!");
+
+        // Mockito verifications
+        Mockito.verify(pendingACPRepository, VerificationModeFactory.times(1)).findById(Mockito.any());
+        Mockito.verify(pendingACPRepository, VerificationModeFactory.times(1)).save(Mockito.any());
+        Mockito.verify(acpRepository, VerificationModeFactory.times(1)).save(Mockito.any());
+    }
+
+    @Test
+    void reviewCandidateACP_notReviewedBefore_rejectACP() throws ResourceNotFoundException {
+        // Preparing the test
+        PendingACP candidateACP = new PendingACP();
+        candidateACP.setName("Test New ACP");
+        candidateACP.setEmail("newacp@mail.pt");
+        candidateACP.setCity("Aveiro");
+        candidateACP.setAddress("Fake Street no 1, Aveiro");
+        candidateACP.setTelephoneNumber("000000000");
+        candidateACP.setDescription("I am a totally legit pickup point");
+        candidateACP.setStatus(0);
+        candidateACP.setAcpId(1);
+
+        // Set up Expectations
+        when(pendingACPRepository.findById(1)).thenReturn(Optional.of(candidateACP));
+
+        // Verify the result is as expected
+        assertThat(adminService.changePendingACPStatus(1, 1))
+                .extracting(SuccessfulRequest::getMessage).isEqualTo("Request rejected!");
+
+        // Mockito verifications
+        Mockito.verify(pendingACPRepository, VerificationModeFactory.times(1)).findById(Mockito.any());
+        Mockito.verify(pendingACPRepository, VerificationModeFactory.times(1)).save(Mockito.any());
+    }
+
+    @Test
+    void reviewCandidateACP_reviewedBefore_thenRejectNewEvaluation() throws ResourceNotFoundException {
+        // Preparing the test
+        PendingACP candidateACP = new PendingACP();
+        candidateACP.setName("Test New ACP");
+        candidateACP.setEmail("newacp@mail.pt");
+        candidateACP.setCity("Aveiro");
+        candidateACP.setAddress("Fake Street no 1, Aveiro");
+        candidateACP.setTelephoneNumber("000000000");
+        candidateACP.setDescription("I am a totally legit pickup point");
+        candidateACP.setStatus(1);
+        candidateACP.setAcpId(1);
+
+        // Set up Expectations
+        when(pendingACPRepository.findById(1)).thenReturn(Optional.of(candidateACP));
+
+        // Verify the result is as expected
+        assertThat(adminService.changePendingACPStatus(1, 1))
+                .extracting(SuccessfulRequest::getMessage).isEqualTo("Operation denied, as this candidate request has already been reviewed!");
+
+        // Mockito verifications
+        Mockito.verify(pendingACPRepository, VerificationModeFactory.times(1)).findById(Mockito.any());
     }
 
     // Auxilliary functions
