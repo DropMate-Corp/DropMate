@@ -32,7 +32,7 @@ public class AdminService {
     public List<Parcel> getAllParcelsWaitingDelivery(){
         return parcelRepository.findAll().stream()
                 .filter(parcel -> parcel.getParcelStatus().equals(Status.IN_DELIVERY))
-                .collect(Collectors.toList());
+                .toList();
     }
   
     /** This method returns all the parcels waiting for pickup
@@ -40,7 +40,7 @@ public class AdminService {
     public List<Parcel> getAllParcelsWaitingPickup(){
         return parcelRepository.findAll().stream()
                 .filter(parcel -> parcel.getParcelStatus().equals(Status.WAITING_FOR_PICKUP))
-                .collect(Collectors.toList());
+                .toList();
     }
 
     /** This method returns all the parcels waiting for delivery at a specific ACP
@@ -54,7 +54,7 @@ public class AdminService {
         return parcelRepository.findAll().stream()
                 .filter(parcel -> parcel.getParcelStatus().equals(Status.IN_DELIVERY))
                 .filter(parcel -> parcel.getPickupACP().equals(acp))
-                .collect(Collectors.toList());
+                .toList();
     }
 
     /** This method returns all the parcels waiting for pickup at a specific ACP
@@ -68,7 +68,7 @@ public class AdminService {
         return parcelRepository.findAll().stream()
                 .filter(parcel -> parcel.getParcelStatus().equals(Status.WAITING_FOR_PICKUP))
                 .filter(parcel -> parcel.getPickupACP().equals(acp))
-                .collect(Collectors.toList());
+                .toList();
     }
 
     /** This method returns all the operational statistics of all ACP's

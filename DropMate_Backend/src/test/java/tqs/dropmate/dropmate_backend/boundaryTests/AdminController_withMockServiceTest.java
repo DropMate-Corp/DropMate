@@ -99,7 +99,7 @@ public class AdminController_withMockServiceTest {
     }
 
     @Test
-    public void whenGetAllACP_thenReturn_statusOK() throws Exception {
+    void whenGetAllACP_thenReturn_statusOK() throws Exception {
         when(adminService.getAllACP()).thenReturn(allACP);
 
         mockMvc.perform(
@@ -111,7 +111,7 @@ public class AdminController_withMockServiceTest {
     }
 
     @Test
-    public void whenGetAllParcelsWaitDelivery_thenReturn_statusOK() throws Exception {
+    void whenGetAllParcelsWaitDelivery_thenReturn_statusOK() throws Exception {
         when(adminService.getAllParcelsWaitingDelivery()).thenReturn(parcelsWaitingDelivery);
 
         mockMvc.perform(
@@ -123,7 +123,7 @@ public class AdminController_withMockServiceTest {
     }
 
     @Test
-    public void whenGetAllAParcelsWaitPickup_thenReturn_statusOK() throws Exception {
+    void whenGetAllAParcelsWaitPickup_thenReturn_statusOK() throws Exception {
         when(adminService.getAllParcelsWaitingPickup()).thenReturn(parcelsWaitingPickup);
 
         mockMvc.perform(
@@ -136,7 +136,7 @@ public class AdminController_withMockServiceTest {
     }
 
     @Test
-    public void whenGetParcelsWaitingDelivery_atSpecificACP_withValidID_thenReturn_StatusOK() throws Exception {
+    void whenGetParcelsWaitingDelivery_atSpecificACP_withValidID_thenReturn_StatusOK() throws Exception {
         when(adminService.getParcelsWaitingDeliveryAtACP(0)).thenReturn(parcelsWaitingDelivery);
 
         mockMvc.perform(
@@ -148,7 +148,7 @@ public class AdminController_withMockServiceTest {
     }
 
     @Test
-    public void whenGetParcelsWaitingPickup_atSpecificACP_withValidID_thenReturn_StatusOK() throws Exception {
+    void whenGetParcelsWaitingPickup_atSpecificACP_withValidID_thenReturn_StatusOK() throws Exception {
             when(adminService.getParcelsWaitingPickupAtACP(0)).thenReturn(parcelsWaitingPickup);
 
             mockMvc.perform(
@@ -161,7 +161,7 @@ public class AdminController_withMockServiceTest {
     }
 
     @Test
-    public void whenGetParcelsWaitingDelivery_atSpecificACP_withInvalidID_thenReturn_statusNotFound() throws Exception {
+    void whenGetParcelsWaitingDelivery_atSpecificACP_withInvalidID_thenReturn_statusNotFound() throws Exception {
         when(adminService.getParcelsWaitingDeliveryAtACP(-2)).thenThrow(new ResourceNotFoundException("Couldn't find ACP with the ID -2!"));
 
         mockMvc.perform(
@@ -170,7 +170,7 @@ public class AdminController_withMockServiceTest {
     }
 
     @Test
-    public void whenGetParcelsWaitingPickup_atSpecificACP_withInvalidID_thenReturn_statusNotFound() throws Exception {
+    void whenGetParcelsWaitingPickup_atSpecificACP_withInvalidID_thenReturn_statusNotFound() throws Exception {
         when(adminService.getParcelsWaitingPickupAtACP(-2)).thenThrow(new ResourceNotFoundException("Couldn't find ACP with the ID -2!"));
 
         mockMvc.perform(
@@ -179,7 +179,7 @@ public class AdminController_withMockServiceTest {
     }
 
     @Test
-    public void whenGetAllACPOperationalStatistics_thenReturn_statusOK() throws Exception {
+    void whenGetAllACPOperationalStatistics_thenReturn_statusOK() throws Exception {
         Map<String, Integer> statsMap = new HashMap<>();
 
         statsMap.put("total_parcels", 10);
@@ -208,7 +208,7 @@ public class AdminController_withMockServiceTest {
     }
 
     @Test
-    public void whenGetSpecificACPOperationalStatistics_withValidID_thenReturn_statusOK() throws Exception {
+    void whenGetSpecificACPOperationalStatistics_withValidID_thenReturn_statusOK() throws Exception {
         Map<String, Integer> statsMap = new HashMap<>();
 
         statsMap.put("total_parcels", 10);
@@ -228,7 +228,7 @@ public class AdminController_withMockServiceTest {
     }
 
     @Test
-    public void whenGetSpecificACPOperationalStatistics_withInvalidID_thenReturn_statusNotFound() throws Exception {
+    void whenGetSpecificACPOperationalStatistics_withInvalidID_thenReturn_statusNotFound() throws Exception {
         when(adminService.getSpecificACPStatistics(-2)).thenThrow(new ResourceNotFoundException("Couldn't find ACP with the ID -2!"));
 
         mockMvc.perform(
@@ -237,7 +237,7 @@ public class AdminController_withMockServiceTest {
     }
 
     @Test
-    public void whenGetSpecificACPDetails_withValidID_thenReturn_statusOK() throws Exception {
+    void whenGetSpecificACPDetails_withValidID_thenReturn_statusOK() throws Exception {
         when(adminService.getACPDetails(2)).thenReturn(allACP.get(1));
 
         mockMvc.perform(
@@ -249,7 +249,7 @@ public class AdminController_withMockServiceTest {
     }
 
     @Test
-    public void whenGetSpecificACPDetails_withInvalidID_thenReturn_statusNotFound() throws Exception {
+    void whenGetSpecificACPDetails_withInvalidID_thenReturn_statusNotFound() throws Exception {
         when(adminService.getACPDetails(-2)).thenThrow(new ResourceNotFoundException("Couldn't find ACP with the ID -2!"));
 
         mockMvc.perform(
@@ -258,7 +258,7 @@ public class AdminController_withMockServiceTest {
     }
 
     @Test
-    public void whenUpdateACPDetails_withValidID_allFields_thenReturn_statusOK() throws Exception {
+    void whenUpdateACPDetails_withValidID_allFields_thenReturn_statusOK() throws Exception {
         // Preparing for the test
         pickupPointTwo.setName("test");
         pickupPointTwo.setEmail("newemail@mail.pt");
@@ -287,7 +287,7 @@ public class AdminController_withMockServiceTest {
     }
 
     @Test
-    public void whenUpdateACPDetails_withValidID_somFields_thenReturn_statusOK() throws Exception {
+    void whenUpdateACPDetails_withValidID_somFields_thenReturn_statusOK() throws Exception {
         // Preparing for the test
         pickupPointTwo.setAddress("Nevermore");
         pickupPointTwo.setCity("Lalaland");
@@ -309,7 +309,7 @@ public class AdminController_withMockServiceTest {
     }
 
     @Test
-    public void whenUpdateACPDetails_withInvalidID_thenReturn_statusNotFound() throws Exception {
+    void whenUpdateACPDetails_withInvalidID_thenReturn_statusNotFound() throws Exception {
         when(adminService.updateACPDetails(-2, null, null, null, "Lalaland", "Nevermore"))
                 .thenThrow(new ResourceNotFoundException("Couldn't find ACP with the ID -2!"));;
 

@@ -101,22 +101,23 @@ public class AdminService_UnitTest {
     }
 
     @Test
-    public void whenGetAllAcp_thenReturnAllAcp(){
+    void whenGetAllAcp_thenReturnAllAcp(){
         // Set up Expectations
         when(acpRepository.findAll()).thenReturn(allACP);
 
         // Verify the result is as expected
         List<AssociatedCollectionPoint> returnedACP = adminService.getAllACP();
-        assertThat(returnedACP).isEqualTo(allACP);
-        assertThat(returnedACP).hasSize(3);
-        assertThat(returnedACP).extracting(AssociatedCollectionPoint::getCity).contains("Aveiro", "Porto", "Viseu");
+        assertThat(returnedACP)
+                .isEqualTo(allACP)
+                .hasSize(3)
+                .extracting(AssociatedCollectionPoint::getCity).contains("Aveiro", "Porto", "Viseu");
 
         // Mockito verifications
         this.verifyFindAllIsCalled();
     }
 
     @Test
-    public void whenGetAllParcelWaitDelivery_thenReturnOnlyDelivery(){
+    void whenGetAllParcelWaitDelivery_thenReturnOnlyDelivery(){
         // Set up Expectations
         when(parcelRepository.findAll()).thenReturn(allParcels);
 
@@ -130,7 +131,7 @@ public class AdminService_UnitTest {
     }
 
     @Test
-    public void whenGetAllParcelWaitPickup_thenReturnOnlyPickup(){
+    void whenGetAllParcelWaitPickup_thenReturnOnlyPickup(){
         // Set up Expectations
         when(parcelRepository.findAll()).thenReturn(allParcels);
 
@@ -144,7 +145,7 @@ public class AdminService_UnitTest {
     }
 
     @Test
-    public void whenGetAllParcelWaitDelivery_atSpecificACP_withValidACP_thenReturnOnlyCorrectACP() throws ResourceNotFoundException {
+    void whenGetAllParcelWaitDelivery_atSpecificACP_withValidACP_thenReturnOnlyCorrectACP() throws ResourceNotFoundException {
         // Set up Expectations
         when(acpRepository.findById(Mockito.any())).thenReturn(Optional.ofNullable(pickupPointOne));
 
@@ -161,7 +162,7 @@ public class AdminService_UnitTest {
     }
 
     @Test
-    public void whenGetAllParcelWaitPickup_atSpecificACP_withValidACP_thenReturnOnlyCorrectACP() throws ResourceNotFoundException {
+    void whenGetAllParcelWaitPickup_atSpecificACP_withValidACP_thenReturnOnlyCorrectACP() throws ResourceNotFoundException {
         // Set up Expectations
         when(acpRepository.findById(Mockito.any())).thenReturn(Optional.ofNullable(allACP.get(1)));
 
@@ -178,7 +179,7 @@ public class AdminService_UnitTest {
     }
 
     @Test
-    public void whenGetAllParcelWaitDelivery_atSpecificACP_withInvalidACP_thenThrowException() throws ResourceNotFoundException {
+    void whenGetAllParcelWaitDelivery_atSpecificACP_withInvalidACP_thenThrowException() throws ResourceNotFoundException {
         // Set up Expectations
         when(acpRepository.findById(-5)).thenReturn(Optional.empty());
 
@@ -193,7 +194,7 @@ public class AdminService_UnitTest {
     }
 
     @Test
-    public void whenGetAllParcelWaitPickup_atSpecificACP_withValidACP_thenThrowException() throws ResourceNotFoundException {
+    void whenGetAllParcelWaitPickup_atSpecificACP_withValidACP_thenThrowException() throws ResourceNotFoundException {
         // Set up Expectations
         when(acpRepository.findById(-5)).thenReturn(Optional.empty());
 
@@ -207,7 +208,7 @@ public class AdminService_UnitTest {
     }
 
     @Test
-    public void whenGetAllOperationalStatistics_thenReturnAll(){
+    void whenGetAllOperationalStatistics_thenReturnAll(){
         Map<String, Integer> statsMap = new HashMap<>();
 
         statsMap.put("total_parcels", 10);
@@ -235,7 +236,7 @@ public class AdminService_UnitTest {
     }
 
     @Test
-    public void whenGetSpecificOperationalStatisics_withValidACP_thenReturnOnlySpecificACP() throws ResourceNotFoundException {
+    void whenGetSpecificOperationalStatisics_withValidACP_thenReturnOnlySpecificACP() throws ResourceNotFoundException {
         // Set up Expectations
         Map<String, Integer> statsMap = new HashMap<>();
 
@@ -250,16 +251,18 @@ public class AdminService_UnitTest {
         // Verify the result is as expected
         Map<String, Integer> returnedStats = adminService.getSpecificACPStatistics(5);
 
-        assertThat(returnedStats).hasSize(4);
-        assertThat(returnedStats).containsKeys("total_parcels", "parcels_in_delivery", "parcels_waiting_pickup", "deliveryLimit");
-        assertThat(returnedStats.get("deliveryLimit")).isEqualTo(10);
+        assertThat(returnedStats)
+                .hasSize(4)
+                .containsKeys("total_parcels", "parcels_in_delivery", "parcels_waiting_pickup", "deliveryLimit");
+
+        assertThat(returnedStats).containsEntry("deliveryLimit", 10);
 
         /// Mockito verifications
         this.verifyFindByIdIsCalled();
     }
 
     @Test
-    public void whenGetSpecificOperationalStatisics_withInvalidACP_thenReturnException() throws ResourceNotFoundException {
+    void whenGetSpecificOperationalStatisics_withInvalidACP_thenReturnException() throws ResourceNotFoundException {
         // Set up Expectations
         when(acpRepository.findById(-5)).thenReturn(Optional.empty());
 
@@ -273,7 +276,7 @@ public class AdminService_UnitTest {
     }
 
     @Test
-    public void getACPDetails_withValidACP_thenReturnDetails() throws ResourceNotFoundException {
+    void getACPDetails_withValidACP_thenReturnDetails() throws ResourceNotFoundException {
         // Set up Expectations
         when(acpRepository.findById(5)).thenReturn(Optional.ofNullable(pickupPointOne));
 
@@ -287,7 +290,7 @@ public class AdminService_UnitTest {
     }
 
     @Test
-    public void getACPDetails_withInvalidACP_thenReturnException() throws ResourceNotFoundException {
+    void getACPDetails_withInvalidACP_thenReturnException() throws ResourceNotFoundException {
         // Set up Expectations
         when(acpRepository.findById(-5)).thenReturn(Optional.empty());
 
@@ -301,7 +304,7 @@ public class AdminService_UnitTest {
     }
 
     @Test
-    public void updateACPDetails_allFieldsPassed() throws ResourceNotFoundException {
+    void updateACPDetails_allFieldsPassed() throws ResourceNotFoundException {
         // Set up Expectations
         when(acpRepository.findById(5)).thenReturn(Optional.ofNullable(pickupPointOne));
 
@@ -320,7 +323,7 @@ public class AdminService_UnitTest {
     }
 
     @Test
-    public void updateACPDetails_someFieldsPassed() throws ResourceNotFoundException {
+    void updateACPDetails_someFieldsPassed() throws ResourceNotFoundException {
         // Set up Expectations
         when(acpRepository.findById(5)).thenReturn(Optional.ofNullable(pickupPointOne));
 
@@ -339,7 +342,7 @@ public class AdminService_UnitTest {
     }
 
     @Test
-    public void updateACPDetails_invalidID() throws ResourceNotFoundException {
+    void updateACPDetails_invalidID() throws ResourceNotFoundException {
         // Set up Expectations
         when(acpRepository.findById(-5)).thenReturn(Optional.empty());
 

@@ -94,7 +94,7 @@ public class DropMate_IntegrationTest {
 
     @Test
     @Order(1)
-    public void whenGetSpecificOperationStatistics_withValidID_thenReturn_statusOK() {
+    void whenGetSpecificOperationStatistics_withValidID_thenReturn_statusOK() {
         RestAssured.with().contentType("application/json")
                 .when().get(BASE_URI + randomServerPort + "/dropmate/admin/acp/1/statistics")
                 .then().statusCode(200)
@@ -106,7 +106,7 @@ public class DropMate_IntegrationTest {
 
     @Test
     @Order(2)
-    public void whenGetSpecificOperationStatistics_withInvalidID_thenReturn_statusNotFound() {
+    void whenGetSpecificOperationStatistics_withInvalidID_thenReturn_statusNotFound() {
         RestAssured.with().contentType("application/json")
                 .when().get(BASE_URI + randomServerPort + "/dropmate/admin/acp/-21/statistics")
                 .then().statusCode(404);
@@ -114,7 +114,7 @@ public class DropMate_IntegrationTest {
 
     @Test
     @Order(3)
-    public void whenGetSpecificACPDetails_withValidID_thenReturn_statusOK() {
+    void whenGetSpecificACPDetails_withValidID_thenReturn_statusOK() {
         RestAssured.with().contentType("application/json")
                 .when().get(BASE_URI + randomServerPort + "/dropmate/admin/acp/5")
                 .then().statusCode(200)
@@ -125,7 +125,7 @@ public class DropMate_IntegrationTest {
 
     @Test
     @Order(4)
-    public void whenGetSpecificACPDetails_withInvalidID_thenReturn_statusNotFound() {
+    void whenGetSpecificACPDetails_withInvalidID_thenReturn_statusNotFound() {
         RestAssured.with().contentType("application/json")
                 .when().get(BASE_URI + randomServerPort + "/dropmate/admin/acp/-21")
                 .then().statusCode(404);
@@ -133,7 +133,7 @@ public class DropMate_IntegrationTest {
 
     @Test
     @Order(5)
-    public void whenGetAllACP_thenReturn_statusOK() throws Exception {
+    void whenGetAllACP_thenReturn_statusOK() throws Exception {
         RestAssured.with().contentType("application/json")
                 .when().get(BASE_URI + randomServerPort + "/dropmate/admin/acp")
                 .then().statusCode(200)
@@ -145,7 +145,7 @@ public class DropMate_IntegrationTest {
 
     @Test
     @Order(6)
-    public void whenGetAllAParcelsWaitDelivery_thenReturn_statusOK() throws Exception {
+    void whenGetAllAParcelsWaitDelivery_thenReturn_statusOK() throws Exception {
         parcelRepository.saveAndFlush(new Parcel("DEL123", "PCK123", 1.5, null, null, Status.IN_DELIVERY, testACP, testStore));
         parcelRepository.saveAndFlush(new Parcel("DEL456", "PCK456", 3.2, null, null, Status.IN_DELIVERY, testACP, testStore));
         parcelRepository.saveAndFlush(new Parcel("DEL790", "PCK356", 1.5, new Date(2023, 5, 22), null, Status.WAITING_FOR_PICKUP, testACP, testStore));
@@ -163,7 +163,7 @@ public class DropMate_IntegrationTest {
 
     @Test
     @Order(7)
-    public void whenGetAllAParcelsWaitPickup_thenReturn_statusOK() throws Exception {
+    void whenGetAllAParcelsWaitPickup_thenReturn_statusOK() throws Exception {
         parcelRepository.saveAndFlush(new Parcel("DEL123", "PCK123", 1.5, null, null, Status.IN_DELIVERY, testACP, testStore));
         parcelRepository.saveAndFlush(new Parcel("DEL456", "PCK456", 3.2, null, null, Status.IN_DELIVERY, testACP, testStore));
         parcelRepository.saveAndFlush(new Parcel("DEL790", "PCK356", 1.5, new Date(2023, 5, 22), null, Status.WAITING_FOR_PICKUP, testACP, testStore));
@@ -181,7 +181,7 @@ public class DropMate_IntegrationTest {
 
     @Test
     @Order(8)
-    public void whenGetParcelsWaitingDelivery_atSpecificACP_withValidID_thenReturn_StatusOK() throws Exception {
+    void whenGetParcelsWaitingDelivery_atSpecificACP_withValidID_thenReturn_StatusOK() throws Exception {
         parcelRepository.saveAndFlush(new Parcel("DEL123", "PCK123", 1.5, null, null, Status.IN_DELIVERY, testACP, testStore));
         parcelRepository.saveAndFlush(new Parcel("DEL456", "PCK456", 3.2, null, null, Status.IN_DELIVERY, testACP2, testStore));
         parcelRepository.saveAndFlush(new Parcel("DEL790", "PCK356", 1.5, new Date(2023, 5, 22), null, Status.WAITING_FOR_PICKUP, testACP, testStore));
@@ -199,7 +199,7 @@ public class DropMate_IntegrationTest {
 
     @Test
     @Order(9)
-    public void whenGetParcelsWaitingPickup_atSpecificACP_withValidID_thenReturn_StatusOK() throws Exception {
+    void whenGetParcelsWaitingPickup_atSpecificACP_withValidID_thenReturn_StatusOK() throws Exception {
         parcelRepository.saveAndFlush(new Parcel("DEL123", "PCK123", 1.5, null, null, Status.IN_DELIVERY, testACP, testStore));
         parcelRepository.saveAndFlush(new Parcel("DEL456", "PCK456", 3.2, null, null, Status.IN_DELIVERY, testACP2, testStore));
         parcelRepository.saveAndFlush(new Parcel("DEL790", "PCK356", 1.5, new Date(2023, 5, 22), null, Status.WAITING_FOR_PICKUP, testACP, testStore));
@@ -217,7 +217,7 @@ public class DropMate_IntegrationTest {
 
     @Test
     @Order(10)
-    public void whenGetParcelsWaitingDelivery_atSpecificACP_withInvalidID_thenReturn_statusNotFound() throws Exception {
+    void whenGetParcelsWaitingDelivery_atSpecificACP_withInvalidID_thenReturn_statusNotFound() throws Exception {
         RestAssured.with().contentType("application/json")
                 .when().get(BASE_URI + randomServerPort + "/dropmate/admin/parcels/-5/delivery")
                 .then().statusCode(404);
@@ -225,7 +225,7 @@ public class DropMate_IntegrationTest {
 
     @Test
     @Order(11)
-    public void whenGetParcelsWaitingPickup_atSpecificACP_withInvalidID_thenReturn_statusNotFound() throws Exception {
+    void whenGetParcelsWaitingPickup_atSpecificACP_withInvalidID_thenReturn_statusNotFound() throws Exception {
         RestAssured.with().contentType("application/json")
                 .when().get(BASE_URI + randomServerPort + "/dropmate/admin/parcels/-5/pickup")
                 .then().statusCode(404);
@@ -233,7 +233,7 @@ public class DropMate_IntegrationTest {
 
     @Test
     @Order(12)
-    public void whenGetAllACPOperationalStatistics_thenReturn_statusOK() throws Exception {
+    void whenGetAllACPOperationalStatistics_thenReturn_statusOK() throws Exception {
         // Doing the test
         io.restassured.path.json.JsonPath path  = RestAssured.with().contentType("application/json")
                 .when().get(BASE_URI + randomServerPort + "/dropmate/admin/acp/statistics")
@@ -252,7 +252,7 @@ public class DropMate_IntegrationTest {
 
     @Test
     @Order(13)
-    public void whenUpdateACPDetails_withValidID_allFields_thenReturn_statusOK() throws Exception {
+    void whenUpdateACPDetails_withValidID_allFields_thenReturn_statusOK() throws Exception {
         RestAssured.given().contentType("application/json")
                 .param("name", "test")
                 .param("email", "newemail@mail.pt")
@@ -269,7 +269,7 @@ public class DropMate_IntegrationTest {
 
     @Test
     @Order(14)
-    public void whenUpdateACPDetails_withValidID_somFields_thenReturn_statusOK() throws Exception {
+    void whenUpdateACPDetails_withValidID_somFields_thenReturn_statusOK() throws Exception {
         RestAssured.given().contentType("application/json")
                 .param("city", "Lalaland")
                 .param("address", "Nevermore")
@@ -283,7 +283,7 @@ public class DropMate_IntegrationTest {
 
     @Test
     @Order(15)
-    public void whenUpdateACPDetails_withInvalidID_thenReturn_statusNotFound() throws Exception {
+    void whenUpdateACPDetails_withInvalidID_thenReturn_statusNotFound() throws Exception {
         RestAssured.given().contentType("application/json")
                 .param("city", "Lalaland")
                 .param("address", "Nevermore")
