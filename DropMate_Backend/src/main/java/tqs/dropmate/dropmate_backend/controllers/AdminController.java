@@ -40,24 +40,25 @@ public class AdminController {
     }
 
     /** Updates the details of an ACP */
-    @PutMapping("/acp")
-    public ResponseEntity<SuccessfulRequest> updateACP(@RequestParam(name = "email", required = false) String email,
+    @PutMapping("/acp/{acpID}")
+    public ResponseEntity<AssociatedCollectionPoint> updateACP(@PathVariable(name = "acpID") Integer acpID,
+                                                       @RequestParam(name = "email", required = false) String email,
                                                        @RequestParam(name = "name", required = false) String name,
                                                        @RequestParam(name = "telephone", required = false) String telephone,
                                                        @RequestParam(name = "city", required = false) String city,
-                                                       @RequestParam(name = "address", required = false) String address){
-        return null;
+                                                       @RequestParam(name = "address", required = false) String address) throws ResourceNotFoundException {
+        return ResponseEntity.ok().body(adminService.updateACPDetails(acpID, email, name, telephone, city, address));
     }
 
     /** This method returns the details associated with a specific ACP */
     @GetMapping("/acp/{acpID}")
-    public ResponseEntity<AssociatedCollectionPoint> getACPDetails(@PathVariable(name = "acpID") Long acpID){
-        return null;
+    public ResponseEntity<AssociatedCollectionPoint> getACPDetails(@PathVariable(name = "acpID") Integer acpID) throws ResourceNotFoundException {
+        return ResponseEntity.ok().body(adminService.getACPDetails(acpID));
     }
 
     /** Deletes an ACP */
     @DeleteMapping ("/acp/{acpID}")
-    public ResponseEntity<SuccessfulRequest> deleteACP(@PathVariable(name = "acpID") Long acpID){
+    public ResponseEntity<SuccessfulRequest> deleteACP(@PathVariable(name = "acpID") Integer acpID){
         return null;
     }
 
@@ -93,14 +94,14 @@ public class AdminController {
 
     /** This method returns all the parcels waiting for delivery at a specific ACP */
     @GetMapping("/parcels/{acpID}/delivery")
-    public ResponseEntity<List<Parcel>> getAllParcelsWaitingDeliveryAtACP(@PathVariable(name = "acpID") Long acpID){
-        return null;
+    public ResponseEntity<List<Parcel>> getAllParcelsWaitingDeliveryAtACP(@PathVariable(name = "acpID") Integer acpID) throws ResourceNotFoundException {
+        return ResponseEntity.ok().body(adminService.getParcelsWaitingDeliveryAtACP(acpID));
     }
 
     /** This method returns all the parcels waiting for pickup at a specific ACP */
     @GetMapping("/parcels/{acpID}/pickup")
-    public ResponseEntity<List<Parcel>> getAllParcelsWaitingPickupAtACP(@PathVariable(name = "acpID") Long acpID){
-        return null;
+    public ResponseEntity<List<Parcel>> getAllParcelsWaitingPickupAtACP(@PathVariable(name = "acpID") Integer acpID) throws ResourceNotFoundException {
+        return ResponseEntity.ok().body(adminService.getParcelsWaitingPickupAtACP(acpID));
     }
 
     /** Returns all the Operators associated with each ACP */

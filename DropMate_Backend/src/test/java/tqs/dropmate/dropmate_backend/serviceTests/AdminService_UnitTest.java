@@ -78,6 +78,13 @@ public class AdminService_UnitTest {
         Parcel parcelOne = new Parcel("DEL000", "PCK257", 1.5, new Date(2023, 5, 22), new Date(2023, 5, 28), Status.DELIVERED);
         Parcel parcelTwo = new Parcel("DEL843", "PCK497", 1.6, new Date(2023, 5, 22), new Date(2023, 5, 29), Status.DELIVERED);
 
+        parcelDelOne.setPickupACP(pickupPointOne);
+        parcelPickOne.setPickupACP(pickupPointOne);
+        parcelOne.setPickupACP(pickupPointOne);
+        parcelDelTwo.setPickupACP(pickupPointTwo);
+        parcelPickTwo.setPickupACP(pickupPointTwo);
+        parcelTwo.setPickupACP(pickupPointTwo);
+
         allParcels = new ArrayList<>();
         allParcels.add(parcelDelOne);
         allParcels.add(parcelDelTwo);
@@ -104,8 +111,8 @@ public class AdminService_UnitTest {
         assertThat(returnedACP).hasSize(3);
         assertThat(returnedACP).extracting(AssociatedCollectionPoint::getCity).contains("Aveiro", "Porto", "Viseu");
 
-        // Verify that the external API was called and Verify that the cache was called twice - to query and to add the new record
-        Mockito.verify(acpRepository, VerificationModeFactory.times(1)).findAll();
+        // Mockito verifications
+        this.verifyFindAllIsCalled();
     }
 
     @Test
@@ -118,7 +125,7 @@ public class AdminService_UnitTest {
         assertThat(returnedParcels).hasSize(2);
         assertThat(returnedParcels).extracting(Parcel::getParcelStatus).containsOnly(Status.IN_DELIVERY);
 
-        // Verify that the external API was called and Verify that the cache was called twice - to query and to add the new record
+        // Mockito verifications
         Mockito.verify(parcelRepository, VerificationModeFactory.times(1)).findAll();
     }
 
@@ -132,8 +139,71 @@ public class AdminService_UnitTest {
         assertThat(returnedParcels).hasSize(2);
         assertThat(returnedParcels).extracting(Parcel::getParcelStatus).containsOnly(Status.WAITING_FOR_PICKUP);
 
-        // Verify that the external API was called and Verify that the cache was called twice - to query and to add the new record
+        // Mockito verifications
         Mockito.verify(parcelRepository, VerificationModeFactory.times(1)).findAll();
+    }
+
+    @Test
+    public void whenGetAllParcelWaitDelivery_atSpecificACP_withValidACP_thenReturnOnlyCorrectACP() throws ResourceNotFoundException {
+        // Set up Expectations
+        when(acpRepository.findById(Mockito.any())).thenReturn(Optional.ofNullable(pickupPointOne));
+
+        when(parcelRepository.findAll()).thenReturn(allParcels);
+
+        // Verify the result is as expected
+        List<Parcel> returnedParcels = adminService.getParcelsWaitingDeliveryAtACP(1);
+        assertThat(returnedParcels).hasSize(1);
+        assertThat(returnedParcels).extracting(Parcel::getParcelStatus).containsOnly(Status.IN_DELIVERY);
+
+        // Mockito verifications
+        this.verifyFindByIdIsCalled();
+        Mockito.verify(parcelRepository, VerificationModeFactory.times(1)).findAll();
+    }
+
+    @Test
+    public void whenGetAllParcelWaitPickup_atSpecificACP_withValidACP_thenReturnOnlyCorrectACP() throws ResourceNotFoundException {
+        // Set up Expectations
+        when(acpRepository.findById(Mockito.any())).thenReturn(Optional.ofNullable(allACP.get(1)));
+
+        when(parcelRepository.findAll()).thenReturn(allParcels);
+
+        // Verify the result is as expected
+        List<Parcel> returnedParcels = adminService.getParcelsWaitingPickupAtACP(1);
+        assertThat(returnedParcels).hasSize(1);
+        assertThat(returnedParcels).extracting(Parcel::getParcelStatus).containsOnly(Status.WAITING_FOR_PICKUP);
+
+        // Mockito verifications
+        this.verifyFindByIdIsCalled();
+        Mockito.verify(parcelRepository, VerificationModeFactory.times(1)).findAll();
+    }
+
+    @Test
+    public void whenGetAllParcelWaitDelivery_atSpecificACP_withInvalidACP_thenThrowException() throws ResourceNotFoundException {
+        // Set up Expectations
+        when(acpRepository.findById(-5)).thenReturn(Optional.empty());
+
+        // Verify the result is as expected
+        assertThatThrownBy(() -> {
+            adminService.getParcelsWaitingDeliveryAtACP(-5);
+        }).isInstanceOf(ResourceNotFoundException.class).hasMessageContainingAll("Couldn't find ACP with the ID -5!");
+
+
+        // Mockito verifications
+        this.verifyFindByIdIsCalled();
+    }
+
+    @Test
+    public void whenGetAllParcelWaitPickup_atSpecificACP_withValidACP_thenThrowException() throws ResourceNotFoundException {
+        // Set up Expectations
+        when(acpRepository.findById(-5)).thenReturn(Optional.empty());
+
+        // Verify the result is as expected
+        assertThatThrownBy(() -> {
+            adminService.getParcelsWaitingPickupAtACP(-5);
+        }).isInstanceOf(ResourceNotFoundException.class).hasMessageContainingAll("Couldn't find ACP with the ID -5!");
+
+        // Mockito verifications
+        this.verifyFindByIdIsCalled();
     }
 
     @Test
@@ -160,8 +230,8 @@ public class AdminService_UnitTest {
                     Assertions.assertThat(map.get(pickupPointOne)).containsEntry("deliveryLimit", 10);
                 });
 
-        // Verify that the external API was called and Verify that the cache was called twice - to query and to add the new record
-        Mockito.verify(acpRepository, VerificationModeFactory.times(1)).findAll();
+        // Mockito verifications
+        this.verifyFindAllIsCalled();
     }
 
     @Test
@@ -184,21 +254,13 @@ public class AdminService_UnitTest {
         assertThat(returnedStats).containsKeys("total_parcels", "parcels_in_delivery", "parcels_waiting_pickup", "deliveryLimit");
         assertThat(returnedStats.get("deliveryLimit")).isEqualTo(10);
 
-        // Verify that the external API was called and Verify that the cache was called twice - to query and to add the new record
-        Mockito.verify(acpRepository, VerificationModeFactory.times(1)).findById(Mockito.any());
+        /// Mockito verifications
+        this.verifyFindByIdIsCalled();
     }
 
     @Test
-    public void whenGetSpecificOperationalStatisics_withInvalidACP_thenReturnOnlySpecificACP() throws ResourceNotFoundException {
+    public void whenGetSpecificOperationalStatisics_withInvalidACP_thenReturnException() throws ResourceNotFoundException {
         // Set up Expectations
-        Map<String, Integer> statsMap = new HashMap<>();
-
-        statsMap.put("total_parcels", 10);
-        statsMap.put("parcels_in_delivery", 5);
-        statsMap.put("parcels_waiting_pickup", 3);
-
-        pickupPointOne.setOperationalStatistics(statsMap);
-
         when(acpRepository.findById(-5)).thenReturn(Optional.empty());
 
         // Verify the result is as expected
@@ -206,7 +268,96 @@ public class AdminService_UnitTest {
             adminService.getSpecificACPStatistics(-5);
         }).isInstanceOf(ResourceNotFoundException.class).hasMessageContainingAll("Couldn't find ACP with the ID -5!");
 
-        // Verify that the external API was called and Verify that the cache was called twice - to query and to add the new record
+        // Mockito verifications
+        this.verifyFindByIdIsCalled();
+    }
+
+    @Test
+    public void getACPDetails_withValidACP_thenReturnDetails() throws ResourceNotFoundException {
+        // Set up Expectations
+        when(acpRepository.findById(5)).thenReturn(Optional.ofNullable(pickupPointOne));
+
+        // Verify the result is as expected
+        AssociatedCollectionPoint acp = adminService.getACPDetails(5);
+
+        assertThat(acp).isEqualTo(pickupPointOne);
+
+        // Mockito verifications
+        this.verifyFindByIdIsCalled();
+    }
+
+    @Test
+    public void getACPDetails_withInvalidACP_thenReturnException() throws ResourceNotFoundException {
+        // Set up Expectations
+        when(acpRepository.findById(-5)).thenReturn(Optional.empty());
+
+        // Verify the result is as expected
+        assertThatThrownBy(() -> {
+            adminService.getACPDetails(-5);
+        }).isInstanceOf(ResourceNotFoundException.class).hasMessageContainingAll("Couldn't find ACP with the ID -5!");
+
+        // Mockito verifications
+        this.verifyFindByIdIsCalled();
+    }
+
+    @Test
+    public void updateACPDetails_allFieldsPassed() throws ResourceNotFoundException {
+        // Set up Expectations
+        when(acpRepository.findById(5)).thenReturn(Optional.ofNullable(pickupPointOne));
+
+        // Verify the result is as expected
+        AssociatedCollectionPoint acp = adminService.updateACPDetails(5, "newemail@mail.pt", "test", "000000000", "Lalaland", "Nevermore");
+
+        assertThat(acp).extracting(AssociatedCollectionPoint::getCity).isEqualTo("Lalaland");
+        assertThat(acp).extracting(AssociatedCollectionPoint::getEmail).isEqualTo("newemail@mail.pt");
+        assertThat(acp).extracting(AssociatedCollectionPoint::getName).isEqualTo("test");
+        assertThat(acp).extracting(AssociatedCollectionPoint::getTelephoneNumber).isEqualTo("000000000");
+        assertThat(acp).extracting(AssociatedCollectionPoint::getAddress).isEqualTo("Nevermore");
+        assertThat(acp).extracting(AssociatedCollectionPoint::getDeliveryLimit).isEqualTo(10);
+
+        // Mockito verifications
+        this.verifyFindByIdIsCalled();
+    }
+
+    @Test
+    public void updateACPDetails_someFieldsPassed() throws ResourceNotFoundException {
+        // Set up Expectations
+        when(acpRepository.findById(5)).thenReturn(Optional.ofNullable(pickupPointOne));
+
+        // Verify the result is as expected
+        AssociatedCollectionPoint acp = adminService.updateACPDetails(5, null, null, null, "Lalaland", "Nevermore");
+
+        assertThat(acp).extracting(AssociatedCollectionPoint::getCity).isEqualTo("Lalaland");
+        assertThat(acp).extracting(AssociatedCollectionPoint::getEmail).isEqualTo(pickupPointOne.getEmail());
+        assertThat(acp).extracting(AssociatedCollectionPoint::getName).isEqualTo(pickupPointOne.getName());
+        assertThat(acp).extracting(AssociatedCollectionPoint::getTelephoneNumber).isEqualTo(pickupPointOne.getTelephoneNumber());
+        assertThat(acp).extracting(AssociatedCollectionPoint::getAddress).isEqualTo("Nevermore");
+        assertThat(acp).extracting(AssociatedCollectionPoint::getDeliveryLimit).isEqualTo(10);
+
+        // Mockito verifications
+        this.verifyFindByIdIsCalled();
+    }
+
+    @Test
+    public void updateACPDetails_invalidID() throws ResourceNotFoundException {
+        // Set up Expectations
+        when(acpRepository.findById(-5)).thenReturn(Optional.empty());
+
+        // Verify the result is as expected
+        assertThatThrownBy(() -> {
+            adminService.updateACPDetails(-5, null, null, null, "Lalaland", "Nevermore");
+        }).isInstanceOf(ResourceNotFoundException.class).hasMessageContainingAll("Couldn't find ACP with the ID -5!");
+
+        // Mockito verifications
+        this.verifyFindByIdIsCalled();
+    }
+
+    // Auxilliary functions
+    private void verifyFindByIdIsCalled(){
         Mockito.verify(acpRepository, VerificationModeFactory.times(1)).findById(Mockito.any());
+    }
+
+    private void verifyFindAllIsCalled(){
+        Mockito.verify(acpRepository, VerificationModeFactory.times(1)).findAll();
     }
 }
