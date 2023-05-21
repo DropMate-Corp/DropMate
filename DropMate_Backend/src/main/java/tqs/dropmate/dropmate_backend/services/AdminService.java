@@ -8,6 +8,7 @@ import tqs.dropmate.dropmate_backend.datamodel.Status;
 import tqs.dropmate.dropmate_backend.exceptions.ResourceNotFoundException;
 import tqs.dropmate.dropmate_backend.repositories.AssociatedCollectionPointRepository;
 import tqs.dropmate.dropmate_backend.repositories.ParcelRepository;
+import tqs.dropmate.dropmate_backend.utils.SuccessfulRequest;
 
 import java.util.HashMap;
 import java.util.List;
@@ -108,6 +109,32 @@ public class AdminService {
     public AssociatedCollectionPoint getACPDetails(Integer acpID) throws ResourceNotFoundException {
         return this.getACPFromID(acpID);
     }
+
+    /** Updates the details of an ACP
+     * @param acpID - ID of the ACP in the database
+     * @param email - Updated email for the ACP. Could be null
+     * @param name - Updated name for the ACP. Could be null
+     * @param telephone - Updated telephone for the ACP. Could be null
+     * @param city - Updated city for the ACP. Could be null
+     * @param address - Updated address for the ACP. Could be null
+     * @return a message stating the Request was Succesful
+     * @throws ResourceNotFoundException - Exception raised when an ID doesn't exist in the database
+     * */
+    public AssociatedCollectionPoint updateACPDetails(Integer acpID, String email, String name, String telephone, String city, String address) throws ResourceNotFoundException {
+        AssociatedCollectionPoint acp = this.getACPFromID(acpID);
+
+        acp.setName(name != null ? name : acp.getName());
+        acp.setEmail(email != null ? email : acp.getEmail());
+        acp.setTelephoneNumber(telephone != null ? telephone : acp.getTelephoneNumber());
+        acp.setCity(city != null ? city : acp.getCity());
+        acp.setAddress(address != null ? address : acp.getAddress());
+
+        acpRepository.save(acp);
+
+        return acp;
+    }
+
+
 
     // Auxilliary functions
 

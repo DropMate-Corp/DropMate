@@ -40,14 +40,14 @@ public class AdminController {
     }
 
     /** Updates the details of an ACP */
-    @PutMapping("/acp")
-    public ResponseEntity<SuccessfulRequest> updateACP(@RequestParam(name = "email", required = false) String email,
+    @PutMapping("/acp/{acpID}")
+    public ResponseEntity<AssociatedCollectionPoint> updateACP(@PathVariable(name = "acpID") Integer acpID,
+                                                       @RequestParam(name = "email", required = false) String email,
                                                        @RequestParam(name = "name", required = false) String name,
                                                        @RequestParam(name = "telephone", required = false) String telephone,
                                                        @RequestParam(name = "city", required = false) String city,
-                                                       @RequestParam(name = "address", required = false) String address){
-        //return ResponseEntity.ok().body(adminService.updateACPDetails(email, name, telephone, city, address));
-        return null;
+                                                       @RequestParam(name = "address", required = false) String address) throws ResourceNotFoundException {
+        return ResponseEntity.ok().body(adminService.updateACPDetails(acpID, email, name, telephone, city, address));
     }
 
     /** This method returns the details associated with a specific ACP */

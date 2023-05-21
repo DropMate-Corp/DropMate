@@ -250,4 +250,45 @@ public class DropMate_IntegrationTest {
         }
     }
 
+    @Test
+    @Order(13)
+    public void whenUpdateACPDetails_withValidID_allFields_thenReturn_statusOK() throws Exception {
+        RestAssured.given().contentType("application/json")
+                .param("name", "test")
+                .param("email", "newemail@mail.pt")
+                .param("telephone", "000000000")
+                .param("city", "Lalaland")
+                .param("address", "Nevermore")
+                .when().put(BASE_URI + randomServerPort + "/dropmate/admin/acp/26")
+                .then().statusCode(200)
+                .body("city", is("Lalaland")).and()
+                .body("address", is("Nevermore")).and()
+                .body("email", is("newemail@mail.pt")).and()
+                .body("deliveryLimit", is(15));
+    }
+
+    @Test
+    @Order(14)
+    public void whenUpdateACPDetails_withValidID_somFields_thenReturn_statusOK() throws Exception {
+        RestAssured.given().contentType("application/json")
+                .param("city", "Lalaland")
+                .param("address", "Nevermore")
+                .when().put(BASE_URI + randomServerPort + "/dropmate/admin/acp/28")
+                .then().statusCode(200)
+                .body("city", is("Lalaland")).and()
+                .body("address", is("Nevermore")).and()
+                .body("email", is("pickuptwo@mail.pt")).and()
+                .body("deliveryLimit", is(15));
+    }
+
+    @Test
+    @Order(15)
+    public void whenUpdateACPDetails_withInvalidID_thenReturn_statusNotFound() throws Exception {
+        RestAssured.given().contentType("application/json")
+                .param("city", "Lalaland")
+                .param("address", "Nevermore")
+                .when().put(BASE_URI + randomServerPort + "/dropmate/admin/acp/-28")
+                .then().statusCode(404);
+    }
+
 }

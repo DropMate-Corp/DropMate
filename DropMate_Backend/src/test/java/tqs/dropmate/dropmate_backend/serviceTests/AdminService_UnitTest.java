@@ -20,7 +20,6 @@ import tqs.dropmate.dropmate_backend.services.AdminService;
 
 import java.sql.Date;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -157,7 +156,8 @@ public class AdminService_UnitTest {
         assertThat(returnedParcels).extracting(Parcel::getParcelStatus).containsOnly(Status.IN_DELIVERY);
 
         // Mockito verifications
-        this.verifyFindAllIsCalled();
+        this.verifyFindByIdIsCalled();
+        Mockito.verify(parcelRepository, VerificationModeFactory.times(1)).findAll();
     }
 
     @Test
@@ -173,7 +173,8 @@ public class AdminService_UnitTest {
         assertThat(returnedParcels).extracting(Parcel::getParcelStatus).containsOnly(Status.WAITING_FOR_PICKUP);
 
         // Mockito verifications
-        this.verifyFindAllIsCalled();
+        this.verifyFindByIdIsCalled();
+        Mockito.verify(parcelRepository, VerificationModeFactory.times(1)).findAll();
     }
 
     @Test
@@ -293,6 +294,58 @@ public class AdminService_UnitTest {
         // Verify the result is as expected
         assertThatThrownBy(() -> {
             adminService.getACPDetails(-5);
+        }).isInstanceOf(ResourceNotFoundException.class).hasMessageContainingAll("Couldn't find ACP with the ID -5!");
+
+        // Mockito verifications
+        this.verifyFindByIdIsCalled();
+    }
+
+    @Test
+    public void updateACPDetails_allFieldsPassed() throws ResourceNotFoundException {
+        // Set up Expectations
+        when(acpRepository.findById(5)).thenReturn(Optional.ofNullable(pickupPointOne));
+
+        // Verify the result is as expected
+        AssociatedCollectionPoint acp = adminService.updateACPDetails(5, "newemail@mail.pt", "test", "000000000", "Lalaland", "Nevermore");
+
+        assertThat(acp).extracting(AssociatedCollectionPoint::getCity).isEqualTo("Lalaland");
+        assertThat(acp).extracting(AssociatedCollectionPoint::getEmail).isEqualTo("newemail@mail.pt");
+        assertThat(acp).extracting(AssociatedCollectionPoint::getName).isEqualTo("test");
+        assertThat(acp).extracting(AssociatedCollectionPoint::getTelephoneNumber).isEqualTo("000000000");
+        assertThat(acp).extracting(AssociatedCollectionPoint::getAddress).isEqualTo("Nevermore");
+        assertThat(acp).extracting(AssociatedCollectionPoint::getDeliveryLimit).isEqualTo(10);
+
+        // Mockito verifications
+        this.verifyFindByIdIsCalled();
+    }
+
+    @Test
+    public void updateACPDetails_someFieldsPassed() throws ResourceNotFoundException {
+        // Set up Expectations
+        when(acpRepository.findById(5)).thenReturn(Optional.ofNullable(pickupPointOne));
+
+        // Verify the result is as expected
+        AssociatedCollectionPoint acp = adminService.updateACPDetails(5, null, null, null, "Lalaland", "Nevermore");
+
+        assertThat(acp).extracting(AssociatedCollectionPoint::getCity).isEqualTo("Lalaland");
+        assertThat(acp).extracting(AssociatedCollectionPoint::getEmail).isEqualTo(pickupPointOne.getEmail());
+        assertThat(acp).extracting(AssociatedCollectionPoint::getName).isEqualTo(pickupPointOne.getName());
+        assertThat(acp).extracting(AssociatedCollectionPoint::getTelephoneNumber).isEqualTo(pickupPointOne.getTelephoneNumber());
+        assertThat(acp).extracting(AssociatedCollectionPoint::getAddress).isEqualTo("Nevermore");
+        assertThat(acp).extracting(AssociatedCollectionPoint::getDeliveryLimit).isEqualTo(10);
+
+        // Mockito verifications
+        this.verifyFindByIdIsCalled();
+    }
+
+    @Test
+    public void updateACPDetails_invalidID() throws ResourceNotFoundException {
+        // Set up Expectations
+        when(acpRepository.findById(-5)).thenReturn(Optional.empty());
+
+        // Verify the result is as expected
+        assertThatThrownBy(() -> {
+            adminService.updateACPDetails(-5, null, null, null, "Lalaland", "Nevermore");
         }).isInstanceOf(ResourceNotFoundException.class).hasMessageContainingAll("Couldn't find ACP with the ID -5!");
 
         // Mockito verifications

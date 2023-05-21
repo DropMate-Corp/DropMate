@@ -26,6 +26,8 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.*;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -252,6 +254,70 @@ public class AdminController_withMockServiceTest {
 
         mockMvc.perform(
                         get("/dropmate/admin/acp/-2").contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    public void whenUpdateACPDetails_withValidID_allFields_thenReturn_statusOK() throws Exception {
+        // Preparing for the test
+        pickupPointTwo.setName("test");
+        pickupPointTwo.setEmail("newemail@mail.pt");
+        pickupPointTwo.setAddress("Nevermore");
+        pickupPointTwo.setCity("Lalaland");
+        pickupPointTwo.setTelephoneNumber("000000000");
+
+        // Setting up expectations
+        when(adminService.updateACPDetails(2, "newemail@mail.pt", "test", "000000000", "Lalaland", "Nevermore"))
+                .thenReturn(pickupPointTwo);
+
+
+        // Performing the call
+        mockMvc.perform(
+                        put("/dropmate/admin/acp/2").contentType(MediaType.APPLICATION_JSON)
+                                .param("name", "test")
+                                .param("email", "newemail@mail.pt")
+                                .param("telephone", "000000000")
+                                .param("city", "Lalaland")
+                                .param("address", "Nevermore"))
+                .andExpect(status().isOk()).andDo(print())
+                .andExpect(jsonPath("$.city", is("Lalaland")))
+                .andExpect(jsonPath("$.address", is("Nevermore")))
+                .andExpect(jsonPath("$.email", is("newemail@mail.pt")))
+                .andExpect(jsonPath("$.deliveryLimit", is(15)));
+    }
+
+    @Test
+    public void whenUpdateACPDetails_withValidID_somFields_thenReturn_statusOK() throws Exception {
+        // Preparing for the test
+        pickupPointTwo.setAddress("Nevermore");
+        pickupPointTwo.setCity("Lalaland");
+
+        // Setting up expectations
+        when(adminService.updateACPDetails(2, null, null, null, "Lalaland", "Nevermore"))
+                .thenReturn(pickupPointTwo);
+
+
+        mockMvc.perform(
+                        put("/dropmate/admin/acp/2").contentType(MediaType.APPLICATION_JSON)
+                                .param("city", "Lalaland")
+                                .param("address", "Nevermore"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.city", is("Lalaland")))
+                .andExpect(jsonPath("$.address", is("Nevermore")))
+                .andExpect(jsonPath("$.email", is("pickuptwo@mail.pt")))
+                .andExpect(jsonPath("$.deliveryLimit", is(15)));
+    }
+
+    @Test
+    public void whenUpdateACPDetails_withInvalidID_thenReturn_statusNotFound() throws Exception {
+        when(adminService.updateACPDetails(-2, null, null, null, "Lalaland", "Nevermore"))
+                .thenThrow(new ResourceNotFoundException("Couldn't find ACP with the ID -2!"));;
+
+
+        mockMvc.perform(
+                        put("/dropmate/admin/acp/-2").contentType(MediaType.APPLICATION_JSON)
+                                .param("city", "Lalaland")
+                                .param("address", "Nevermore"))
                 .andExpect(status().isNotFound());
     }
 }
