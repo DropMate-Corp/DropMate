@@ -27,16 +27,14 @@ public class AdminController {
         return null;
     }
 
+
+    // ACP Methods
+
+
     /** This method returns all the ACP's associated with the Platform */
     @GetMapping("/acp")
     public ResponseEntity<List<AssociatedCollectionPoint>> getAllACP(){
         return ResponseEntity.ok().body(adminService.getAllACP());
-    }
-
-    /** This method is used to associate a new ACP with the platform */
-    @PostMapping("/acp")
-    public ResponseEntity<SuccessfulRequest> addACP(@RequestParam(name = "acp") AssociatedCollectionPoint acp){
-        return null;
     }
 
     /** Updates the details of an ACP */
@@ -62,11 +60,25 @@ public class AdminController {
         return null;
     }
 
+    /** Returns all the Operators associated with each ACP */
+    @GetMapping("/acp/operators")
+    public ResponseEntity<Map<AssociatedCollectionPoint, ACPOperator>> getAllOperators(){
+        return null;
+    }
+
+
+    // E-Store Methods
+
+
     /** This method returns all the E-Stores associated with the Platform */
     @GetMapping("/estores/")
     public ResponseEntity<List<Store>> getAllStores(){
         return null;
     }
+
+
+    // Operational Statistics
+
 
     /** This method returns the statistics associated with all ACPs */
     @GetMapping("/acp/statistics")
@@ -79,6 +91,10 @@ public class AdminController {
     public ResponseEntity<Map<String, Integer>> getACPStatistics(@PathVariable(name = "acpID") Integer acpID) throws ResourceNotFoundException {
         return ResponseEntity.ok().body(adminService.getSpecificACPStatistics(acpID));
     }
+
+
+    // Management of Parcels
+
 
     /** This method returns all the parcels waiting for delivery */
     @GetMapping("/parcels/all/delivery")
@@ -104,23 +120,30 @@ public class AdminController {
         return ResponseEntity.ok().body(adminService.getParcelsWaitingPickupAtACP(acpID));
     }
 
-    /** Returns all the Operators associated with each ACP */
-    @GetMapping("/acp/operators")
-    public ResponseEntity<Map<AssociatedCollectionPoint, ACPOperator>> getAllOperators(){
-        return null;
-    }
+
+    // Management of Pending ACP's
+
 
     /** Adds a new ACP to the pending list */
     @PostMapping("/acp/pending")
-    public ResponseEntity<SuccessfulRequest> addNewPendingACP(@RequestParam(name = "candidateACP") PendingACP candidateACP){return null;}
+    public ResponseEntity<PendingACP> addNewPendingACP(@RequestParam(name = "name") String name,
+                                                       @RequestParam(name = "email") String email,
+                                                       @RequestParam(name = "city") String city,
+                                                       @RequestParam(name = "address") String address,
+                                                       @RequestParam(name = "telephoneNumber") String telephoneNumber,
+                                                       @RequestParam(name = "description") String description) {
+
+        return ResponseEntity.ok().body(adminService.addNewPendingAcp(name, email, city, address, telephoneNumber, description));
+    }
 
     /** Gets all of the candidate ACP's  */
     @GetMapping("/acp/pending")
     public ResponseEntity<List<PendingACP>> getPendingACP(){return null;}
 
     /** Changes the status of a candidate ACP */
-    @PostMapping("/acp/pending/{acpID}/status")
-    public ResponseEntity<SuccessfulRequest> changePendingACPStatus(@PathVariable(name = "candidateACP") PendingACP candidateACP,
-                                                                    @RequestParam(name = "oldStatus") Integer oldStatus,
-                                                                    @RequestParam(name = "newStatus") Integer newStatus) {return null;}
+    @PutMapping("/acp/pending/{acpID}/status")
+    public ResponseEntity<SuccessfulRequest> changePendingACPStatus(@PathVariable(name = "acpID") Integer candidateID,
+                                                                    @RequestParam(name = "newStatus") Integer newStatus) throws ResourceNotFoundException {
+        return ResponseEntity.ok().body(adminService.changePendingACPStatus(candidateID, newStatus));
+    }
 }
