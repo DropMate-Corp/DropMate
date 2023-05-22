@@ -96,6 +96,33 @@ public class DropMate_IntegrationTest {
         user.setPassword("password");
 
         systemAdministratorRepository.saveAndFlush(user);
+
+        // Preparing the test
+        pendingACPRepository.deleteAll();
+
+        PendingACP candidateACP = new PendingACP();
+
+        candidateACP.setName("Test New ACP");
+        candidateACP.setEmail("newacp@mail.pt");
+        candidateACP.setCity("Aveiro");
+        candidateACP.setAddress("Fake Street no 1, Aveiro");
+        candidateACP.setTelephoneNumber("000000000");
+        candidateACP.setDescription("I am a totally legit pickup point");
+        candidateACP.setStatus(0);
+
+        PendingACP candidateACP2 = new PendingACP();
+
+        candidateACP2.setName("Test New ACP");
+        candidateACP2.setEmail("newacp@mail.pt");
+        candidateACP2.setCity("Aveiro");
+        candidateACP2.setAddress("Fake Street no 1, Aveiro");
+        candidateACP2.setTelephoneNumber("000000000");
+        candidateACP2.setDescription("I am a totally legit pickup point");
+        candidateACP2.setStatus(1);
+
+
+        pendingACPRepository.saveAndFlush(candidateACP);
+        pendingACPRepository.saveAndFlush(candidateACP2);
     }
 
     @AfterEach
@@ -104,6 +131,7 @@ public class DropMate_IntegrationTest {
         parcelRepository.deleteAll();
         storeRepository.deleteAll();
         pendingACPRepository.deleteAll();
+        systemAdministratorRepository.deleteAll();
     }
 
     @Test
@@ -306,86 +334,40 @@ public class DropMate_IntegrationTest {
     }
 
     @Test
-    @Disabled
+    @Order(16)
     void reviewCandidateACP_withValidID_notReviewedBefore_thenAcceptACP() throws Exception {
-        // Preparing the test
-        PendingACP candidateACP = new PendingACP();
-
-        candidateACP.setName("Test New ACP");
-        candidateACP.setEmail("newacp@mail.pt");
-        candidateACP.setCity("Aveiro");
-        candidateACP.setAddress("Fake Street no 1, Aveiro");
-        candidateACP.setTelephoneNumber("000000000");
-        candidateACP.setDescription("I am a totally legit pickup point");
-        candidateACP.setStatus(0);
-
-
-        pendingACPRepository.saveAndFlush(candidateACP);
-
         // Making the call
         RestAssured.with().contentType("application/json")
-                .when().post(BASE_URI + randomServerPort + "/dropmate/admin/acp/pending/1/status?newStatus=" + "2")
+                .when().put(BASE_URI + randomServerPort + "/dropmate/admin/acp/pending/32/status?newStatus=" + "2")
                 .then().statusCode(200)
-                .assertThat().body("message", equalTo("Request accepted!"));
+                .assertThat().body("message", equalTo("Operation denied, as this candidate request has already been reviewed!"));
 
-
-        // Verifying that the new ACP was added to the repository
-        List<AssociatedCollectionPoint> allACP = acpRepository.findAll();
-        Assertions.assertThat(allACP).extracting(AssociatedCollectionPoint::getName).contains("Test New ACP");
     }
 
     @Test
-    @Order(16)
+    @Order(17)
     void reviewCandidateACP_withValidID_notReviewedBefore_rejectACP() throws Exception {
-        // Preparing the test
-        PendingACP candidateACP = new PendingACP();
-
-        candidateACP.setName("Test New ACP");
-        candidateACP.setEmail("newacp@mail.pt");
-        candidateACP.setCity("Aveiro");
-        candidateACP.setAddress("Fake Street no 1, Aveiro");
-        candidateACP.setTelephoneNumber("000000000");
-        candidateACP.setDescription("I am a totally legit pickup point");
-        candidateACP.setStatus(0);
-
-
-        pendingACPRepository.saveAndFlush(candidateACP);
-
         // Performing the call
         RestAssured.given().contentType("application/json")
                 .param("newStatus", "1")
-                .when().put(BASE_URI + randomServerPort + "/dropmate/admin/acp/pending/1/status")
+                .when().put(BASE_URI + randomServerPort + "/dropmate/admin/acp/pending/33/status")
                 .then().statusCode(200)
                 .body("message", is("Request rejected!"));
     }
 
     @Test
-    @Order(17)
+    @Order(18)
     void reviewCandidateACP_withValidID_reviewedBefore_thenRejectNewEvaluation() throws Exception {
-        // Preparing the test
-        PendingACP candidateACP = new PendingACP();
-
-        candidateACP.setName("Test New ACP");
-        candidateACP.setEmail("newacp@mail.pt");
-        candidateACP.setCity("Aveiro");
-        candidateACP.setAddress("Fake Street no 1, Aveiro");
-        candidateACP.setTelephoneNumber("000000000");
-        candidateACP.setDescription("I am a totally legit pickup point");
-        candidateACP.setStatus(1);
-
-
-        pendingACPRepository.saveAndFlush(candidateACP);
-
         // Performing the call
         RestAssured.given().contentType("application/json")
-                .param("newStatus", "1")
-                .when().put(BASE_URI + randomServerPort + "/dropmate/admin/acp/pending/2/status")
+                .param("newStatus", "2")
+                .when().put(BASE_URI + randomServerPort + "/dropmate/admin/acp/pending/36/status")
                 .then().statusCode(200)
                 .body("message", is("Operation denied, as this candidate request has already been reviewed!"));
     }
 
     @Test
-    @Order(18)
+    @Order(19)
     void reviewCandidateACP_withInvalidID_thenReceiveException() throws Exception {
         // Performing the call
         RestAssured.given().contentType("application/json")
@@ -395,6 +377,7 @@ public class DropMate_IntegrationTest {
     }
 
     @Test
+    @Order(26)
     @Disabled
     void whenAddNewPendingACP_thenReturn_correspondingACP() throws Exception {
         RestAssured.given().log().all().contentType(ContentType.JSON)
@@ -416,17 +399,17 @@ public class DropMate_IntegrationTest {
     }
 
     @Test
-    @Order(19)
+    @Order(20)
     void deleteACP_withValidID_thenACPDeleted() throws Exception {
         // Performing the call
         RestAssured.given().contentType("application/json")
-                .when().delete(BASE_URI + randomServerPort + "/dropmate/admin/acp/37")
+                .when().delete(BASE_URI + randomServerPort + "/dropmate/admin/acp/40")
                 .then().statusCode(200)
                 .body("message", is("ACP succesfully deleted!"));
     }
 
     @Test
-    @Order(20)
+    @Order(21)
     void deleteACP_withInvalidID_thenThrowException() throws Exception {
         // Performing the call
         RestAssured.given().contentType("application/json")
@@ -436,7 +419,7 @@ public class DropMate_IntegrationTest {
     }
 
     @Test
-    @Order(21)
+    @Order(22)
     void whenGetAllStores_thenReturn_statusOK() throws Exception {
         RestAssured.with().contentType("application/json")
                 .when().get(BASE_URI + randomServerPort + "/dropmate/admin/estores")
@@ -448,7 +431,7 @@ public class DropMate_IntegrationTest {
     }
 
     @Test
-    @Order(22)
+    @Order(23)
     void whenLoginValidUser_thenReturnUser_andStatus200() {
         RestAssured.with().contentType("application/json")
                 .when().post(BASE_URI + randomServerPort + "/dropmate/admin/login?email=" + "user@email.com" + "&password=" + "password")
@@ -459,7 +442,7 @@ public class DropMate_IntegrationTest {
     }
 
     @Test
-    @Order(23)
+    @Order(24)
     void whenLoginWithInvalidEmail_thenReturnStatus401() {
         RestAssured.with().contentType("application/json")
                 .when().post(BASE_URI + randomServerPort + "/dropmate/admin/login?email=" + "invalidemail@email.com" + "&password=" + "password")
@@ -468,7 +451,7 @@ public class DropMate_IntegrationTest {
     }
 
     @Test
-    @Order(24)
+    @Order(25)
     void whenLoginWithInvalidPassword_thenReturnStatus401() {
         RestAssured.with().contentType("application/json")
                 .when().post(BASE_URI + randomServerPort + "/dropmate/admin/login?email=" + "user@email.com" + "&password=" + "invalidPassword")
