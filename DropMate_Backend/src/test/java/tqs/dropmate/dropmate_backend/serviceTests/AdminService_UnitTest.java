@@ -459,6 +459,20 @@ public class AdminService_UnitTest {
         Mockito.verify(pendingACPRepository, VerificationModeFactory.times(1)).findById(Mockito.any());
     }
 
+    @Test
+    void removeExistingACP() throws ResourceNotFoundException {
+        // Set up Expectations
+        when(acpRepository.findById(1)).thenReturn(Optional.of(pickupPointOne));
+
+        // Verify the result is as expected
+        assertThat(adminService.removeACP(1))
+                .extracting(SuccessfulRequest::getMessage).isEqualTo("ACP succesfully deleted!");
+
+        // Mockito verifications
+        this.verifyFindByIdIsCalled();
+        Mockito.verify(acpRepository, VerificationModeFactory.times(1)).delete(Mockito.any());
+    }
+
     // Auxilliary functions
     private void verifyFindByIdIsCalled(){
         Mockito.verify(acpRepository, VerificationModeFactory.times(1)).findById(Mockito.any());

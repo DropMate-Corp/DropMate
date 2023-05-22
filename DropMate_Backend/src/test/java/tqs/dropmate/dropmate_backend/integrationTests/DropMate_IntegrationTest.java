@@ -8,8 +8,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.TestPropertySource;
@@ -30,7 +28,6 @@ import java.util.Map;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -318,11 +315,12 @@ public class DropMate_IntegrationTest {
 
         pendingACPRepository.saveAndFlush(candidateACP);
 
-        int param1 = 2;
+        // Making the call
+        RestAssured.with().contentType("application/json")
+                .when().post(BASE_URI + randomServerPort + "/dropmate/admin/acp/pending/1/status?newStatus=" + "2")
+                .then().statusCode(200)
+                .assertThat().body("message", equalTo("Request accepted!"));
 
-        ResponseEntity<String> response = restTemplate.exchange(BASE_URI + randomServerPort + "/dropmate/admin/acp/pending/1/status?newStatus={param1}", HttpMethod.POST, null, String.class, param1);
-
-        assertEquals(200, response.getStatusCodeValue());
 
         // Verifying that the new ACP was added to the repository
         List<AssociatedCollectionPoint> allACP = acpRepository.findAll();
@@ -408,6 +406,26 @@ public class DropMate_IntegrationTest {
                 .body("email", is("newacp@mail.pt")).and()
                 .body("acpId", is(1)).and()
                 .body("status", is(0));
+    }
+
+    @Test
+    @Order(19)
+    void deleteACP_withValidID_thenACPDeleted() throws Exception {
+        // Performing the call
+        RestAssured.given().contentType("application/json")
+                .when().delete(BASE_URI + randomServerPort + "/dropmate/admin/acp/37")
+                .then().statusCode(200)
+                .body("message", is("ACP succesfully deleted!"));
+    }
+
+    @Test
+    @Order(20)
+    void deleteACP_withInvalidID_thenThrowException() throws Exception {
+        // Performing the call
+        RestAssured.given().contentType("application/json")
+                .param("newStatus", "1")
+                .when().put(BASE_URI + randomServerPort + "/dropmate/admin/acp/-41")
+                .then().statusCode(404);
     }
 
 }

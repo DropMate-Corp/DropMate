@@ -56,8 +56,8 @@ public class AdminController {
 
     /** Deletes an ACP */
     @DeleteMapping ("/acp/{acpID}")
-    public ResponseEntity<SuccessfulRequest> deleteACP(@PathVariable(name = "acpID") Integer acpID){
-        return null;
+    public ResponseEntity<SuccessfulRequest> deleteACP(@PathVariable(name = "acpID") Integer acpID) throws ResourceNotFoundException {
+        return ResponseEntity.ok().body(adminService.removeACP(acpID));
     }
 
     /** Returns all the Operators associated with each ACP */

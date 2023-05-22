@@ -404,4 +404,27 @@ public class AdminController_withMockServiceTest {
                                 .param("newStatus", "2"))
                 .andExpect(status().isNotFound());
     }
+
+    @Test
+    void deleteACP_withValidID_thenACPDeleted() throws Exception {
+        // Set up Expectations
+        when(adminService.removeACP(1)).thenReturn(new SuccessfulRequest("ACP succesfully deleted!"));
+
+        // Performing the call
+        mockMvc.perform(
+                        delete("/dropmate/admin/acp/1").contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message", is("ACP succesfully deleted!")));
+    }
+
+    @Test
+    void deleteACP_withInvalidID_thenThrowException() throws Exception {
+        // Set up Expectations
+        when(adminService.removeACP(-1)).thenThrow(new ResourceNotFoundException("Couldn't find candidate ACP with the ID -1!"));;
+
+        // Performing the call
+        mockMvc.perform(
+                        delete("/dropmate/admin/acp/-1").contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound());
+    }
 }
