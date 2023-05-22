@@ -9,10 +9,8 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import tqs.dropmate.dropmate_backend.controllers.AdminController;
-import tqs.dropmate.dropmate_backend.datamodel.AssociatedCollectionPoint;
-import tqs.dropmate.dropmate_backend.datamodel.Parcel;
-import tqs.dropmate.dropmate_backend.datamodel.PendingACP;
-import tqs.dropmate.dropmate_backend.datamodel.Status;
+import tqs.dropmate.dropmate_backend.datamodel.*;
+import tqs.dropmate.dropmate_backend.exceptions.InvalidCredentialsException;
 import tqs.dropmate.dropmate_backend.exceptions.ResourceNotFoundException;
 import tqs.dropmate.dropmate_backend.services.AdminService;
 import tqs.dropmate.dropmate_backend.utils.SuccessfulRequest;
@@ -23,7 +21,7 @@ import java.util.stream.Collectors;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.*;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -42,6 +40,7 @@ public class AdminController_withMockServiceTest {
     private List<Parcel> parcelsWaitingPickup;
     private AssociatedCollectionPoint pickupPointOne;
     private AssociatedCollectionPoint pickupPointTwo;
+    private SystemAdministrator user;
 
     @BeforeEach
     public void setUp(){
@@ -87,6 +86,12 @@ public class AdminController_withMockServiceTest {
         parcelsWaitingPickup = new ArrayList<>();
         parcelsWaitingPickup.add(parcelPickOne);
         parcelsWaitingPickup.add(parcelPickTwo);
+
+        // System admin
+        user = new SystemAdministrator();
+        user.setName("User");
+        user.setEmail("user@email.com");
+        user.setPassword("password");
     }
 
     @AfterEach
@@ -106,6 +111,24 @@ public class AdminController_withMockServiceTest {
                 .andExpect(jsonPath("$", hasSize(3)))
                 .andExpect(jsonPath("$[0].city", is("Aveiro")))
                 .andExpect(jsonPath("$[2].address", is("Fake address 3, Viseu")));
+    }
+
+    @Test
+    void whenGetAllStores_thenReturn_statusOK() throws Exception {
+        // Creating Fake Stores
+        List<Store> allStores = new ArrayList<>();
+        allStores.add(new Store("Store One", "one@mail.pt", "Aveiro", "Fake Adress 1, Aveiro", "000000000"));
+        allStores.add(new Store("Store Two", "two@mail.pt", "Porto", "Fake Adress 2, Porto", "000000000"));
+
+
+        when(adminService.getAllStores()).thenReturn(allStores);
+
+        mockMvc.perform(
+                        get("/dropmate/admin/estores").contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(2)))
+                .andExpect(jsonPath("$[0].city", is("Aveiro")))
+                .andExpect(jsonPath("$[1].address", is("Fake Adress 2, Porto")));
     }
 
     @Test
@@ -426,5 +449,55 @@ public class AdminController_withMockServiceTest {
         mockMvc.perform(
                         delete("/dropmate/admin/acp/-1").contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void whenLoginValidUser_thenReturnUser_andStatus200() throws Exception {
+        when(adminService.processAdminLogin(user.getEmail(), user.getPassword()))
+                .thenReturn(user);
+
+        mockMvc.perform(
+                        post("/dropmate/admin/login")
+                                .param("email", user.getEmail())
+                                .param("password", user.getPassword()).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.name").value(user.getName()))
+                .andExpect(jsonPath("$.email").value(user.getEmail()))
+                .andExpect(jsonPath("$.password").value(user.getPassword()));
+
+        verify(adminService, times(1)).processAdminLogin(user.getEmail(), user.getPassword());
+    }
+
+    @Test
+    void whenLoginWithInvalidPassword_thenReturnStatus401() throws Exception {
+        String wrongPassword = "wrongPassword";
+        when(adminService.processAdminLogin(user.getEmail(), wrongPassword))
+                .thenThrow(new InvalidCredentialsException());
+
+        mockMvc.perform(
+                        post("/dropmate/admin/login")
+                                .param("email", user.getEmail())
+                                .param("password", wrongPassword).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.message").value("Invalid login credentials."));
+
+        verify(adminService, times(1)).processAdminLogin(user.getEmail(), wrongPassword);
+    }
+
+    @Test
+    void whenLoginWithInvalidEmail_thenReturnStatus401() throws Exception {
+        String wrongEmail = "wrongEmail@mail.com";
+
+        when(adminService.processAdminLogin(wrongEmail, user.getPassword()))
+                .thenThrow(new InvalidCredentialsException());
+
+        mockMvc.perform(
+                        post("/dropmate/admin/login")
+                                .param("email", wrongEmail)
+                                .param("password", user.getPassword()).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.message").value("Invalid login credentials."));
+
+        verify(adminService, times(1)).processAdminLogin(wrongEmail, user.getPassword());
     }
 }

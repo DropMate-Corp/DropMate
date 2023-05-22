@@ -3,6 +3,7 @@ package tqs.dropmate.dropmate_backend.controllers;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import tqs.dropmate.dropmate_backend.datamodel.*;
+import tqs.dropmate.dropmate_backend.exceptions.InvalidCredentialsException;
 import tqs.dropmate.dropmate_backend.exceptions.ResourceNotFoundException;
 import tqs.dropmate.dropmate_backend.services.AdminService;
 import tqs.dropmate.dropmate_backend.utils.SuccessfulRequest;
@@ -23,8 +24,8 @@ public class AdminController {
     /** Method for the DropMate administrator login */
     @PostMapping("/login")
     public ResponseEntity<SystemAdministrator> adminLogin(@RequestParam(name = "email") String email,
-                                                          @RequestParam(name = "password") String password){
-        return null;
+                                                          @RequestParam(name = "password") String password) throws InvalidCredentialsException {
+        return ResponseEntity.ok().body(adminService.processAdminLogin(email, password));
     }
 
 
@@ -60,20 +61,15 @@ public class AdminController {
         return ResponseEntity.ok().body(adminService.removeACP(acpID));
     }
 
-    /** Returns all the Operators associated with each ACP */
-    @GetMapping("/acp/operators")
-    public ResponseEntity<Map<AssociatedCollectionPoint, ACPOperator>> getAllOperators(){
-        return null;
-    }
 
 
     // E-Store Methods
 
 
     /** This method returns all the E-Stores associated with the Platform */
-    @GetMapping("/estores/")
+    @GetMapping("/estores")
     public ResponseEntity<List<Store>> getAllStores(){
-        return null;
+        return ResponseEntity.ok().body(adminService.getAllStores());
     }
 
 

@@ -2,14 +2,10 @@ package tqs.dropmate.dropmate_backend.services;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import tqs.dropmate.dropmate_backend.datamodel.AssociatedCollectionPoint;
-import tqs.dropmate.dropmate_backend.datamodel.Parcel;
-import tqs.dropmate.dropmate_backend.datamodel.PendingACP;
-import tqs.dropmate.dropmate_backend.datamodel.Status;
+import tqs.dropmate.dropmate_backend.datamodel.*;
+import tqs.dropmate.dropmate_backend.exceptions.InvalidCredentialsException;
 import tqs.dropmate.dropmate_backend.exceptions.ResourceNotFoundException;
-import tqs.dropmate.dropmate_backend.repositories.AssociatedCollectionPointRepository;
-import tqs.dropmate.dropmate_backend.repositories.ParcelRepository;
-import tqs.dropmate.dropmate_backend.repositories.PendingAssociatedCollectionPointRepository;
+import tqs.dropmate.dropmate_backend.repositories.*;
 import tqs.dropmate.dropmate_backend.utils.SuccessfulRequest;
 
 import java.util.HashMap;
@@ -19,13 +15,19 @@ import java.util.stream.Collectors;
 
 @Service
 public class AdminService {
-    @Autowired
     private AssociatedCollectionPointRepository acpRepository;
-    @Autowired
     private ParcelRepository parcelRepository;
-    @Autowired
     private PendingAssociatedCollectionPointRepository pendingACPRepository;
+    private StoreRepository storeRepository;
+    private SystemAdministratorRepository systemAdministratorRepository;
 
+    public AdminService(AssociatedCollectionPointRepository acpRepository, ParcelRepository parcelRepository, PendingAssociatedCollectionPointRepository pendingACPRepository, StoreRepository storeRepository, SystemAdministratorRepository systemAdministratorRepository) {
+        this.acpRepository = acpRepository;
+        this.parcelRepository = parcelRepository;
+        this.pendingACPRepository = pendingACPRepository;
+        this.storeRepository = storeRepository;
+        this.systemAdministratorRepository = systemAdministratorRepository;
+    }
 
     // ACP Methods
     /** This method returns all the ACP's associated with the Platform */
@@ -79,10 +81,32 @@ public class AdminService {
         return new SuccessfulRequest("ACP succesfully deleted!");
     }
 
+    /** Method for the DropMate administrator login
+     * @param email - The email of the System Admin
+     * @param password - The password of the System Admin
+     * @return the corresponding System Admin object
+     * @throws ResourceNotFoundException - Exception raised when an ID doesn't exist in the database
+     * */
+    public SystemAdministrator processAdminLogin(String email, String password) throws InvalidCredentialsException {
+        SystemAdministrator admin = systemAdministratorRepository.findByEmail(email);
+
+        if(admin != null && admin.getPassword().equals(password)){
+            return admin;
+        }
+        throw new InvalidCredentialsException();
+    }
+
 
 
     // E-Store Methods
 
+
+    /** This method returns all the E-Stores associated with the Platform
+     * @return the List of all E-Stores partnered with the platform
+     * */
+    public List<Store> getAllStores() {
+        return storeRepository.findAll();
+    }
 
 
     // Operational Statistics

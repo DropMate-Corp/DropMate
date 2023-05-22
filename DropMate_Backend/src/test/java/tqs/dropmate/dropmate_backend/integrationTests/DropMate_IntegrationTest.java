@@ -15,10 +15,7 @@ import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import tqs.dropmate.dropmate_backend.datamodel.*;
-import tqs.dropmate.dropmate_backend.repositories.AssociatedCollectionPointRepository;
-import tqs.dropmate.dropmate_backend.repositories.ParcelRepository;
-import tqs.dropmate.dropmate_backend.repositories.PendingAssociatedCollectionPointRepository;
-import tqs.dropmate.dropmate_backend.repositories.StoreRepository;
+import tqs.dropmate.dropmate_backend.repositories.*;
 
 import java.sql.Date;
 import java.util.HashMap;
@@ -32,7 +29,7 @@ import static org.hamcrest.Matchers.*;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @Testcontainers
-@TestPropertySource(properties = "spring.jpa.hibernate.ddl-auto=create")
+@TestPropertySource(properties = "spring.jpa.hibernate.ddl-auto=create-drop")
 //@TestPropertySource(locations = "classpath:application-test.properties")
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class DropMate_IntegrationTest {
@@ -49,6 +46,8 @@ public class DropMate_IntegrationTest {
     private StoreRepository storeRepository;
     @Autowired
     private PendingAssociatedCollectionPointRepository pendingACPRepository;
+    @Autowired
+    private SystemAdministratorRepository systemAdministratorRepository;
     @Autowired
     private TestRestTemplate restTemplate;
 
@@ -89,6 +88,14 @@ public class DropMate_IntegrationTest {
 
         testStore = new Store("PickUpPointTwo", "pickuptwo@mail.pt", "Porto", "Fake address 2, Porto", "935264901");
         storeRepository.saveAndFlush(testStore);
+
+        // System admin
+        SystemAdministrator user = new SystemAdministrator();
+        user.setName("User");
+        user.setEmail("user@email.com");
+        user.setPassword("password");
+
+        systemAdministratorRepository.saveAndFlush(user);
     }
 
     @AfterEach
@@ -426,6 +433,47 @@ public class DropMate_IntegrationTest {
                 .param("newStatus", "1")
                 .when().put(BASE_URI + randomServerPort + "/dropmate/admin/acp/-41")
                 .then().statusCode(404);
+    }
+
+    @Test
+    @Order(21)
+    void whenGetAllStores_thenReturn_statusOK() throws Exception {
+        RestAssured.with().contentType("application/json")
+                .when().get(BASE_URI + randomServerPort + "/dropmate/admin/estores")
+                .then().statusCode(200)
+                .body("size()", is(1)).and()
+                .body("city", hasItems("Porto")).and()
+                .body("[0].email", is("pickuptwo@mail.pt"));
+
+    }
+
+    @Test
+    @Order(22)
+    void whenLoginValidUser_thenReturnUser_andStatus200() {
+        RestAssured.with().contentType("application/json")
+                .when().post(BASE_URI + randomServerPort + "/dropmate/admin/login?email=" + "user@email.com" + "&password=" + "password")
+                .then().statusCode(200)
+                .assertThat().body("name", equalTo("User"))
+                .assertThat().body("email", equalTo("user@email.com"))
+                .assertThat().body("password", equalTo("password"));
+    }
+
+    @Test
+    @Order(23)
+    void whenLoginWithInvalidEmail_thenReturnStatus401() {
+        RestAssured.with().contentType("application/json")
+                .when().post(BASE_URI + randomServerPort + "/dropmate/admin/login?email=" + "invalidemail@email.com" + "&password=" + "password")
+                .then().statusCode(401)
+                .assertThat().body("message", equalTo("Invalid login credentials."));
+    }
+
+    @Test
+    @Order(24)
+    void whenLoginWithInvalidPassword_thenReturnStatus401() {
+        RestAssured.with().contentType("application/json")
+                .when().post(BASE_URI + randomServerPort + "/dropmate/admin/login?email=" + "user@email.com" + "&password=" + "invalidPassword")
+                .then().statusCode(401)
+                .assertThat().body("message", equalTo("Invalid login credentials."));
     }
 
 }

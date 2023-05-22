@@ -10,14 +10,10 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.internal.verification.VerificationModeFactory;
 import org.mockito.junit.jupiter.MockitoExtension;
-import tqs.dropmate.dropmate_backend.datamodel.AssociatedCollectionPoint;
-import tqs.dropmate.dropmate_backend.datamodel.Parcel;
-import tqs.dropmate.dropmate_backend.datamodel.PendingACP;
-import tqs.dropmate.dropmate_backend.datamodel.Status;
+import tqs.dropmate.dropmate_backend.datamodel.*;
+import tqs.dropmate.dropmate_backend.exceptions.InvalidCredentialsException;
 import tqs.dropmate.dropmate_backend.exceptions.ResourceNotFoundException;
-import tqs.dropmate.dropmate_backend.repositories.AssociatedCollectionPointRepository;
-import tqs.dropmate.dropmate_backend.repositories.ParcelRepository;
-import tqs.dropmate.dropmate_backend.repositories.PendingAssociatedCollectionPointRepository;
+import tqs.dropmate.dropmate_backend.repositories.*;
 import tqs.dropmate.dropmate_backend.services.AdminService;
 import tqs.dropmate.dropmate_backend.utils.SuccessfulRequest;
 
@@ -26,7 +22,7 @@ import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class AdminService_UnitTest {
@@ -34,6 +30,10 @@ public class AdminService_UnitTest {
     private AssociatedCollectionPointRepository acpRepository;
     @Mock(lenient = true)
     private ParcelRepository parcelRepository;
+    @Mock(lenient = true)
+    private StoreRepository storeRepository;
+    @Mock(lenient = true)
+    private SystemAdministratorRepository systemAdministratorRepository;
     @Mock(lenient = true)
     private PendingAssociatedCollectionPointRepository pendingACPRepository;
 
@@ -119,6 +119,28 @@ public class AdminService_UnitTest {
 
         // Mockito verifications
         this.verifyFindAllIsCalled();
+    }
+
+    @Test
+    void whenGetAllStores_thenReturnAllStores(){
+        // Creating Fake Stores
+        List<Store> allStores = new ArrayList<>();
+        allStores.add(new Store("Store One", "one@mail.pt", "Aveiro", "Fake Adress 1, Aveiro", "000000000"));
+        allStores.add(new Store("Store Two", "two@mail.pt", "Porto", "Fake Adress 2, Porto", "000000000"));
+
+
+        // Set up Expectations
+        when(storeRepository.findAll()).thenReturn(allStores);
+
+        // Verify the result is as expected
+        List<Store> returnedStores = adminService.getAllStores();
+        assertThat(returnedStores)
+                .isEqualTo(allStores)
+                .hasSize(2)
+                .extracting(Store::getCity).contains("Aveiro", "Porto");
+
+        // Mockito verifications
+        Mockito.verify(storeRepository, VerificationModeFactory.times(1)).findAll();
     }
 
     @Test
@@ -471,6 +493,65 @@ public class AdminService_UnitTest {
         // Mockito verifications
         this.verifyFindByIdIsCalled();
         Mockito.verify(acpRepository, VerificationModeFactory.times(1)).delete(Mockito.any());
+    }
+
+    @Test
+    void whenLoginValidUser_thenReturnUser () throws InvalidCredentialsException {
+        // Set Up Expectations
+        SystemAdministrator admin = new SystemAdministrator();
+        admin.setName("User");
+        admin.setEmail("user@email.com");
+        admin.setPassword("password");
+
+        when(systemAdministratorRepository.findByEmail(admin.getEmail())).thenReturn(admin);
+        SystemAdministrator loggedUser = adminService.processAdminLogin(admin.getEmail(), admin.getPassword());
+
+        // Verify the result is as expected
+        assertThat(loggedUser).isNotNull();
+        assertThat(loggedUser.getName()).isEqualTo(admin.getName());
+        assertThat(loggedUser.getEmail()).isEqualTo(admin.getEmail());
+        assertThat(loggedUser.getPassword()).isEqualTo(admin.getPassword());
+
+        // Mockito verifications
+        verify(systemAdministratorRepository, times(1)).findByEmail(admin.getEmail());
+    }
+
+    @Test
+    void whenLoginWithInvalidEmail_thenThrowInvalidCredentialsException () {
+        // Set Up Expectations
+        SystemAdministrator admin = new SystemAdministrator();
+        admin.setName("User");
+        admin.setEmail("user@email.com");
+        admin.setPassword("password");
+
+        when(systemAdministratorRepository.findByEmail(admin.getEmail())).thenReturn(null);
+
+        // Verify the result is as expected
+        assertThatThrownBy(() -> adminService.processAdminLogin(admin.getEmail(), admin.getPassword()))
+                .isInstanceOf(InvalidCredentialsException.class)
+                .hasMessageContaining("Invalid login credentials.");
+
+        // Mockito verifications
+        verify(systemAdministratorRepository, times(1)).findByEmail(admin.getEmail());
+    }
+
+    @Test
+    void whenLoginWithInvalidPassword_thenThrowInvalidCredentialsException () {
+        // Set Up Expectations
+        SystemAdministrator admin = new SystemAdministrator();
+        admin.setName("User");
+        admin.setEmail("user@email.com");
+        admin.setPassword("password");
+
+        when(systemAdministratorRepository.findByEmail(admin.getEmail())).thenReturn(admin);
+
+        // Verify the result is as expected
+        assertThatThrownBy(() -> adminService.processAdminLogin(admin.getEmail(), "invalidPassword"))
+                .isInstanceOf(InvalidCredentialsException.class)
+                .hasMessageContaining("Invalid login credentials.");
+
+        // Mockito verifications
+        verify(systemAdministratorRepository, times(1)).findByEmail(admin.getEmail());
     }
 
     // Auxilliary functions
