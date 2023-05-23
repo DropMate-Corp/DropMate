@@ -2,11 +2,9 @@ package tqs.dropmate.dropmate_backend.integrationTests;
 
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -19,7 +17,6 @@ import tqs.dropmate.dropmate_backend.repositories.*;
 
 import java.sql.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import static org.hamcrest.CoreMatchers.is;
@@ -32,7 +29,7 @@ import static org.hamcrest.Matchers.*;
 @TestPropertySource(properties = "spring.jpa.hibernate.ddl-auto=create-drop")
 //@TestPropertySource(locations = "classpath:application-test.properties")
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-public class DropMate_IntegrationTest {
+public class AdminController_IntegrationTest {
     private final static String BASE_URI = "http://localhost:";
 
     @LocalServerPort
@@ -48,8 +45,6 @@ public class DropMate_IntegrationTest {
     private PendingAssociatedCollectionPointRepository pendingACPRepository;
     @Autowired
     private SystemAdministratorRepository systemAdministratorRepository;
-    @Autowired
-    private TestRestTemplate restTemplate;
 
     private AssociatedCollectionPoint testACP;
     private AssociatedCollectionPoint testACP2;
@@ -378,23 +373,17 @@ public class DropMate_IntegrationTest {
 
     @Test
     @Order(26)
-    @Disabled
     void whenAddNewPendingACP_thenReturn_correspondingACP() throws Exception {
         RestAssured.given().log().all().contentType(ContentType.JSON)
-                .body("{"
-                        + "\"city\": \"Aveiro\","
-                        + "\"address\": \"Fake Street no 1, Aveiro\","
-                        + "\"name\": \"Test New ACP\","
-                        + "\"email\": \"newacp@mail.pt\","
-                        + "\"telephoneNumber\": \"000000000\","
-                        + "\"description\": \"I am a totally legit pickup point\""
-                        + "}"
-                ).when().post(BASE_URI + randomServerPort + "/dropmate/admin/acp/pending")
+                .when().post(BASE_URI + randomServerPort + "/dropmate/admin/acp/pending?city=" + "Aveiro"
+                + "&address=" + "Fake Street no 1, Aveiro" + "&name=" + "Test New ACP"
+                        + "&email=" + "newacp@mail.pt" + "&telephoneNumber=" + "000000000"
+                        + "&description=" + "I am a totally legit pickup point")
                 .then().statusCode(200)
                 .body("city", is("Aveiro")).and()
                 .body("address", is("Fake Street no 1, Aveiro")).and()
                 .body("email", is("newacp@mail.pt")).and()
-                .body("acpId", is(1)).and()
+                .body("acpId", is(51)).and()
                 .body("status", is(0));
     }
 
