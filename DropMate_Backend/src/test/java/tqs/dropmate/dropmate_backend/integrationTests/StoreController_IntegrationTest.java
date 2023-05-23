@@ -19,7 +19,11 @@ import tqs.dropmate.dropmate_backend.datamodel.Store;
 import tqs.dropmate.dropmate_backend.repositories.AssociatedCollectionPointRepository;
 import tqs.dropmate.dropmate_backend.repositories.StoreRepository;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.Matchers.hasItems;
 
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -58,9 +62,38 @@ public class StoreController_IntegrationTest {
     public void setUp(){
         testACP = new AssociatedCollectionPoint("PickUpPointOne", "pickupone@mail.pt", "Aveiro", "Fake address 1, Aveiro", "953339994", 10 );
         AssociatedCollectionPoint testACP2 = new AssociatedCollectionPoint("PickUpPointTwo", "pickuptwo@mail.pt", "Porto", "Fake address 2, Porto", "935264901", 15 );
+        AssociatedCollectionPoint pickupPointThree = new AssociatedCollectionPoint();
+        pickupPointThree.setName("Pickup Three");
+        pickupPointThree.setCity("Viseu");
+        pickupPointThree.setAddress("Fake address 3, Viseu");
+        pickupPointThree.setEmail("pickupthree@mail.pt");
+        pickupPointThree.setDeliveryLimit(12);
+        pickupPointThree.setTelephoneNumber("900000000");
+
+        // Under Limit
+        Map<String, Integer> statsMapOne = new HashMap<>();
+        statsMapOne.put("total_parcels", 10);
+        statsMapOne.put("parcels_in_delivery", 5);
+        statsMapOne.put("parcels_waiting_pickup", 3);
+        testACP.setOperationalStatistics(statsMapOne);
+
+        // Over Limit
+        Map<String, Integer> statsMapTwo = new HashMap<>();
+        statsMapTwo.put("total_parcels", 30);
+        statsMapTwo.put("parcels_in_delivery", 12);
+        statsMapTwo.put("parcels_waiting_pickup", 3);
+        testACP2.setOperationalStatistics(statsMapTwo);
+
+        // Under Limit
+        Map<String, Integer> statsMapThree = new HashMap<>();
+        statsMapThree.put("total_parcels", 30);
+        statsMapThree.put("parcels_in_delivery", 2);
+        statsMapThree.put("parcels_waiting_pickup", 1);
+        pickupPointThree.setOperationalStatistics(statsMapThree);
 
         acpRepository.saveAndFlush(testACP);
         acpRepository.saveAndFlush(testACP2);
+        acpRepository.saveAndFlush(pickupPointThree);
 
         testStore = new Store("PickUpPointTwo", "pickuptwo@mail.pt", "Porto", "Fake address 2, Porto", "935264901");
         storeRepository.saveAndFlush(testStore);
@@ -74,10 +107,29 @@ public class StoreController_IntegrationTest {
 
     @Test
     @Order(1)
+    void whenGettingAvailableACP_withValidParameters_thenReturnOnlyACPSUnderLimit_statusOK() throws Exception {
+        RestAssured.given().log().all().contentType(ContentType.JSON)
+                .when().get(BASE_URI + randomServerPort + "/dropmate/estore_api/acp?storeID=" + "1")
+                .then().statusCode(200)
+                .body("size()", is(2)).and()
+                .body("city", hasItems("Aveiro", "Viseu")).and()
+                .body("[1].email", is("pickupthree@mail.pt"));
+    }
+
+    @Test
+    @Order(2)
+    void whenGettingAvailableACP__withInvalidStoreID_statusNotFound() throws Exception {
+        RestAssured.given().log().all().contentType(ContentType.JSON)
+                .when().get(BASE_URI + randomServerPort + "/dropmate/estore_api/acp?storeID=" + "1")
+                .then().statusCode(404);
+    }
+
+    @Test
+    @Order(3)
     void whenCreatingOrder_withValidParameters_thenReturn_statusOK() {
         RestAssured.given().log().all().contentType(ContentType.JSON)
-                .when().post(BASE_URI + randomServerPort + "/dropmate/estore_api/parcel?acpID=" + "1"
-                        + "&storeID=" + "1")
+                .when().post(BASE_URI + randomServerPort + "/dropmate/estore_api/parcel?acpID=" + "7"
+                        + "&storeID=" + "3")
                 .then().statusCode(200)
                 .body("deliveryCode", Matchers.notNullValue()).and()
                 .body("pickupCode", Matchers.notNullValue()).and()
@@ -85,20 +137,20 @@ public class StoreController_IntegrationTest {
     }
 
     @Test
-    @Order(2)
+    @Order(4)
     void whenCreatingOrder_withInvalidStoreID_thenReturn_statusNotFound() throws Exception {
         RestAssured.given().log().all().contentType(ContentType.JSON)
-                .when().post(BASE_URI + randomServerPort + "/dropmate/estore_api/parcel?acpID=" + "1"
+                .when().post(BASE_URI + randomServerPort + "/dropmate/estore_api/parcel?acpID=" + "10"
                         + "&storeID=" + "-1")
                 .then().statusCode(404);
     }
 
     @Test
-    @Order(3)
+    @Order(5)
     void whenCreatingOrder_withInvalidACPID_thenReturn_statusNotFound() throws Exception {
         RestAssured.given().log().all().contentType(ContentType.JSON)
                 .when().post(BASE_URI + randomServerPort + "/dropmate/estore_api/parcel?acpID=" + "-1"
-                        + "&storeID=" + "1")
+                        + "&storeID=" + "4")
                 .then().statusCode(404);
     }
 }

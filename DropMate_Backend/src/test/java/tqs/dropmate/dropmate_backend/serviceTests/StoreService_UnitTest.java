@@ -17,9 +17,7 @@ import tqs.dropmate.dropmate_backend.exceptions.ResourceNotFoundException;
 import tqs.dropmate.dropmate_backend.repositories.*;
 import tqs.dropmate.dropmate_backend.services.StoreService;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -47,6 +45,7 @@ public class StoreService_UnitTest {
         testStore = new Store("Store One", "one@mail.pt", "Aveiro", "Fake Adress 1, Aveiro", "000000000");
 
         AssociatedCollectionPoint pickupPointOne = new AssociatedCollectionPoint();
+        pickupPointOne.setName("Pickup One");
         pickupPointOne.setCity("Aveiro");
         pickupPointOne.setAddress("Fake address 1, Aveiro");
         pickupPointOne.setEmail("pickupone@mail.pt");
@@ -54,6 +53,7 @@ public class StoreService_UnitTest {
         pickupPointOne.setTelephoneNumber("953339994");
 
         AssociatedCollectionPoint pickupPointTwo = new AssociatedCollectionPoint();
+        pickupPointTwo.setName("Pickup Two");
         pickupPointTwo.setCity("Porto");
         pickupPointTwo.setAddress("Fake address 2, Porto");
         pickupPointTwo.setEmail("pickuptwo@mail.pt");
@@ -61,11 +61,33 @@ public class StoreService_UnitTest {
         pickupPointTwo.setTelephoneNumber("939333594");
 
         AssociatedCollectionPoint pickupPointThree = new AssociatedCollectionPoint();
+        pickupPointThree.setName("Pickup Three");
         pickupPointThree.setCity("Viseu");
         pickupPointThree.setAddress("Fake address 3, Viseu");
         pickupPointThree.setEmail("pickupthree@mail.pt");
         pickupPointThree.setDeliveryLimit(12);
         pickupPointThree.setTelephoneNumber("900000000");
+
+        // Under Limit
+        Map<String, Integer> statsMapOne = new HashMap<>();
+        statsMapOne.put("total_parcels", 10);
+        statsMapOne.put("parcels_in_delivery", 5);
+        statsMapOne.put("parcels_waiting_pickup", 3);
+        pickupPointOne.setOperationalStatistics(statsMapOne);
+
+        // Over Limit
+        Map<String, Integer> statsMapTwo = new HashMap<>();
+        statsMapTwo.put("total_parcels", 30);
+        statsMapTwo.put("parcels_in_delivery", 12);
+        statsMapTwo.put("parcels_waiting_pickup", 3);
+        pickupPointTwo.setOperationalStatistics(statsMapTwo);
+
+        // Under Limit
+        Map<String, Integer> statsMapThree = new HashMap<>();
+        statsMapThree.put("total_parcels", 30);
+        statsMapThree.put("parcels_in_delivery", 2);
+        statsMapThree.put("parcels_waiting_pickup", 1);
+        pickupPointThree.setOperationalStatistics(statsMapThree);
 
         // Adding to ACP list
         allACP = new ArrayList<>();
@@ -137,7 +159,41 @@ public class StoreService_UnitTest {
         assertThat(storeService.generateRandomCode()).matches("[A-Z]{3}\\d{3}");
     }
 
+    @Test
+    void whenGettingAvailableACP_withValidParameters_thenReturnOnlyACPSUnderLimit() throws ResourceNotFoundException {
+        // Set up Expectations
+        when(storeRepository.findById(Mockito.any())).thenReturn(Optional.ofNullable(testStore));
+        when(acpRepository.findAll()).thenReturn(allACP);
+
+        // Verify the result is as expected
+        List<AssociatedCollectionPoint> availableACP = storeService.getAvailableACP(1);
+        assertThat(availableACP).hasSize(2);
+        assertThat(availableACP).extracting(AssociatedCollectionPoint::getName).containsOnly("Pickup One", "Pickup Three");
+        assertThat(availableACP).extracting(AssociatedCollectionPoint::getCity).containsOnly("Aveiro", "Viseu");
+
+        // Mockito verifications
+        this.verifyStoreFindByIdIsCalled();
+        Mockito.verify(acpRepository, VerificationModeFactory.times(1)).findAll();
+    }
+
+    @Test
+    void whenGettingAvailableACP__withInvalidStoreID_thenExceptionThrown(){
+        // Set up Expectations
+        when(storeRepository.findById(-5)).thenReturn(Optional.empty());
+
+        // Verify the result is as expected
+        assertThatThrownBy(() -> {
+            storeService.getAvailableACP(-5);
+        }).isInstanceOf(ResourceNotFoundException.class).hasMessageContainingAll("Couldn't find Store with the ID -5!");
+
+        // Mockito verifications
+        this.verifyStoreFindByIdIsCalled();
+    }
+
+
+
     // Auxilliary Functions
+
     private void verifyACPFindByIdIsCalled(){
         Mockito.verify(acpRepository, VerificationModeFactory.times(1)).findById(Mockito.any());
     }

@@ -29,8 +29,8 @@ public class EstoreController {
 
     /** Gets all of the ACP's available to take new orders, that is, the ACP's currently under their operational limit */
     @GetMapping("/acp")
-    public ResponseEntity<List<AssociatedCollectionPoint>> getAvailableACP(){
-        return null;
+    public ResponseEntity<List<AssociatedCollectionPoint>> getAvailableACP(@RequestParam(name = "storeID") Integer storeID) throws ResourceNotFoundException {
+        return ResponseEntity.ok().body(storeService.getAvailableACP(storeID));
     }
 
     /** Returns the current status of a parcel, as well as it's delivery/pickup date, if available. These are returned in a Map.

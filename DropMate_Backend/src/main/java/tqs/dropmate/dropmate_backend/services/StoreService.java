@@ -1,5 +1,6 @@
 package tqs.dropmate.dropmate_backend.services;
 
+import jakarta.persistence.criteria.CriteriaBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import tqs.dropmate.dropmate_backend.datamodel.AssociatedCollectionPoint;
@@ -13,6 +14,9 @@ import tqs.dropmate.dropmate_backend.repositories.StoreRepository;
 
 import java.sql.Date;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
 @Service
@@ -51,6 +55,28 @@ public class StoreService {
         parcelRepository.save(newOrder);
 
         return newOrder;
+    }
+
+    /** Gets all of the ACP's available to take new orders, that is, the ACP's currently under their operational limit
+     * @param storeID - ID of the Store the order comes from
+     * @return a list with all the available ACP's
+     * @throws ResourceNotFoundException - Exception raised when an ID doesn't exist in the database
+     * */
+    public List<AssociatedCollectionPoint> getAvailableACP(Integer storeID) throws ResourceNotFoundException {
+        Store store = this.getStoreFromID(storeID);
+        List<AssociatedCollectionPoint> avaliableACP = new ArrayList<>();
+
+        for(AssociatedCollectionPoint acp:acpRepository.findAll()){
+            int parcelsInDelivery = acp.getOperationalStatistics().getOrDefault("parcels_in_delivery", 0);
+            int parcelsWaitingPickup = acp.getOperationalStatistics().getOrDefault("parcels_waiting_pickup", 0);
+            int limit = acp.getDeliveryLimit();
+
+            if(parcelsInDelivery + parcelsWaitingPickup < limit) {
+                avaliableACP.add(acp);
+            }
+        }
+
+        return avaliableACP;
     }
 
     // Auxilliary functions
