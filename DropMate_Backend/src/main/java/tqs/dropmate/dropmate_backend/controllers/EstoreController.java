@@ -5,8 +5,8 @@ import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import tqs.dropmate.dropmate_backend.datamodel.AssociatedCollectionPoint;
-import tqs.dropmate.dropmate_backend.datamodel.Parcel;
 import tqs.dropmate.dropmate_backend.exceptions.ResourceNotFoundException;
+import tqs.dropmate.dropmate_backend.services.AdminService;
 import tqs.dropmate.dropmate_backend.services.StoreService;
 
 import java.util.List;
@@ -18,6 +18,8 @@ import java.util.Map;
 public class EstoreController {
     @Autowired
     private StoreService storeService;
+    @Autowired
+    private AdminService adminService;
 
     /** Used to post a new order placed by a Client of the partner E-Store */
     @PostMapping("/parcel")
@@ -42,7 +44,7 @@ public class EstoreController {
 
     /** Gets the information about a specific ACP */
     @GetMapping("/acp/{acpID}")
-    public RequestEntity<AssociatedCollectionPoint> getACPDetails(@PathVariable(name = "acpID") Long acpID){
-        return null;
+    public ResponseEntity<AssociatedCollectionPoint> getACPDetails(@PathVariable(name = "acpID") Integer acpID) throws ResourceNotFoundException {
+        return ResponseEntity.ok().body(adminService.getACPDetails(acpID));
     }
 }

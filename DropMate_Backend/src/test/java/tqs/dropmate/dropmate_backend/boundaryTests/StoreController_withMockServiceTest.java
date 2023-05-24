@@ -12,6 +12,7 @@ import tqs.dropmate.dropmate_backend.controllers.EstoreController;
 import tqs.dropmate.dropmate_backend.datamodel.AssociatedCollectionPoint;
 import tqs.dropmate.dropmate_backend.datamodel.Status;
 import tqs.dropmate.dropmate_backend.exceptions.ResourceNotFoundException;
+import tqs.dropmate.dropmate_backend.services.AdminService;
 import tqs.dropmate.dropmate_backend.services.StoreService;
 
 import java.sql.Date;
@@ -33,6 +34,8 @@ public class StoreController_withMockServiceTest {
 
     @MockBean
     private StoreService storeService;
+    @MockBean
+    private AdminService adminService;
 
     private List<AssociatedCollectionPoint> availableACP;
 
@@ -168,6 +171,27 @@ public class StoreController_withMockServiceTest {
 
         mockMvc.perform(
                         get("/dropmate/estore_api/parcel/PCKD3674").contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void whenGetSpecificACPDetails_withValidID_thenReturn_statusOK() throws Exception {
+        when(adminService.getACPDetails(2)).thenReturn(availableACP.get(1));
+
+        mockMvc.perform(
+                        get("/dropmate/estore_api/acp/2").contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.city", is("Viseu")))
+                .andExpect(jsonPath("$.address", is("Fake address 3, Viseu")))
+                .andExpect(jsonPath("$.deliveryLimit", is(12)));
+    }
+
+    @Test
+    void whenGetSpecificACPDetails_withInvalidID_thenReturn_statusNotFound() throws Exception {
+        when(adminService.getACPDetails(-2)).thenThrow(new ResourceNotFoundException("Couldn't find ACP with the ID -2!"));
+
+        mockMvc.perform(
+                        get("/dropmate/estore_api/acp/-2").contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound());
     }
 }

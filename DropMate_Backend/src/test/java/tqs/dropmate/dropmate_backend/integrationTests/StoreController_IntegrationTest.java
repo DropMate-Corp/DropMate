@@ -184,4 +184,23 @@ public class StoreController_IntegrationTest {
                 .when().get(BASE_URI + randomServerPort + "/dropmate/estore_api/parcel/NOCODE")
                 .then().statusCode(404);
     }
+
+    @Test
+    @Order(8)
+    void whenGetACPDetails_withValidID_thenReturn_statusOK() {
+        RestAssured.with().contentType("application/json")
+                .when().get(BASE_URI + randomServerPort + "/dropmate/estore_api/acp/22")
+                .then().statusCode(200)
+                .body("city", is("Aveiro")).and()
+                .body("address", is("Fake address 1, Aveiro")).and()
+                .body("deliveryLimit", is(10));
+    }
+
+    @Test
+    @Order(9)
+    void whenGetACPDetails_withInvalidID_thenReturn_statusNotFound() {
+        RestAssured.with().contentType("application/json")
+                .when().get(BASE_URI + randomServerPort + "/dropmate/estore_api/acp/-21")
+                .then().statusCode(404);
+    }
 }
