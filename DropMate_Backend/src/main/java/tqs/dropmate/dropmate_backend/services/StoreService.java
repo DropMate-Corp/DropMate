@@ -12,6 +12,7 @@ import tqs.dropmate.dropmate_backend.repositories.AssociatedCollectionPointRepos
 import tqs.dropmate.dropmate_backend.repositories.ParcelRepository;
 import tqs.dropmate.dropmate_backend.repositories.StoreRepository;
 
+import java.security.SecureRandom;
 import java.sql.Date;
 import java.time.LocalDate;
 import java.util.*;
@@ -140,7 +141,7 @@ public class StoreService {
         String letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
         String numbers = "0123456789";
 
-        Random random = new Random();
+        SecureRandom random = new SecureRandom();
         StringBuilder code = new StringBuilder();
 
         // Generate 4 random uppercase letters
