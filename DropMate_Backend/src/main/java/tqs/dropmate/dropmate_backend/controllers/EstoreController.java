@@ -21,7 +21,7 @@ public class EstoreController {
 
     /** Used to post a new order placed by a Client of the partner E-Store */
     @PostMapping("/parcel")
-    public ResponseEntity<Parcel> createNewOrder(@RequestParam(name = "acpID") Integer acpID,
+    public ResponseEntity<Map<String, String>> createNewOrder(@RequestParam(name = "acpID") Integer acpID,
                                                  @RequestParam(name = "storeID") Integer storeID
                                                  ) throws ResourceNotFoundException {
         return ResponseEntity.ok().body(storeService.createNewOrder(acpID, storeID));
@@ -35,9 +35,9 @@ public class EstoreController {
 
     /** Returns the current status of a parcel, as well as it's delivery/pickup date, if available. These are returned in a Map.
      The input is the delivery code of the parcel. */
-    @GetMapping("/parcel/{parcelCode}")
-    public RequestEntity<Map<String, String>> getParcelStatus(@PathVariable(name = "parcelCode") String parcelCode){
-        return null;
+    @GetMapping("/parcel/{pickupCode}")
+    public ResponseEntity<Map<String, String>> getParcelStatus(@PathVariable(name = "pickupCode") String pickupCode) throws ResourceNotFoundException {
+        return ResponseEntity.ok().body(storeService.getParcelStatus(pickupCode));
     }
 
     /** Gets the information about a specific ACP */

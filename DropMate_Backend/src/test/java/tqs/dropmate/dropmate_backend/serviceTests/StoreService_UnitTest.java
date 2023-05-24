@@ -17,6 +17,8 @@ import tqs.dropmate.dropmate_backend.exceptions.ResourceNotFoundException;
 import tqs.dropmate.dropmate_backend.repositories.*;
 import tqs.dropmate.dropmate_backend.services.StoreService;
 
+import java.sql.Date;
+import java.time.LocalDate;
 import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -109,13 +111,13 @@ public class StoreService_UnitTest {
         when(acpRepository.findById(Mockito.any())).thenReturn(Optional.ofNullable(allACP.get(0)));
 
         // Verify the result is as expected
-        Parcel order = storeService.createNewOrder(1,1);
-        assertThat(order).extracting(Parcel::getPickupACP).isEqualTo(allACP.get(0));
-        assertThat(order).extracting(Parcel::getStore).isEqualTo(testStore);
-        assertThat(order).extracting(Parcel::getParcelStatus).isEqualTo(Status.IN_DELIVERY);
-        assertThat(order).extracting(Parcel::getPickupCode).isNotNull();
-        assertThat(order).extracting(Parcel::getDeliveryCode).isNotNull();
-        assertThat(order).extracting(Parcel::getDeliveryDate).isNotNull();
+        Map<String, String> order = storeService.createNewOrder(1,1);
+
+        assertThat(order).hasSize(3);
+        assertThat(order).containsKeys("status", "delivery_date", "pickup_code");
+        assertThat(order.get("delivery_date")).isEqualTo(Date.valueOf(LocalDate.now().plusDays(5)).toString());
+        assertThat(order.get("status")).isEqualTo(Status.IN_DELIVERY.toString());
+        assertThat(order.get("pickup_code")).isNotNull();
 
         // Mockito verifications
         this.verifyACPFindByIdIsCalled();
@@ -156,7 +158,7 @@ public class StoreService_UnitTest {
     @Test
     void testGenerateRandomCode(){
         // Verify the result is as expected
-        assertThat(storeService.generateRandomCode()).matches("[A-Z]{3}\\d{3}");
+        assertThat(storeService.generateRandomCode()).matches("[A-Z]{4}\\d{4}");
     }
 
     @Test
@@ -177,7 +179,7 @@ public class StoreService_UnitTest {
     }
 
     @Test
-    void whenGettingAvailableACP__withInvalidStoreID_thenExceptionThrown(){
+    void whenGettingAvailableACP_withInvalidStoreID_thenExceptionThrown(){
         // Set up Expectations
         when(storeRepository.findById(-5)).thenReturn(Optional.empty());
 
@@ -188,6 +190,58 @@ public class StoreService_UnitTest {
 
         // Mockito verifications
         this.verifyStoreFindByIdIsCalled();
+    }
+
+    @Test
+    void whenGetParcelStatus_withValidPickupCode_thenReturnCorrectMap() throws ResourceNotFoundException {
+        // Set up Expectations
+        Parcel testParcel = new Parcel(1, "DELT1463", "PCKD3674", 5.0, Date.valueOf(LocalDate.now().plusDays(5)),
+                Date.valueOf(LocalDate.now().plusDays(15)), Status.DELIVERED, allACP.get(0), testStore);
+
+
+        when(parcelRepository.findFirstByPickupCode(Mockito.any())).thenReturn(testParcel);
+
+        // Verify the result is as expected
+        Map<String, String> returnMap = storeService.getParcelStatus("PCKD3674");
+        assertThat(returnMap).hasSize(3);
+        assertThat(returnMap).containsKeys("status", "delivery_date", "pickup_date");
+        assertThat(returnMap.get("pickup_date")).isEqualTo(Date.valueOf(LocalDate.now().plusDays(15)).toString());
+
+        // Mockito verifications
+        Mockito.verify(parcelRepository, VerificationModeFactory.times(1)).findFirstByPickupCode(Mockito.any());
+    }
+
+    @Test
+    void whenGetParcelStatus_withValidPickupCode_noPickupCode_thenReturnCorrectMap() throws ResourceNotFoundException {
+        // Set up Expectations
+        Parcel testParcel = new Parcel(1, "DELT1463", "PCKD3674", 5.0, Date.valueOf(LocalDate.now().plusDays(5)),
+                null, Status.WAITING_FOR_PICKUP, allACP.get(0), testStore);
+
+
+        when(parcelRepository.findFirstByPickupCode(Mockito.any())).thenReturn(testParcel);
+
+        // Verify the result is as expected
+        Map<String, String> returnMap = storeService.getParcelStatus("PCKD3674");
+        assertThat(returnMap).hasSize(3);
+        assertThat(returnMap).containsKeys("status", "delivery_date", "pickup_date");
+        assertThat(returnMap.get("pickup_date")).isNull();
+
+        // Mockito verifications
+        Mockito.verify(parcelRepository, VerificationModeFactory.times(1)).findFirstByPickupCode(Mockito.any());
+    }
+
+    @Test
+    void whenGetParcelStatus_withInvalidPickupCode_thenExceptionThrown(){
+        // Set up Expectations
+        when(parcelRepository.findFirstByPickupCode("248484")).thenReturn(null);
+
+        // Verify the result is as expected
+        assertThatThrownBy(() -> {
+            storeService.getParcelStatus("248484");
+        }).isInstanceOf(ResourceNotFoundException.class).hasMessageContainingAll("Couldn't find Parcel with the pickup Code 248484!");
+
+        // Mockito verifications
+        Mockito.verify(parcelRepository, VerificationModeFactory.times(1)).findFirstByPickupCode(Mockito.any());
     }
 
 

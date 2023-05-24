@@ -10,11 +10,12 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import tqs.dropmate.dropmate_backend.controllers.EstoreController;
 import tqs.dropmate.dropmate_backend.datamodel.AssociatedCollectionPoint;
-import tqs.dropmate.dropmate_backend.datamodel.Parcel;
 import tqs.dropmate.dropmate_backend.datamodel.Status;
 import tqs.dropmate.dropmate_backend.exceptions.ResourceNotFoundException;
 import tqs.dropmate.dropmate_backend.services.StoreService;
 
+import java.sql.Date;
+import java.time.LocalDate;
 import java.util.*;
 
 import static org.hamcrest.CoreMatchers.is;
@@ -81,18 +82,21 @@ public class StoreController_withMockServiceTest {
     @Test
     void whenCreatingOrder_withValidParameters_thenReturn_statusOK() throws Exception {
         // Setting up expectations
-        Parcel testParcel = new Parcel("DEL123", "PCK123", 1.5, null, null, Status.IN_DELIVERY);
+        Map<String, String> returnMap = new HashMap<>();
+        returnMap.put("status", Status.IN_DELIVERY.toString());
+        returnMap.put("delivery_date", Date.valueOf(LocalDate.now().plusDays(5)).toString());
+        returnMap.put("pickup_code", "PCK123");
 
-        when(storeService.createNewOrder(1, 1)).thenReturn(testParcel);
+        when(storeService.createNewOrder(1, 1)).thenReturn(returnMap);
 
         mockMvc.perform(
                         post("/dropmate/estore_api/parcel").contentType(MediaType.APPLICATION_JSON)
                                 .param("acpID", "1")
                                 .param("storeID", "1"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.deliveryCode", is("DEL123")))
-                .andExpect(jsonPath("$.pickupCode", is("PCK123")))
-                .andExpect(jsonPath("$.parcelStatus", is(Status.IN_DELIVERY.toString())));
+                .andExpect(jsonPath("$.pickup_code", is("PCK123")))
+                .andExpect(jsonPath("$.status", is(Status.IN_DELIVERY.toString())))
+                .andExpect(jsonPath("$.delivery_date", is(Date.valueOf(LocalDate.now().plusDays(5)).toString())));
     }
 
     @Test
@@ -131,12 +135,39 @@ public class StoreController_withMockServiceTest {
     }
 
     @Test
-    void whenGettingAvailableACP__withInvalidStoreID_statusNotFound() throws Exception {
+    void whenGettingAvailableACP_withInvalidStoreID_statusNotFound() throws Exception {
         when(storeService.getAvailableACP(-1)).thenThrow(new ResourceNotFoundException("Couldn't find Store with the ID -1!"));
 
         mockMvc.perform(
                         get("/dropmate/estore_api/acp").contentType(MediaType.APPLICATION_JSON)
                                 .param("storeID", "-1"))
+                .andExpect(status().isNotFound());
+    }
+
+
+    @Test
+    void whenGetParcelStatus_withValidPickupCode_thenReturnStatusOK() throws Exception {
+        Map<String, String> returnMap = new HashMap<>();
+        returnMap.put("status", Status.DELIVERED.toString());
+        returnMap.put("delivery_date", Date.valueOf(LocalDate.now().plusDays(5)).toString());
+        returnMap.put("pickup_date", Date.valueOf(LocalDate.now().plusDays(15)).toString());
+
+        when(storeService.getParcelStatus("PCKD3674")).thenReturn(returnMap);
+
+        mockMvc.perform(
+                        get("/dropmate/estore_api/parcel/PCKD3674").contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status", is(Status.DELIVERED.toString())))
+                .andExpect(jsonPath("$.delivery_date", is(Date.valueOf(LocalDate.now().plusDays(5)).toString())))
+                .andExpect(jsonPath("$.pickup_date", is(Date.valueOf(LocalDate.now().plusDays(15)).toString())));
+    }
+
+    @Test
+    void whenGetParcelStatus_withInvalidPickupCode_statusNotFound() throws Exception {
+        when(storeService.getParcelStatus("PCKD3674")).thenThrow(new ResourceNotFoundException("Couldn't find Parcel with the pickup Code PCKD3674!"));
+
+        mockMvc.perform(
+                        get("/dropmate/estore_api/parcel/PCKD3674").contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound());
     }
 }

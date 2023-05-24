@@ -14,11 +14,15 @@ import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import tqs.dropmate.dropmate_backend.datamodel.AssociatedCollectionPoint;
+import tqs.dropmate.dropmate_backend.datamodel.Parcel;
 import tqs.dropmate.dropmate_backend.datamodel.Status;
 import tqs.dropmate.dropmate_backend.datamodel.Store;
 import tqs.dropmate.dropmate_backend.repositories.AssociatedCollectionPointRepository;
+import tqs.dropmate.dropmate_backend.repositories.ParcelRepository;
 import tqs.dropmate.dropmate_backend.repositories.StoreRepository;
 
+import java.sql.Date;
+import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -38,6 +42,8 @@ public class StoreController_IntegrationTest {
     StoreRepository storeRepository;
     @Autowired
     AssociatedCollectionPointRepository acpRepository;
+    @Autowired
+    ParcelRepository parcelRepository;
 
     @LocalServerPort
     private int randomServerPort;
@@ -97,12 +103,18 @@ public class StoreController_IntegrationTest {
 
         testStore = new Store("PickUpPointTwo", "pickuptwo@mail.pt", "Porto", "Fake address 2, Porto", "935264901");
         storeRepository.saveAndFlush(testStore);
+
+        // Parcel
+        Parcel testParcel = new Parcel(1, "DELT1463", "PCKD3674", 5.0, Date.valueOf(LocalDate.now().plusDays(5)),
+                Date.valueOf(LocalDate.now().plusDays(15)), Status.DELIVERED, testACP, testStore);
+        parcelRepository.saveAndFlush(testParcel);
     }
 
     @AfterEach
     public void resetDB(){
         acpRepository.deleteAll();
         storeRepository.deleteAll();
+        parcelRepository.deleteAll();
     }
 
     @Test
@@ -131,9 +143,9 @@ public class StoreController_IntegrationTest {
                 .when().post(BASE_URI + randomServerPort + "/dropmate/estore_api/parcel?acpID=" + "7"
                         + "&storeID=" + "3")
                 .then().statusCode(200)
-                .body("deliveryCode", Matchers.notNullValue()).and()
-                .body("pickupCode", Matchers.notNullValue()).and()
-                .body("parcelStatus", is(Status.IN_DELIVERY.toString()));
+                .body("delivery_date", Matchers.notNullValue()).and()
+                .body("pickup_code", Matchers.notNullValue()).and()
+                .body("status", is(Status.IN_DELIVERY.toString()));
     }
 
     @Test
@@ -151,6 +163,25 @@ public class StoreController_IntegrationTest {
         RestAssured.given().log().all().contentType(ContentType.JSON)
                 .when().post(BASE_URI + randomServerPort + "/dropmate/estore_api/parcel?acpID=" + "-1"
                         + "&storeID=" + "4")
+                .then().statusCode(404);
+    }
+
+    @Test
+    @Order(6)
+    void whenGetParcelStatus_withValidPickupCode_thenReturnStatusOK() throws Exception {
+        RestAssured.given().log().all().contentType(ContentType.JSON)
+                .when().get(BASE_URI + randomServerPort + "/dropmate/estore_api/parcel/PCKD3674")
+                .then().statusCode(200)
+                .body("status", is(Status.DELIVERED.toString())).and()
+                .body("delivery_date", is(Date.valueOf(LocalDate.now().plusDays(5)).toString())).and()
+                .body("pickup_date", is(Date.valueOf(LocalDate.now().plusDays(15)).toString()));
+    }
+
+    @Test
+    @Order(7)
+    void whenGetParcelStatus_withInvalidPickupCode_statusNotFound() throws Exception {
+        RestAssured.given().log().all().contentType(ContentType.JSON)
+                .when().get(BASE_URI + randomServerPort + "/dropmate/estore_api/parcel/NOCODE")
                 .then().statusCode(404);
     }
 }
