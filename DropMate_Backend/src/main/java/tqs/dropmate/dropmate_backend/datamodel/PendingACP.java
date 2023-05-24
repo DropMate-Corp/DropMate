@@ -36,4 +36,14 @@ public class PendingACP {
 
     @Column(nullable = false)
     private String description;
+
+    public PendingACP(String name, String email, String city, String address, String telephoneNumber, Integer status, String description) {
+        this.name = name;
+        this.email = email;
+        this.city = city;
+        this.address = address;
+        this.telephoneNumber = telephoneNumber;
+        this.status = status;
+        this.description = description;
+    }
 }

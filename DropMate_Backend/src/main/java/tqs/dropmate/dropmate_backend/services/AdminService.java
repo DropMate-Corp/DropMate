@@ -2,14 +2,10 @@ package tqs.dropmate.dropmate_backend.services;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import tqs.dropmate.dropmate_backend.datamodel.AssociatedCollectionPoint;
-import tqs.dropmate.dropmate_backend.datamodel.Parcel;
-import tqs.dropmate.dropmate_backend.datamodel.PendingACP;
-import tqs.dropmate.dropmate_backend.datamodel.Status;
+import tqs.dropmate.dropmate_backend.datamodel.*;
+import tqs.dropmate.dropmate_backend.exceptions.InvalidCredentialsException;
 import tqs.dropmate.dropmate_backend.exceptions.ResourceNotFoundException;
-import tqs.dropmate.dropmate_backend.repositories.AssociatedCollectionPointRepository;
-import tqs.dropmate.dropmate_backend.repositories.ParcelRepository;
-import tqs.dropmate.dropmate_backend.repositories.PendingAssociatedCollectionPointRepository;
+import tqs.dropmate.dropmate_backend.repositories.*;
 import tqs.dropmate.dropmate_backend.utils.SuccessfulRequest;
 
 import java.util.HashMap;
@@ -19,17 +15,136 @@ import java.util.stream.Collectors;
 
 @Service
 public class AdminService {
-    @Autowired
     private AssociatedCollectionPointRepository acpRepository;
-    @Autowired
     private ParcelRepository parcelRepository;
-    @Autowired
     private PendingAssociatedCollectionPointRepository pendingACPRepository;
+    private StoreRepository storeRepository;
+    private SystemAdministratorRepository systemAdministratorRepository;
 
+    public AdminService(AssociatedCollectionPointRepository acpRepository, ParcelRepository parcelRepository, PendingAssociatedCollectionPointRepository pendingACPRepository, StoreRepository storeRepository, SystemAdministratorRepository systemAdministratorRepository) {
+        this.acpRepository = acpRepository;
+        this.parcelRepository = parcelRepository;
+        this.pendingACPRepository = pendingACPRepository;
+        this.storeRepository = storeRepository;
+        this.systemAdministratorRepository = systemAdministratorRepository;
+    }
+
+    // ACP Methods
     /** This method returns all the ACP's associated with the Platform */
     public List<AssociatedCollectionPoint> getAllACP(){
         return acpRepository.findAll();
     }
+
+    /** Updates the details of an ACP
+     * @param acpID - ID of the ACP in the database
+     * @param email - Updated email for the ACP. Could be null
+     * @param name - Updated name for the ACP. Could be null
+     * @param telephone - Updated telephone for the ACP. Could be null
+     * @param city - Updated city for the ACP. Could be null
+     * @param address - Updated address for the ACP. Could be null
+     * @return the updated ACP
+     * @throws ResourceNotFoundException - Exception raised when an ID doesn't exist in the database
+     * */
+    public AssociatedCollectionPoint updateACPDetails(Integer acpID, String email, String name, String telephone, String city, String address) throws ResourceNotFoundException {
+        AssociatedCollectionPoint acp = this.getACPFromID(acpID);
+
+        acp.setName(name != null ? name : acp.getName());
+        acp.setEmail(email != null ? email : acp.getEmail());
+        acp.setTelephoneNumber(telephone != null ? telephone : acp.getTelephoneNumber());
+        acp.setCity(city != null ? city : acp.getCity());
+        acp.setAddress(address != null ? address : acp.getAddress());
+
+        acpRepository.save(acp);
+
+        return acp;
+    }
+
+    /** This method returns the details associated with a specific ACP
+     * @param acpID - ID of the ACP in the database
+     * @return corresponding ACP details
+     * @throws ResourceNotFoundException - Exception raised when an ID doesn't exist in the database
+     * */
+    public AssociatedCollectionPoint getACPDetails(Integer acpID) throws ResourceNotFoundException {
+        return this.getACPFromID(acpID);
+    }
+
+    /** This method deletes an ACP
+     * @param acpID - ID of the ACP in the database
+     * @return a Successful Request message
+     * @throws ResourceNotFoundException - Exception raised when an ID doesn't exist in the database
+     * */
+    public SuccessfulRequest removeACP(Integer acpID) throws ResourceNotFoundException {
+        AssociatedCollectionPoint acp = this.getACPFromID(acpID);
+
+        acpRepository.delete(acp);
+
+        return new SuccessfulRequest("ACP succesfully deleted!");
+    }
+
+    /** Method for the DropMate administrator login
+     * @param email - The email of the System Admin
+     * @param password - The password of the System Admin
+     * @return the corresponding System Admin object
+     * @throws ResourceNotFoundException - Exception raised when an ID doesn't exist in the database
+     * */
+    public SystemAdministrator processAdminLogin(String email, String password) throws InvalidCredentialsException {
+        SystemAdministrator admin = systemAdministratorRepository.findByEmail(email);
+
+        if(admin != null && admin.getPassword().equals(password)){
+            return admin;
+        }
+        throw new InvalidCredentialsException();
+    }
+
+
+
+    // E-Store Methods
+
+
+    /** This method returns all the E-Stores associated with the Platform
+     * @return the List of all E-Stores partnered with the platform
+     * */
+    public List<Store> getAllStores() {
+        return storeRepository.findAll();
+    }
+
+
+    // Operational Statistics
+
+
+    /** This method returns all the operational statistics of all ACP's
+     * @return Map containing the operational statistics for each ACP. Each key is a ACP, and the value another Map of the corresponding statistics.
+     * */
+    public Map<AssociatedCollectionPoint, Map<String, Integer>> getAllACPStatistics() {
+        return acpRepository.findAll().stream()
+                .collect(Collectors.toMap(
+                        acp -> acp,
+                        acp -> {
+
+                            Map<String, Integer> statistics = new HashMap<>(acp.getOperationalStatistics());
+                            statistics.put("deliveryLimit", acp.getDeliveryLimit());
+                            return statistics;
+                        }
+                ));
+    }
+
+    /** This method returns the details associated with a specific ACP
+     * @param acpID - ID of the ACP in the database
+     * @return Map containing the operational statistics of the ACP. Each key is a parameter, with the value being the related statistic.
+     * @throws ResourceNotFoundException - Exception raised when an ID doesn't exist in the database
+     * */
+    public Map<String, Integer> getSpecificACPStatistics(Integer acpID) throws ResourceNotFoundException {
+        AssociatedCollectionPoint acp = this.getACPFromID(acpID);
+
+        Map<String, Integer> stats = acp.getOperationalStatistics();
+        stats.put("deliveryLimit", acp.getDeliveryLimit());
+
+        return stats;
+    }
+
+
+    // Management of Parcels
+
 
     /** This method returns all the parcels waiting for delivery
      * @return List of all parcels waiting delivery */
@@ -38,7 +153,7 @@ public class AdminService {
                 .filter(parcel -> parcel.getParcelStatus().equals(Status.IN_DELIVERY))
                 .toList();
     }
-  
+
     /** This method returns all the parcels waiting for pickup
      * @return List of all the parcels waiting for pickup.*/
     public List<Parcel> getAllParcelsWaitingPickup(){
@@ -75,68 +190,9 @@ public class AdminService {
                 .toList();
     }
 
-    /** This method returns all the operational statistics of all ACP's
-     * @return Map containing the operational statistics for each ACP. Each key is a ACP, and the value another Map of the corresponding statistics.
-     * */
-    public Map<AssociatedCollectionPoint, Map<String, Integer>> getAllACPStatistics() {
-        return acpRepository.findAll().stream()
-                .collect(Collectors.toMap(
-                        acp -> acp,
-                        acp -> {
 
-                            Map<String, Integer> statistics = new HashMap<>(acp.getOperationalStatistics());
-                            statistics.put("deliveryLimit", acp.getDeliveryLimit());
-                            return statistics;
-                        }
-                ));
-    }
+    // Management of Pending ACP's
 
-    /** This method returns the details associated with a specific ACP
-     * @param acpID - ID of the ACP in the database
-     * @return Map containing the operational statistics of the ACP. Each key is a parameter, with the value being the related statistic.
-     * @throws ResourceNotFoundException - Exception raised when an ID doesn't exist in the database
-     * */
-    public Map<String, Integer> getSpecificACPStatistics(Integer acpID) throws ResourceNotFoundException {
-        AssociatedCollectionPoint acp = this.getACPFromID(acpID);
-
-        Map<String, Integer> stats = acp.getOperationalStatistics();
-        stats.put("deliveryLimit", acp.getDeliveryLimit());
-
-        return stats;
-    }
-
-    /** This method returns the details associated with a specific ACP
-     * @param acpID - ID of the ACP in the database
-     * @return corresponding ACP details
-     * @throws ResourceNotFoundException - Exception raised when an ID doesn't exist in the database
-     * */
-    public AssociatedCollectionPoint getACPDetails(Integer acpID) throws ResourceNotFoundException {
-        return this.getACPFromID(acpID);
-    }
-
-    /** Updates the details of an ACP
-     * @param acpID - ID of the ACP in the database
-     * @param email - Updated email for the ACP. Could be null
-     * @param name - Updated name for the ACP. Could be null
-     * @param telephone - Updated telephone for the ACP. Could be null
-     * @param city - Updated city for the ACP. Could be null
-     * @param address - Updated address for the ACP. Could be null
-     * @return the updated ACP
-     * @throws ResourceNotFoundException - Exception raised when an ID doesn't exist in the database
-     * */
-    public AssociatedCollectionPoint updateACPDetails(Integer acpID, String email, String name, String telephone, String city, String address) throws ResourceNotFoundException {
-        AssociatedCollectionPoint acp = this.getACPFromID(acpID);
-
-        acp.setName(name != null ? name : acp.getName());
-        acp.setEmail(email != null ? email : acp.getEmail());
-        acp.setTelephoneNumber(telephone != null ? telephone : acp.getTelephoneNumber());
-        acp.setCity(city != null ? city : acp.getCity());
-        acp.setAddress(address != null ? address : acp.getAddress());
-
-        acpRepository.save(acp);
-
-        return acp;
-    }
 
     /** Adds a new ACP to the pending list
      * @param email - Updated email for the ACP. Could be null
@@ -197,7 +253,6 @@ public class AdminService {
 
         return new SuccessfulRequest("Request rejected!");
     }
-
 
 
     // Auxilliary functions
