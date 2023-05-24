@@ -6,4 +6,6 @@ import tqs.dropmate.dropmate_backend.datamodel.Parcel;
 
 @Repository
 public interface ParcelRepository extends JpaRepository<Parcel, Integer> {
+    Parcel findFirstByPickupCode(String pickupCode);
+    Boolean existsByPickupCode(String pickupCode);
 }
