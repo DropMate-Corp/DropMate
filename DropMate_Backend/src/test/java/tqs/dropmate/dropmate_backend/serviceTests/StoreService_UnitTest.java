@@ -26,7 +26,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-public class StoreService_UnitTest {
+class StoreService_UnitTest {
     @Mock(lenient = true)
     private StoreRepository storeRepository;
     @Mock(lenient = true)
@@ -113,10 +113,11 @@ public class StoreService_UnitTest {
         // Verify the result is as expected
         Map<String, String> order = storeService.createNewOrder(1,1);
 
-        assertThat(order).hasSize(3);
-        assertThat(order).containsKeys("status", "delivery_date", "pickup_code");
-        assertThat(order.get("delivery_date")).isEqualTo(Date.valueOf(LocalDate.now().plusDays(5)).toString());
-        assertThat(order.get("status")).isEqualTo(Status.IN_DELIVERY.toString());
+        assertThat(order).hasSize(3)
+                .containsKeys("status", "delivery_date", "pickup_code")
+                .containsEntry("delivery_date", Date.valueOf(LocalDate.now().plusDays(5)).toString())
+                .containsEntry("status", Status.IN_DELIVERY.toString());
+
         assertThat(order.get("pickup_code")).isNotNull();
 
         // Mockito verifications
@@ -203,9 +204,9 @@ public class StoreService_UnitTest {
 
         // Verify the result is as expected
         Map<String, String> returnMap = storeService.getParcelStatus("PCKD3674");
-        assertThat(returnMap).hasSize(3);
-        assertThat(returnMap).containsKeys("status", "delivery_date", "pickup_date");
-        assertThat(returnMap.get("pickup_date")).isEqualTo(Date.valueOf(LocalDate.now().plusDays(15)).toString());
+        assertThat(returnMap).hasSize(3)
+                .containsKeys("status", "delivery_date", "pickup_date")
+                .containsEntry("pickup_date", Date.valueOf(LocalDate.now().plusDays(15)).toString());
 
         // Mockito verifications
         Mockito.verify(parcelRepository, VerificationModeFactory.times(1)).findFirstByPickupCode(Mockito.any());
@@ -222,8 +223,9 @@ public class StoreService_UnitTest {
 
         // Verify the result is as expected
         Map<String, String> returnMap = storeService.getParcelStatus("PCKD3674");
-        assertThat(returnMap).hasSize(3);
-        assertThat(returnMap).containsKeys("status", "delivery_date", "pickup_date");
+        assertThat(returnMap).hasSize(3)
+                .containsKeys("status", "delivery_date", "pickup_date");
+
         assertThat(returnMap.get("pickup_date")).isNull();
 
         // Mockito verifications

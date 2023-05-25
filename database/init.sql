@@ -67,7 +67,7 @@ CREATE TABLE `associated_collection_points` (
 
 LOCK TABLES `associated_collection_points` WRITE;
 /*!40000 ALTER TABLE `associated_collection_points` DISABLE KEYS */;
-INSERT INTO `associated_collection_points` VALUES (1,'Av. Dom Frei Miguel de Bulhões e Sousa, 3810-164','Aveiro',0,'234195 919','Pracinha das Flores','234 195 919','10'),(2,'R. do Buragal 216, 3810-382 Aradas','Aveiro',0,'234427 229','Mercadão das Flores','234 427 229','22'),(3,'Praça do Marquês de Pombal, 3810-164 Aveiro','Aveiro',0,'234 420 043','D\'Art E Flor','234 420 043','30'),(4,'Av. Cap. Silva Pereira 151, 3500-102 Viseu','Viseu',0,'273 583 894','Crava E Canela','273 583 894','30'),(5,'Largo da Lapa 38, 4050-069 Porto','Porto',0,'22 550 8873','Porto Flores','22 550 8873','30'),(6,'R. Dr. António José de Almeida 327 A, 3000-045 Coimbra','Coimbra',0,'914 423 374','Florista Tina','914 423 374','30'),(7,'Urbanização Nova Leiria, R. Porto de Mós 19 loja c, 2415-784 Leiria','Leiria',0,'916 261 025','Floraria','916 261 025','30'),(8,'Av. António Macedo, Edifício Lyons Club nº242 - Loja 3, 4700-413 Braga','Braga',0,'253 271 534','Jardim da Celeste','253 271 534','30'),(9,'3740-255 Sever do Vouga','Sever do Vouga',0,'938 412 334','Petalas da Rosa','938 412 334','30');
+INSERT INTO `associated_collection_points` VALUES (1,'Av. Dom Frei Miguel de Bulhões e Sousa, 3810-164','Aveiro',10,'flores@mail.pt','234 195 919','Pracinha das Flores','234 195 919'),(2,'R. do Buragal 216, 3810-382 Aradas','Aveiro',22,'mercadao@mail.pt','234 427 229','Mercadão das Flores','234 427 229'),(3,'Praça do Marquês de Pombal, 3810-164 Aveiro','Aveiro',30,'dart@mail.pt','234 427 229','D\'Art E Flor','234 427 229'),(4,'Av. Cap. Silva Pereira 151, 3500-102 Viseu','Viseu',30,'crava@mail.pt','273 583 894','Crava E Canela','273 583 894'),(5,'Largo da Lapa 38, 4050-069 Porto','Porto',30,'porto@mail.pt','225 508 873','Porto Flores','225 508 873'),(6,'R. Dr. António José de Almeida 327 A, 3000-045 Coimbra','Coimbra',30,'tina@mail.pt','914 423 374','Florista Tina','914 423 374'),(7,'Urbanização Nova Leiria, R. Porto de Mós 19 loja c, 2415-784 Leiria','Leiria',30,'floraria@mail.pt','916 261 025','Floraria','916 261 025'),(8,'Av. António Macedo, Edifício Lyons Club nº242 - Loja 3, 4700-413 Braga','Braga',30,'celeste@mail.pt','253 271 534','Jardim da Celeste','253 271 534'),(9,'3740-255 Sever do Vouga','Sever do Vouga',30,'petals@mail.pt','938 412 334','Petalas da Rosa','938 412 334');
 /*!40000 ALTER TABLE `associated_collection_points` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -148,6 +148,8 @@ CREATE TABLE `parcels` (
   `acp_id` int NOT NULL,
   `store_id` int NOT NULL,
   PRIMARY KEY (`parcel_id`),
+  UNIQUE KEY `UK_44c0drdqc4q4bbk81vhqmlddy` (`delivery_code`),
+  UNIQUE KEY `UK_tiyqfimfv23d7y3yx5ts5mnq8` (`pickup_code`),
   KEY `FK2orccd344k6vsxqpad5gcew4m` (`acp_id`),
   KEY `FKu20j636jg5jcvryspi6ubl1x` (`store_id`),
   CONSTRAINT `FK2orccd344k6vsxqpad5gcew4m` FOREIGN KEY (`acp_id`) REFERENCES `associated_collection_points` (`acp_id`),
@@ -231,4 +233,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2023-05-18 14:23:40
+-- Dump completed on 2023-05-25 17:11:31
