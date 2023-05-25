@@ -25,7 +25,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-public class AdminService_UnitTest {
+class AdminService_UnitTest {
     @Mock(lenient = true)
     private AssociatedCollectionPointRepository acpRepository;
     @Mock(lenient = true)
@@ -280,9 +280,8 @@ public class AdminService_UnitTest {
 
         assertThat(returnedStats)
                 .hasSize(4)
-                .containsKeys("total_parcels", "parcels_in_delivery", "parcels_waiting_pickup", "deliveryLimit");
-
-        assertThat(returnedStats).containsEntry("deliveryLimit", 10);
+                .containsKeys("total_parcels", "parcels_in_delivery", "parcels_waiting_pickup", "deliveryLimit")
+                .containsEntry("deliveryLimit", 10);
 
         /// Mockito verifications
         this.verifyFindByIdIsCalled();

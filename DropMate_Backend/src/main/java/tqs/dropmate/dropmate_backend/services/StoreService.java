@@ -67,7 +67,7 @@ public class StoreService {
      * @throws ResourceNotFoundException - Exception raised when an ID doesn't exist in the database
      * */
     public List<AssociatedCollectionPoint> getAvailableACP(Integer storeID) throws ResourceNotFoundException {
-        Store store = this.getStoreFromID(storeID);
+        this.getStoreFromID(storeID);
         List<AssociatedCollectionPoint> avaliableACP = new ArrayList<>();
 
         for(AssociatedCollectionPoint acp:acpRepository.findAll()){

@@ -120,7 +120,7 @@ public class StoreController_IntegrationTest {
     @Test
     @Order(1)
     void whenGettingAvailableACP_withValidParameters_thenReturnOnlyACPSUnderLimit_statusOK() throws Exception {
-        RestAssured.given().log().all().contentType(ContentType.JSON)
+        RestAssured.given().contentType(ContentType.JSON)
                 .when().get(BASE_URI + randomServerPort + "/dropmate/estore_api/acp?storeID=" + "1")
                 .then().statusCode(200)
                 .body("size()", is(2)).and()
@@ -131,7 +131,7 @@ public class StoreController_IntegrationTest {
     @Test
     @Order(2)
     void whenGettingAvailableACP__withInvalidStoreID_statusNotFound() throws Exception {
-        RestAssured.given().log().all().contentType(ContentType.JSON)
+        RestAssured.given().contentType(ContentType.JSON)
                 .when().get(BASE_URI + randomServerPort + "/dropmate/estore_api/acp?storeID=" + "1")
                 .then().statusCode(404);
     }
@@ -139,7 +139,7 @@ public class StoreController_IntegrationTest {
     @Test
     @Order(3)
     void whenCreatingOrder_withValidParameters_thenReturn_statusOK() {
-        RestAssured.given().log().all().contentType(ContentType.JSON)
+        RestAssured.given().contentType(ContentType.JSON)
                 .when().post(BASE_URI + randomServerPort + "/dropmate/estore_api/parcel?acpID=" + "7"
                         + "&storeID=" + "3")
                 .then().statusCode(200)
@@ -151,7 +151,7 @@ public class StoreController_IntegrationTest {
     @Test
     @Order(4)
     void whenCreatingOrder_withInvalidStoreID_thenReturn_statusNotFound() throws Exception {
-        RestAssured.given().log().all().contentType(ContentType.JSON)
+        RestAssured.given().contentType(ContentType.JSON)
                 .when().post(BASE_URI + randomServerPort + "/dropmate/estore_api/parcel?acpID=" + "10"
                         + "&storeID=" + "-1")
                 .then().statusCode(404);
@@ -160,7 +160,7 @@ public class StoreController_IntegrationTest {
     @Test
     @Order(5)
     void whenCreatingOrder_withInvalidACPID_thenReturn_statusNotFound() throws Exception {
-        RestAssured.given().log().all().contentType(ContentType.JSON)
+        RestAssured.given().contentType(ContentType.JSON)
                 .when().post(BASE_URI + randomServerPort + "/dropmate/estore_api/parcel?acpID=" + "-1"
                         + "&storeID=" + "4")
                 .then().statusCode(404);
@@ -169,7 +169,7 @@ public class StoreController_IntegrationTest {
     @Test
     @Order(6)
     void whenGetParcelStatus_withValidPickupCode_thenReturnStatusOK() throws Exception {
-        RestAssured.given().log().all().contentType(ContentType.JSON)
+        RestAssured.given().contentType(ContentType.JSON)
                 .when().get(BASE_URI + randomServerPort + "/dropmate/estore_api/parcel/PCKD3674")
                 .then().statusCode(200)
                 .body("status", is(Status.DELIVERED.toString())).and()
@@ -180,7 +180,7 @@ public class StoreController_IntegrationTest {
     @Test
     @Order(7)
     void whenGetParcelStatus_withInvalidPickupCode_statusNotFound() throws Exception {
-        RestAssured.given().log().all().contentType(ContentType.JSON)
+        RestAssured.given().contentType(ContentType.JSON)
                 .when().get(BASE_URI + randomServerPort + "/dropmate/estore_api/parcel/NOCODE")
                 .then().statusCode(404);
     }
