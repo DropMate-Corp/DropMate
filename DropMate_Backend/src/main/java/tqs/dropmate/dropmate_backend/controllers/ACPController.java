@@ -27,20 +27,20 @@ public class ACPController {
 
     /** Get all parcels belonging to the ACP in the "In delivery" state */
     @GetMapping("/parcel/all/delivery")
-    public ResponseEntity<List<Parcel>> getAllParcelsInDelivery(@RequestParam(name = "acpID") Integer acpID){
-        return null;
+    public ResponseEntity<List<Parcel>> getAllParcelsWaitingDelivery(@RequestParam(name = "acpID") Integer acpID) throws ResourceNotFoundException {
+        return ResponseEntity.ok().body(acpService.getAllParcelsWaitingDelivery(acpID));
     }
 
     /** Get all parcels belonging to the ACP in the "Waiting for pickup" state */
     @GetMapping("/parcel/all/pickup")
-    public ResponseEntity<List<Parcel>> getAllParcelsWaitingForPickup(@RequestParam(name = "acpID") Integer acpID){
-        return null;
+    public ResponseEntity<List<Parcel>> getAllParcelsWaitingForPickup(@RequestParam(name = "acpID") Integer acpID) throws ResourceNotFoundException {
+        return ResponseEntity.ok().body(acpService.getAllParcelsWaitingForPickup(acpID));
     }
 
     /** Get all parcels belonging to the ACP in the "Delivered" state */
     @GetMapping("/parcel/all/delivered")
-    public ResponseEntity<List<Parcel>> getAllParcelsDelivered(@RequestParam(name = "acpID") Integer acpID){
-        return null;
+    public ResponseEntity<List<Parcel>> getAllParcelsDelivered(@RequestParam(name = "acpID") Integer acpID) throws ResourceNotFoundException {
+        return ResponseEntity.ok().body(acpService.getAllParcelsDelivered(acpID));
     }
 
     /** Used to check-in a parcel when it reaches the Pickup Point */
