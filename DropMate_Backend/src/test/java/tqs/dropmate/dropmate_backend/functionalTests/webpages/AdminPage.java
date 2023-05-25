@@ -7,13 +7,15 @@ import org.openqa.selenium.support.FindBy;
 import org.openqa.selenium.support.PageFactory;
 
 public class AdminPage {
+    private final WebDriver driver;
     private static final String URL = "http://localhost:5173/admin";
 
     @FindBy(id = "registeredACPs")
     WebElement registeredACPsContainer;
 
     public AdminPage(WebDriver driver) {
-        driver.get(URL);
+        this.driver = driver;
+        this.driver.get(URL);
         PageFactory.initElements(driver, this);
     }
 
@@ -23,5 +25,11 @@ public class AdminPage {
 
         // Check if table is displayed
         return table.isDisplayed();
+    }
+
+    public void clickViewACPButton(String acpId) {
+        String buttonId = "viewACP" + acpId;
+        WebElement viewButton = this.driver.findElement(By.id(buttonId));
+        viewButton.click();
     }
 }
