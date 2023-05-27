@@ -3,14 +3,22 @@ package tqs.dropmate.dropmate_backend.services;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import tqs.dropmate.dropmate_backend.datamodel.AssociatedCollectionPoint;
+import tqs.dropmate.dropmate_backend.datamodel.Parcel;
+import tqs.dropmate.dropmate_backend.datamodel.Status;
 import tqs.dropmate.dropmate_backend.exceptions.ResourceNotFoundException;
 import tqs.dropmate.dropmate_backend.repositories.AssociatedCollectionPointRepository;
+import tqs.dropmate.dropmate_backend.repositories.ParcelRepository;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class ACPService {
 
     @Autowired
     private AssociatedCollectionPointRepository acpRepository;
+    @Autowired
+    private ParcelRepository parcelRepository;
 
     /** Returns the current Delivery Limit for the ACP
      * @param acpID - ID of the ACP in the database
@@ -35,6 +43,48 @@ public class ACPService {
         acpRepository.save(acp);
 
         return deliveryLimit;
+    }
+
+    /** Get all parcels belonging to the ACP in the "In delivery" state
+     * @param acpID - ID of the ACP in the database
+     * @return The list of parcels waiting for delivery at this specific ACP
+     * @throws ResourceNotFoundException - Exception raised when an ID doesn't exist in the database
+     * */
+    public List<Parcel> getAllParcelsWaitingDelivery(Integer acpID) throws ResourceNotFoundException {
+        AssociatedCollectionPoint acp = this.getACPFromID(acpID);
+
+        return parcelRepository.findAll().stream()
+                .filter(parcel -> parcel.getParcelStatus().equals(Status.IN_DELIVERY))
+                .filter(parcel -> parcel.getPickupACP().equals(acp))
+                .toList();
+    }
+
+    /** Get all parcels belonging to the ACP in the "Waiting for pickup" state
+     * @param acpID - ID of the ACP in the database
+     * @return The list of parcels waiting for pickup at this specific ACP
+     * @throws ResourceNotFoundException - Exception raised when an ID doesn't exist in the database
+     * */
+    public List<Parcel> getAllParcelsWaitingForPickup(Integer acpID) throws ResourceNotFoundException {
+        AssociatedCollectionPoint acp = this.getACPFromID(acpID);
+
+        return parcelRepository.findAll().stream()
+                .filter(parcel -> parcel.getParcelStatus().equals(Status.WAITING_FOR_PICKUP))
+                .filter(parcel -> parcel.getPickupACP().equals(acp))
+                .toList();
+    }
+
+    /** Get all parcels belonging to the ACP in the "Delivered" state
+     * @param acpID - ID of the ACP in the database
+     * @return The list of parcels delivered at this specific ACP
+     * @throws ResourceNotFoundException - Exception raised when an ID doesn't exist in the database
+     * */
+    public List<Parcel> getAllParcelsDelivered(Integer acpID) throws ResourceNotFoundException {
+        AssociatedCollectionPoint acp = this.getACPFromID(acpID);
+
+        return parcelRepository.findAll().stream()
+                .filter(parcel -> parcel.getParcelStatus().equals(Status.DELIVERED))
+                .filter(parcel -> parcel.getPickupACP().equals(acp))
+                .toList();
     }
 
     // Auxilliary functions
