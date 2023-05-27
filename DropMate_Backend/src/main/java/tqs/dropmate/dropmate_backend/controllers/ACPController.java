@@ -5,6 +5,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import tqs.dropmate.dropmate_backend.datamodel.ACPOperator;
 import tqs.dropmate.dropmate_backend.datamodel.Parcel;
+import tqs.dropmate.dropmate_backend.exceptions.InvalidCredentialsException;
 import tqs.dropmate.dropmate_backend.exceptions.ResourceNotFoundException;
 import tqs.dropmate.dropmate_backend.services.ACPService;
 import tqs.dropmate.dropmate_backend.utils.SuccessfulRequest;
@@ -45,9 +46,9 @@ public class ACPController {
 
     /** Used to check-in a parcel when it reaches the Pickup Point */
     @PutMapping("/parcel/{parcelID}/checkin")
-    public ResponseEntity<SuccessfulRequest> checkInParcel(@PathVariable(name = "parcelID") Integer parcelID,
-                                                           @RequestParam(name = "deliveryCode") String deliveryCode){
-        return null;
+    public ResponseEntity<Parcel> checkInParcel(@PathVariable(name = "parcelID") Integer parcelID,
+                                                @RequestParam(name = "deliveryCode") String deliveryCode) throws ResourceNotFoundException, InvalidCredentialsException {
+        return ResponseEntity.ok().body(acpService.checkInProcess(parcelID, deliveryCode));
     }
 
     /** Used to check-out a parcel when it reaches the Pickup Point */

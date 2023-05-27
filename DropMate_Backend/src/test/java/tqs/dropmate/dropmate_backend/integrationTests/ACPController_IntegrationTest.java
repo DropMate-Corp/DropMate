@@ -22,6 +22,7 @@ import tqs.dropmate.dropmate_backend.repositories.ParcelRepository;
 import tqs.dropmate.dropmate_backend.repositories.StoreRepository;
 
 import java.sql.Date;
+import java.time.LocalDate;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.hasItems;
@@ -85,7 +86,7 @@ class ACPController_IntegrationTest {
 
     @Test
     @Order(1)
-    void whenGetAllAParcelsWaitDelivery_thenReturn_statusOK() throws Exception {
+    void whenGetAllAParcelsWaitDelivery_thenReturn_statusOK() {
         RestAssured.with().contentType("application/json")
                 .when().get(BASE_URI + randomServerPort + "/dropmate/acp_api/parcel/all/delivery?acpID=1")
                 .then().statusCode(200)
@@ -96,7 +97,7 @@ class ACPController_IntegrationTest {
 
     @Test
     @Order(2)
-    void whenGetAllAParcelsWaitPickup_thenReturn_statusOK() throws Exception {
+    void whenGetAllAParcelsWaitPickup_thenReturn_statusOK() {
         RestAssured.with().contentType("application/json")
                 .when().get(BASE_URI + randomServerPort + "/dropmate/acp_api/parcel/all/pickup?acpID=2")
                 .then().statusCode(200)
@@ -107,7 +108,7 @@ class ACPController_IntegrationTest {
 
     @Test
     @Order(3)
-    void whenGetAllAParcelsDelivered_thenReturn_statusOK() throws Exception {
+    void whenGetAllAParcelsDelivered_thenReturn_statusOK() {
         RestAssured.with().contentType("application/json")
                 .when().get(BASE_URI + randomServerPort + "/dropmate/acp_api/parcel/all/delivered?acpID=3")
                 .then().statusCode(200)
@@ -118,7 +119,7 @@ class ACPController_IntegrationTest {
 
     @Test
     @Order(4)
-    void whenGetACPDelivery_withValidID_thenReturn_StatusOK() throws Exception {
+    void whenGetACPDelivery_withValidID_thenReturn_StatusOK() {
         RestAssured.with().contentType("application/json")
                 .when().get(BASE_URI + randomServerPort + "/dropmate/acp_api/limit?acpID=4")
                 .then().statusCode(200)
@@ -128,7 +129,7 @@ class ACPController_IntegrationTest {
 
     @Test
     @Order(5)
-    void whenGetACPDelivery_withInvalidID_thenReturn_StatusNotFound() throws Exception {
+    void whenGetACPDelivery_withInvalidID_thenReturn_StatusNotFound() {
         RestAssured.given().contentType(ContentType.JSON)
                 .when().get(BASE_URI + randomServerPort + "/dropmate/acp_api/limit?acpID=-1")
                 .then().statusCode(404);
@@ -136,7 +137,7 @@ class ACPController_IntegrationTest {
 
     @Test
     @Order(6)
-    void whenUpdateACPDelivery_withValidID_thenReturn_StatusOK() throws Exception {
+    void whenUpdateACPDelivery_withValidID_thenReturn_StatusOK() {
         RestAssured.with().contentType("application/json")
                 .when().put(BASE_URI + randomServerPort + "/dropmate/acp_api/limit?acpID=6&deliveryLimit=50")
                 .then().statusCode(200)
@@ -145,7 +146,7 @@ class ACPController_IntegrationTest {
 
     @Test
     @Order(7)
-    void whenUpdateACPDelivery_withInvalidID_thenReturn_StatusNotFound() throws Exception {
+    void whenUpdateACPDelivery_withInvalidID_thenReturn_StatusNotFound() {
         RestAssured.given().contentType(ContentType.JSON)
                 .when().put(BASE_URI + randomServerPort + "/dropmate/acp_api/limit?acpID=-1&deliveryLimit=50")
                 .then().statusCode(404);
@@ -153,7 +154,7 @@ class ACPController_IntegrationTest {
 
     @Test
     @Order(8)
-    void whenGetParcelsWaitingDelivery_atSpecificACP_withInvalidID_thenReturn_statusNotFound() throws Exception {
+    void whenGetParcelsWaitingDelivery_atSpecificACP_withInvalidID_thenReturn_statusNotFound() {
         RestAssured.with().contentType("application/json")
                 .when().get(BASE_URI + randomServerPort + "/dropmate/acp_api/parcel/all/pickup?acpID=1")
                 .then().statusCode(404);
@@ -161,7 +162,7 @@ class ACPController_IntegrationTest {
 
     @Test
     @Order(9)
-    void whenGetParcelsWaitingPickup_atSpecificACP_withInvalidID_thenReturn_statusNotFound() throws Exception {
+    void whenGetParcelsWaitingPickup_atSpecificACP_withInvalidID_thenReturn_statusNotFound() {
         RestAssured.with().contentType("application/json")
                 .when().get(BASE_URI + randomServerPort + "/dropmate/acp_api/parcel/all/delivery?acpID=1")
                 .then().statusCode(404);
@@ -169,9 +170,36 @@ class ACPController_IntegrationTest {
 
     @Test
     @Order(10)
-    void whenGetParcelsDelivered_atSpecificACP_withInvalidID_thenReturn_statusNotFound() throws Exception {
+    void whenGetParcelsDelivered_atSpecificACP_withInvalidID_thenReturn_statusNotFound() {
         RestAssured.with().contentType("application/json")
                 .when().get(BASE_URI + randomServerPort + "/dropmate/acp_api/parcel/all/delivered?acpID=1")
+                .then().statusCode(404);
+    }
+
+    @Test
+    @Order(11)
+    void whenDoingCheckIn_existingParcel_validDeliveryCode_thenReturn_statusOK() {
+        RestAssured.with().contentType("application/json")
+                .when().put(BASE_URI + randomServerPort + "/dropmate/acp_api/parcel/61/checkin?deliveryCode=DEL123")
+                .then().statusCode(200)
+                .body("deliveryCode", is("DEL123")).and()
+                .body("parcelStatus", is(Status.WAITING_FOR_PICKUP.toString())).and()
+                .body("deliveryDate", is(Date.valueOf(LocalDate.now()).toString()));
+    }
+
+    @Test
+    @Order(12)
+    void whenDoingCheckIn_existingParcel_invalidDeliveryCode_thenReturn_statusNotFound() throws Exception {
+        RestAssured.with().contentType("application/json")
+                .when().put(BASE_URI + randomServerPort + "/dropmate/acp_api/parcel/67/checkin?deliveryCode=WRONGCODE")
+                .then().statusCode(401);
+    }
+
+    @Test
+    @Order(13)
+    void whenDoingCheckIn_nonExistingParcel_thenReturn_statusNotFound() throws Exception {
+        RestAssured.with().contentType("application/json")
+                .when().put(BASE_URI + randomServerPort + "/dropmate/acp_api/parcel/-534/checkin?deliveryCode=DEL123")
                 .then().statusCode(404);
     }
 }

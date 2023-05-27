@@ -93,7 +93,7 @@ public class AdminService {
         if(admin != null && admin.getPassword().equals(password)){
             return admin;
         }
-        throw new InvalidCredentialsException();
+        throw new InvalidCredentialsException("Invalid login credentials");
     }
 
 

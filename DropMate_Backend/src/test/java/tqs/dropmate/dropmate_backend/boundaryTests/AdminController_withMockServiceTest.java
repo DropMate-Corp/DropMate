@@ -475,14 +475,14 @@ class AdminController_withMockServiceTest {
     void whenLoginWithInvalidPassword_thenReturnStatus401() throws Exception {
         String wrongPassword = "wrongPassword";
         when(adminService.processAdminLogin(user.getEmail(), wrongPassword))
-                .thenThrow(new InvalidCredentialsException());
+                .thenThrow(new InvalidCredentialsException("Invalid login credentials"));
 
         mockMvc.perform(
                         post("/dropmate/admin/login")
                                 .param("email", user.getEmail())
                                 .param("password", wrongPassword).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.message").value("Invalid login credentials."));
+                .andExpect(jsonPath("$.message").value("Invalid login credentials"));
 
         verify(adminService, times(1)).processAdminLogin(user.getEmail(), wrongPassword);
     }
@@ -492,14 +492,14 @@ class AdminController_withMockServiceTest {
         String wrongEmail = "wrongEmail@mail.com";
 
         when(adminService.processAdminLogin(wrongEmail, user.getPassword()))
-                .thenThrow(new InvalidCredentialsException());
+                .thenThrow(new InvalidCredentialsException("Invalid login credentials"));
 
         mockMvc.perform(
                         post("/dropmate/admin/login")
                                 .param("email", wrongEmail)
                                 .param("password", user.getPassword()).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.message").value("Invalid login credentials."));
+                .andExpect(jsonPath("$.message").value("Invalid login credentials"));
 
         verify(adminService, times(1)).processAdminLogin(wrongEmail, user.getPassword());
     }

@@ -5,12 +5,14 @@ import org.springframework.stereotype.Service;
 import tqs.dropmate.dropmate_backend.datamodel.AssociatedCollectionPoint;
 import tqs.dropmate.dropmate_backend.datamodel.Parcel;
 import tqs.dropmate.dropmate_backend.datamodel.Status;
+import tqs.dropmate.dropmate_backend.exceptions.InvalidCredentialsException;
 import tqs.dropmate.dropmate_backend.exceptions.ResourceNotFoundException;
 import tqs.dropmate.dropmate_backend.repositories.AssociatedCollectionPointRepository;
 import tqs.dropmate.dropmate_backend.repositories.ParcelRepository;
 
+import java.sql.Date;
+import java.time.LocalDate;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class ACPService {
@@ -87,6 +89,28 @@ public class ACPService {
                 .toList();
     }
 
+    /** Used to check-in a parcel when it reaches the Pickup Point
+     * @param parcelID - ID of the parcel on the DropMate database
+     * @param deliveryCode - Delivery code generated for the parcel
+     * @return A message saying the check in process was successful
+     * @throws ResourceNotFoundException - Exception raised when an ID doesn't exist in the database
+     * */
+    public Parcel checkInProcess(Integer parcelID, String deliveryCode) throws ResourceNotFoundException, InvalidCredentialsException {
+        Parcel parcel = this.getParcelFromID(parcelID);
+
+        // Checking if the delivery code inputted by the Operator is correct
+        if(! deliveryCode.equals(parcel.getDeliveryCode())){
+            throw new InvalidCredentialsException("Request denied. Delivery code inputted by Operator doesn't match the code of the parcel.");
+        }
+
+        // Updating the Parcel status
+        parcel.setParcelStatus(Status.WAITING_FOR_PICKUP);
+        parcel.setDeliveryDate(Date.valueOf(LocalDate.now()));
+        parcelRepository.save(parcel);
+
+        return parcel;
+    }
+
     // Auxilliary functions
 
     /** This method checks whether an ACP exists or not on the ACPRepository, based on its ID. If it doesn't it throws
@@ -97,5 +121,15 @@ public class ACPService {
      */
     private AssociatedCollectionPoint getACPFromID(Integer acpID) throws ResourceNotFoundException {
         return acpRepository.findById(acpID).orElseThrow(() -> new ResourceNotFoundException("Couldn't find ACP with the ID " + acpID + "!"));
+    }
+
+    /** This method checks whether a Parcel exists or not on the ParcleRepository, based on its ID. If it doesn't it throws
+     * an exception.
+     * @param parcelID - ID of the Parcel in the database
+     * @return corresponding ACP
+     * @throws ResourceNotFoundException - Exception raised when an ID doesn't exist in the database
+     */
+    private Parcel getParcelFromID(Integer parcelID) throws ResourceNotFoundException {
+        return parcelRepository.findById(parcelID).orElseThrow(() -> new ResourceNotFoundException("Couldn't find ACP with the ID " + parcelID + "!"));
     }
 }
