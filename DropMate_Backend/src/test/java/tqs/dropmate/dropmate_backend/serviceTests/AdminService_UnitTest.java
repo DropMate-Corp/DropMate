@@ -531,7 +531,7 @@ class AdminService_UnitTest {
         // Verify the result is as expected
         assertThatThrownBy(() -> adminService.processAdminLogin(admin.getEmail(), admin.getPassword()))
                 .isInstanceOf(InvalidCredentialsException.class)
-                .hasMessageContaining("Invalid login credentials.");
+                .hasMessageContaining("Invalid login credentials");
 
         // Mockito verifications
         verify(systemAdministratorRepository, times(1)).findByEmail(admin.getEmail());
@@ -550,7 +550,7 @@ class AdminService_UnitTest {
         // Verify the result is as expected
         assertThatThrownBy(() -> adminService.processAdminLogin(admin.getEmail(), "invalidPassword"))
                 .isInstanceOf(InvalidCredentialsException.class)
-                .hasMessageContaining("Invalid login credentials.");
+                .hasMessageContaining("Invalid login credentials");
 
         // Mockito verifications
         verify(systemAdministratorRepository, times(1)).findByEmail(admin.getEmail());

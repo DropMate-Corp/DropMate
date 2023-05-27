@@ -436,7 +436,7 @@ public class AdminController_IntegrationTest {
         RestAssured.with().contentType("application/json")
                 .when().post(BASE_URI + randomServerPort + "/dropmate/admin/login?email=" + "invalidemail@email.com" + "&password=" + "password")
                 .then().statusCode(401)
-                .assertThat().body("message", equalTo("Invalid login credentials."));
+                .assertThat().body("message", equalTo("Invalid login credentials"));
     }
 
     @Test
@@ -445,7 +445,7 @@ public class AdminController_IntegrationTest {
         RestAssured.with().contentType("application/json")
                 .when().post(BASE_URI + randomServerPort + "/dropmate/admin/login?email=" + "user@email.com" + "&password=" + "invalidPassword")
                 .then().statusCode(401)
-                .assertThat().body("message", equalTo("Invalid login credentials."));
+                .assertThat().body("message", equalTo("Invalid login credentials"));
     }
 
 }

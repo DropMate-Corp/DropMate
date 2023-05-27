@@ -482,7 +482,7 @@ class AdminController_withMockServiceTest {
                                 .param("email", user.getEmail())
                                 .param("password", wrongPassword).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.message").value("Invalid login credentials."));
+                .andExpect(jsonPath("$.message").value("Invalid login credentials"));
 
         verify(adminService, times(1)).processAdminLogin(user.getEmail(), wrongPassword);
     }
@@ -499,7 +499,7 @@ class AdminController_withMockServiceTest {
                                 .param("email", wrongEmail)
                                 .param("password", user.getPassword()).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.message").value("Invalid login credentials."));
+                .andExpect(jsonPath("$.message").value("Invalid login credentials"));
 
         verify(adminService, times(1)).processAdminLogin(wrongEmail, user.getPassword());
     }
