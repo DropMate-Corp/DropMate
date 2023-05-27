@@ -24,10 +24,22 @@ public class AdminPage_FunctionalTest {
     @Disabled
     public void testCheckACPDetails(FirefoxDriver driver) {
         AdminPage adminPage = new AdminPage(driver);
-        adminPage.clickViewACPButton("8");
+        adminPage.clickViewACPButton("1");
 
-        ACPPage acpPage = new ACPPage(driver, "8");
-        assertTrue(acpPage.checkACPName("Jardim da Celeste"));
+        ACPPage acpPage = new ACPPage(driver, "1");
+        assertTrue(acpPage.checkACPName("Pracinha das Flores"));
+
+        driver.quit();
+    }
+
+    @Test
+    @Disabled
+    public void testCheckACPStatistics(FirefoxDriver driver) {
+        AdminPage adminPage = new AdminPage(driver);
+        adminPage.clickViewACPButton("1");
+
+        ACPPage acpPage = new ACPPage(driver, "1");
+        assertTrue(acpPage.checkACPStatistics("10", "1", "1", "3"));
 
         driver.quit();
     }
@@ -65,6 +77,17 @@ public class AdminPage_FunctionalTest {
 
         // Check if registered partners table is displayed
         assertTrue(adminPage.checkIfRegisteredPartnersTableIsDisplayed());
+
+        driver.quit();
+    }
+
+    @Test
+    @Disabled
+    public void testCheckACPStaticticsTable(FirefoxDriver driver) {
+        AdminPage adminPage = new AdminPage(driver);
+
+        // Check if ACP statistics table is displayed
+        assertTrue(adminPage.checkIfACPStatisticsTableIsDisplayed());
 
         driver.quit();
     }

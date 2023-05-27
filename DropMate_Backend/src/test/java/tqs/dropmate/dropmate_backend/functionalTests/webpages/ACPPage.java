@@ -9,6 +9,8 @@ import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
 import java.time.Duration;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class ACPPage {
     private final WebDriver driver;
@@ -37,4 +39,40 @@ public class ACPPage {
         // Check if the name displayed is the same as the one passed as argument
         return nameElement.getText().equals(name);
     }
+
+    public boolean checkACPStatistics(String limit, String inDelivery, String pickup, String total) {
+        Logger logger = Logger.getLogger("TestLogger");
+
+        WebElement limitElement = waitForElement(By.id("Parcel Limit"));
+        WebElement inDeliveryElement = waitForElement(By.id("Parcels in Delivery"));
+        WebElement pickupElement = waitForElement(By.id("Parcels Waiting Pickup"));
+        WebElement totalElement = waitForElement(By.id("Total Parcels"));
+
+        // Check if the statistics are displayed
+        assert limitElement.isDisplayed();
+        assert inDeliveryElement.isDisplayed();
+        assert pickupElement.isDisplayed();
+        assert totalElement.isDisplayed();
+
+        // Check if the statistics displayed are the same as the ones passed as arguments and log the result
+        boolean result = true;
+        if (!limitElement.getText().equals(limit)) {
+            logger.log(Level.SEVERE, "Limit: " + limitElement.getText() + " != " + limit);
+            result = false;
+        }
+        if (!inDeliveryElement.getText().equals(inDelivery)) {
+            logger.log(Level.SEVERE, "In Delivery: " + inDeliveryElement.getText() + " != " + inDelivery);
+            result = false;
+        }
+        if (!pickupElement.getText().equals(pickup)) {
+            logger.log(Level.SEVERE, "Pickup: " + pickupElement.getText() + " != " + pickup);
+            result = false;
+        }
+        if (!totalElement.getText().equals(total)) {
+            logger.log(Level.SEVERE, "Total: " + totalElement.getText() + " != " + total);
+            result = false;
+        }
+        return result;
+    }
+
 }
