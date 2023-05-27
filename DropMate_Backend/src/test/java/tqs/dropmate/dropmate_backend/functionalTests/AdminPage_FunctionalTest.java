@@ -42,4 +42,30 @@ public class AdminPage_FunctionalTest {
 
         driver.quit();
     }
+
+    @Test
+    @Disabled
+    public void testCheckParcelsTable(FirefoxDriver driver) {
+        AdminPage adminPage = new AdminPage(driver);
+
+        // Check if parcels table is displayed
+        assertTrue(adminPage.isParcelsTableDisplayed());
+
+        // Change Delivery Status to IN_DELIVERY
+        adminPage.selectDeliveryStatus("In Delivery");
+        assertTrue(adminPage.checkIfAllParcelTableRowsAreWithTheRightStatus("IN_DELIVERY"));
+
+        driver.quit();
+    }
+
+    @Test
+    @Disabled
+    public void testCheckRegisteredPartnersTable(FirefoxDriver driver) {
+        AdminPage adminPage = new AdminPage(driver);
+
+        // Check if registered partners table is displayed
+        assertTrue(adminPage.checkIfRegisteredPartnersTableIsDisplayed());
+
+        driver.quit();
+    }
 }
