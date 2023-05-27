@@ -96,4 +96,9 @@ public class AdminPage {
         WebElement table = waitForElement(By.id("registeredPartnersTable"));
         return table.isDisplayed();
     }
+
+    public boolean checkIfACPStatisticsTableIsDisplayed() {
+        WebElement table = waitForElement(By.id("ACPStatisticsTable"));
+        return table.isDisplayed();
+    }
 }
