@@ -475,7 +475,7 @@ class AdminController_withMockServiceTest {
     void whenLoginWithInvalidPassword_thenReturnStatus401() throws Exception {
         String wrongPassword = "wrongPassword";
         when(adminService.processAdminLogin(user.getEmail(), wrongPassword))
-                .thenThrow(new InvalidCredentialsException());
+                .thenThrow(new InvalidCredentialsException("Invalid login credentials"));
 
         mockMvc.perform(
                         post("/dropmate/admin/login")
@@ -492,7 +492,7 @@ class AdminController_withMockServiceTest {
         String wrongEmail = "wrongEmail@mail.com";
 
         when(adminService.processAdminLogin(wrongEmail, user.getPassword()))
-                .thenThrow(new InvalidCredentialsException());
+                .thenThrow(new InvalidCredentialsException("Invalid login credentials"));
 
         mockMvc.perform(
                         post("/dropmate/admin/login")
