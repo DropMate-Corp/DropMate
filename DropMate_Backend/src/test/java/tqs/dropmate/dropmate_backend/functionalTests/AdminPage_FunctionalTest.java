@@ -1,7 +1,6 @@
 package tqs.dropmate.dropmate_backend.functionalTests;
 
 import io.github.bonigarcia.seljup.SeleniumJupiter;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -15,30 +14,32 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class AdminPage_FunctionalTest {
     @Test
     @Disabled
-    public void checkIfRegisteredACPsTableIsDisplayed(FirefoxDriver driver) {
+    public void testCheckIfRegisteredACPsTableIsDisplayed(FirefoxDriver driver) {
         AdminPage adminPage = new AdminPage(driver);
-        assertTrue(adminPage.checkIfRegisteredACPsTableIsDisplayed());
+        assertTrue(adminPage.isRegisteredACPsTableDisplayed());
         driver.quit();
     }
 
     @Test
     @Disabled
-    public void checkACPDetails(FirefoxDriver driver) {
+    public void testCheckACPDetails(FirefoxDriver driver) {
         AdminPage adminPage = new AdminPage(driver);
-        this.wait(1);
-        adminPage.clickViewACPButton("1");
+        adminPage.clickViewACPButton("8");
 
-        ACPPage acpPage = new ACPPage(driver, "1");
-        this.wait(1);
-        assertTrue(acpPage.checkIfACPNameIsDisplayed());
+        ACPPage acpPage = new ACPPage(driver, "8");
+        assertTrue(acpPage.checkACPName("Jardim da Celeste"));
 
         driver.quit();
     }
 
-    public void wait(int seconds) {
-        try {
-            Thread.sleep(seconds * 1000L);
-        } catch (InterruptedException ignored) {
-        }
+    @Test
+    @Disabled
+    public void testDeleteACP(FirefoxDriver driver) {
+        AdminPage adminPage = new AdminPage(driver);
+        adminPage.clickDeleteACPButton("8");
+        adminPage.confirmDeleteACP();
+        assertTrue(adminPage.isACPDeleted("8"));
+
+        driver.quit();
     }
 }
