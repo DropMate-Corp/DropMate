@@ -48,16 +48,16 @@ public class AdminPage_FunctionalTest {
     @Disabled
     public void testDeleteACP(FirefoxDriver driver) {
         AdminPage adminPage = new AdminPage(driver);
-        adminPage.clickDeleteACPButton("8");
+        adminPage.clickDeleteACPButton("1");
         adminPage.confirmDeleteACP();
-        assertTrue(adminPage.isACPDeleted("8"));
+        assertTrue(adminPage.isACPDeleted("1"));
 
         driver.quit();
     }
 
     @Test
     @Disabled
-    public void testCheckParcelsTable(FirefoxDriver driver) {
+    public void testCheckParcelsTableInDelivery(FirefoxDriver driver) {
         AdminPage adminPage = new AdminPage(driver);
 
         // Check if parcels table is displayed
@@ -66,6 +66,21 @@ public class AdminPage_FunctionalTest {
         // Change Delivery Status to IN_DELIVERY
         adminPage.selectDeliveryStatus("In Delivery");
         assertTrue(adminPage.checkIfAllParcelTableRowsAreWithTheRightStatus("IN_DELIVERY"));
+
+        driver.quit();
+    }
+
+    @Test
+    @Disabled
+    public void testCheckParcelsTableWaitingPickup(FirefoxDriver driver) {
+        AdminPage adminPage = new AdminPage(driver);
+
+        // Check if parcels table is displayed
+        assertTrue(adminPage.isParcelsTableDisplayed());
+
+        // Change Delivery Status to WAITING_PICKUP
+        adminPage.selectDeliveryStatus("Waiting For Pickup");
+        assertTrue(adminPage.checkIfAllParcelTableRowsAreWithTheRightStatus("WAITING_FOR_PICKUP"));
 
         driver.quit();
     }

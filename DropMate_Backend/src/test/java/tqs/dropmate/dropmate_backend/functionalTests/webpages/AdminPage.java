@@ -1,14 +1,14 @@
 package tqs.dropmate.dropmate_backend.functionalTests.webpages;
 
 import org.openqa.selenium.*;
-import org.openqa.selenium.support.FindBy;
-import org.openqa.selenium.support.PageFactory;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.Select;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
 import java.time.Duration;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class AdminPage {
     private final WebDriver driver;
@@ -62,11 +62,8 @@ public class AdminPage {
     }
 
     public void selectDeliveryStatus(String status) {
-        WebElement select = waitForElement(By.name("deliveryStatus"));
-
-        Select selectElement = new Select(select);
-
-        selectElement.selectByVisibleText(status);
+        WebElement selectElement = waitForElement(By.name("deliveryStatus"));
+        selectElement.sendKeys(status);
     }
 
     public boolean checkIfAllParcelTableRowsAreWithTheRightStatus(String status) {
