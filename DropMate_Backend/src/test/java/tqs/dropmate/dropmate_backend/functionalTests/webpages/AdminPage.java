@@ -1,28 +1,23 @@
 package tqs.dropmate.dropmate_backend.functionalTests.webpages;
 
-import org.openqa.selenium.By;
-import org.openqa.selenium.NoSuchElementException;
-import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.WebElement;
+import org.openqa.selenium.*;
 import org.openqa.selenium.support.FindBy;
 import org.openqa.selenium.support.PageFactory;
 import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.Select;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
 import java.time.Duration;
+import java.util.List;
 
 public class AdminPage {
     private final WebDriver driver;
     private static final String URL = "http://localhost:5173/admin";
     private static final Duration DEFAULT_TIMEOUT = Duration.ofSeconds(10);
 
-    @FindBy(id = "registeredACPs")
-    WebElement registeredACPsContainer;
-
     public AdminPage(WebDriver driver) {
         this.driver = driver;
         this.driver.get(URL);
-        PageFactory.initElements(driver, this);
     }
 
     private WebElement waitForElement(By locator) {
@@ -31,7 +26,7 @@ public class AdminPage {
     }
 
     public boolean isRegisteredACPsTableDisplayed() {
-        WebElement table = waitForElement(By.tagName("table"));
+        WebElement table = waitForElement(By.id("registeredACPsTable"));
         return table.isDisplayed();
     }
 
@@ -53,7 +48,7 @@ public class AdminPage {
     }
 
     public boolean isACPDeleted(String acpId) {
-        WebElement table = waitForElement(By.tagName("table"));
+        WebElement table = waitForElement(By.id("registeredACPsTable"));
         assert table.isDisplayed();
 
         String rowId = "row" + acpId;
@@ -64,5 +59,41 @@ public class AdminPage {
             rowFound = false;
         }
         return !rowFound;
+    }
+
+    public void selectDeliveryStatus(String status) {
+        WebElement select = waitForElement(By.name("deliveryStatus"));
+
+        Select selectElement = new Select(select);
+
+        selectElement.selectByVisibleText(status);
+    }
+
+    public boolean checkIfAllParcelTableRowsAreWithTheRightStatus(String status) {
+        WebElement table = waitForElement(By.id("parcelsTable"));
+        assert table.isDisplayed();
+
+        List<WebElement> rows = table.findElements(By.tagName("tr"));
+
+        for (WebElement row : rows) {
+            List<WebElement> columns = row.findElements(By.tagName("td"));
+            if (columns.size() > 0) {
+                String deliveryStatus = columns.get(6).getText();
+                if (!deliveryStatus.equals(status)) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    public boolean isParcelsTableDisplayed() {
+        WebElement table = waitForElement(By.id("parcelsTable"));
+        return table.isDisplayed();
+    }
+
+    public boolean checkIfRegisteredPartnersTableIsDisplayed() {
+        WebElement table = waitForElement(By.id("registeredPartnersTable"));
+        return table.isDisplayed();
     }
 }
