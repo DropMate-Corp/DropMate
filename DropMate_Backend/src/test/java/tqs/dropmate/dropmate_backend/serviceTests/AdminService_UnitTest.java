@@ -54,6 +54,7 @@ class AdminService_UnitTest {
         pickupPointOne.setEmail("pickupone@mail.pt");
         pickupPointOne.setDeliveryLimit(10);
         pickupPointOne.setTelephoneNumber("953339994");
+        pickupPointOne.setAcpId(1);
 
         AssociatedCollectionPoint pickupPointTwo = new AssociatedCollectionPoint();
         pickupPointTwo.setCity("Porto");
@@ -61,6 +62,7 @@ class AdminService_UnitTest {
         pickupPointTwo.setEmail("pickuptwo@mail.pt");
         pickupPointTwo.setDeliveryLimit(15);
         pickupPointTwo.setTelephoneNumber("939333594");
+        pickupPointTwo.setAcpId(2);
 
         AssociatedCollectionPoint pickupPointThree = new AssociatedCollectionPoint();
         pickupPointThree.setCity("Viseu");
@@ -68,6 +70,7 @@ class AdminService_UnitTest {
         pickupPointThree.setEmail("pickupthree@mail.pt");
         pickupPointThree.setDeliveryLimit(12);
         pickupPointThree.setTelephoneNumber("900000000");
+        pickupPointThree.setAcpId(3);
 
         // Adding to ACP list
         allACP = new ArrayList<>();
@@ -248,14 +251,14 @@ class AdminService_UnitTest {
         when(acpRepository.findAll()).thenReturn(allACP);
 
         // Verify the result is as expected
-        Map<AssociatedCollectionPoint, Map<String, Integer>> stats = adminService.getAllACPStatistics();
+        Map<Integer, Map<String, Integer>> stats = adminService.getAllACPStatistics();
         assertThat(stats).hasSize(3);
-        assertThat(stats.keySet()).extracting(AssociatedCollectionPoint::getCity).contains("Aveiro", "Porto", "Viseu");
+        assertThat(stats.keySet()).contains(1,2,3);
 
-        assertThat(stats).containsKey(pickupPointOne)
+        assertThat(stats).containsKey(1)
                 .satisfies(map -> {
-                    Assertions.assertThat(map.get(pickupPointOne)).containsEntry("parcels_in_delivery", 5);
-                    Assertions.assertThat(map.get(pickupPointOne)).containsEntry("deliveryLimit", 10);
+                    Assertions.assertThat(map.get(1)).containsEntry("parcels_in_delivery", 5);
+                    Assertions.assertThat(map.get(1)).containsEntry("deliveryLimit", 10);
                 });
 
         // Mockito verifications

@@ -51,6 +51,7 @@ class AdminController_withMockServiceTest {
         pickupPointOne.setEmail("pickupone@mail.pt");
         pickupPointOne.setDeliveryLimit(10);
         pickupPointOne.setTelephoneNumber("953339994");
+        pickupPointOne.setAcpId(1);
 
         pickupPointTwo = new AssociatedCollectionPoint();
         pickupPointTwo.setCity("Porto");
@@ -58,6 +59,7 @@ class AdminController_withMockServiceTest {
         pickupPointTwo.setEmail("pickuptwo@mail.pt");
         pickupPointTwo.setDeliveryLimit(15);
         pickupPointTwo.setTelephoneNumber("939333594");
+        pickupPointTwo.setAcpId(2);
 
         AssociatedCollectionPoint pickupPointThree = new AssociatedCollectionPoint();
         pickupPointThree.setCity("Viseu");
@@ -65,6 +67,7 @@ class AdminController_withMockServiceTest {
         pickupPointThree.setEmail("pickupthree@mail.pt");
         pickupPointThree.setDeliveryLimit(12);
         pickupPointThree.setTelephoneNumber("900000000");
+        pickupPointThree.setAcpId(3);
 
         // Adding to ACP list
         allACP = new ArrayList<>();
@@ -211,7 +214,7 @@ class AdminController_withMockServiceTest {
 
         when(adminService.getAllACPStatistics()).thenReturn(allACP.stream()
                 .collect(Collectors.toMap(
-                        acp -> acp,
+                        AssociatedCollectionPoint::getAcpId,
                         acp -> {
                             Map<String, Integer> statistics = new HashMap<>(acp.getOperationalStatistics());
                             statistics.put("deliveryLimit", acp.getDeliveryLimit());

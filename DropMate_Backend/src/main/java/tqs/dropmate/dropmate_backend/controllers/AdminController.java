@@ -78,7 +78,7 @@ public class AdminController {
 
     /** This method returns the statistics associated with all ACPs */
     @GetMapping("/acp/statistics")
-    public ResponseEntity<Map<AssociatedCollectionPoint, Map<String, Integer>>> getAllACPStatistics(){
+    public ResponseEntity<Map<Integer, Map<String, Integer>>> getAllACPStatistics(){
         return ResponseEntity.ok().body(adminService.getAllACPStatistics());
     }
 

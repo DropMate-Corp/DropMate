@@ -113,12 +113,12 @@ public class AdminService {
 
 
     /** This method returns all the operational statistics of all ACP's
-     * @return Map containing the operational statistics for each ACP. Each key is a ACP, and the value another Map of the corresponding statistics.
+     * @return Map containing the operational statistics for each ACP. Each key is the ID of the ACP, and the value another Map of the corresponding statistics.
      * */
-    public Map<AssociatedCollectionPoint, Map<String, Integer>> getAllACPStatistics() {
+    public Map<Integer, Map<String, Integer>> getAllACPStatistics() {
         return acpRepository.findAll().stream()
                 .collect(Collectors.toMap(
-                        acp -> acp,
+                        AssociatedCollectionPoint::getAcpId,
                         acp -> {
 
                             Map<String, Integer> statistics = new HashMap<>(acp.getOperationalStatistics());
