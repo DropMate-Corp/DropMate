@@ -47,7 +47,7 @@ public class ACPController {
     /** Used to check-in a parcel when it reaches the Pickup Point */
     @PutMapping("/parcel/{parcelID}/checkin")
     public ResponseEntity<Parcel> checkInParcel(@PathVariable(name = "parcelID") Integer parcelID,
-                                                           @RequestParam(name = "deliveryCode") String deliveryCode) throws ResourceNotFoundException, InvalidCredentialsException {
+                                                @RequestParam(name = "deliveryCode") String deliveryCode) throws ResourceNotFoundException, InvalidCredentialsException {
         return ResponseEntity.ok().body(acpService.checkInProcess(parcelID, deliveryCode));
     }
 

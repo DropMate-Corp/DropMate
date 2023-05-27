@@ -11,10 +11,12 @@ import org.springframework.test.web.servlet.MockMvc;
 import tqs.dropmate.dropmate_backend.controllers.ACPController;
 import tqs.dropmate.dropmate_backend.datamodel.Parcel;
 import tqs.dropmate.dropmate_backend.datamodel.Status;
+import tqs.dropmate.dropmate_backend.exceptions.InvalidCredentialsException;
 import tqs.dropmate.dropmate_backend.exceptions.ResourceNotFoundException;
 import tqs.dropmate.dropmate_backend.services.ACPService;
 
 import java.sql.Date;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -184,6 +186,43 @@ class ACPController_withMockServiceTest {
         mockMvc.perform(
                         get("/dropmate/acp_api/parcel/all/delivered").contentType(MediaType.APPLICATION_JSON)
                                 .param("acpID", "-2"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void whenDoingCheckIn_existingParcel_validDeliveryCode_thenReturn_statusOK() throws Exception {
+        Parcel testParcel = parcelsWaitingDelivery.get(0);
+        testParcel.setParcelStatus(Status.WAITING_FOR_PICKUP);
+        testParcel.setDeliveryDate(Date.valueOf(LocalDate.now()));
+
+        when(acpService.checkInProcess(1, "DEL123")).thenReturn(testParcel);
+
+        mockMvc.perform(
+                        put("/dropmate/acp_api/parcel/1/checkin").contentType(MediaType.APPLICATION_JSON)
+                                .param("deliveryCode", "DEL123"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.deliveryCode", is("DEL123")))
+                .andExpect(jsonPath("$.parcelStatus", is(Status.WAITING_FOR_PICKUP.toString())))
+                .andExpect(jsonPath("$.deliveryDate", is(Date.valueOf(LocalDate.now()).toString())));
+    }
+
+    @Test
+    void whenDoingCheckIn_existingParcel_invalidDeliveryCode_thenReturn_statusNotFound() throws Exception {
+        when(acpService.checkInProcess(1, "WRONGCODE")).thenThrow(new InvalidCredentialsException("Request denied. Delivery code inputted by Operator doesn't match the code of the parcel."));
+
+        mockMvc.perform(
+                        put("/dropmate/acp_api/parcel/1/checkin").contentType(MediaType.APPLICATION_JSON)
+                                .param("deliveryCode", "WRONGCODE"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void whenDoingCheckIn_nonExistingParcel_thenReturn_statusNotFound() throws Exception {
+        when(acpService.checkInProcess(-1, "DEL123")).thenThrow(new ResourceNotFoundException("Couldn't find ACP with the ID -1!"));
+
+        mockMvc.perform(
+                        put("/dropmate/acp_api/parcel/-1/checkin").contentType(MediaType.APPLICATION_JSON)
+                                .param("deliveryCode", "DEL123"))
                 .andExpect(status().isNotFound());
     }
 }

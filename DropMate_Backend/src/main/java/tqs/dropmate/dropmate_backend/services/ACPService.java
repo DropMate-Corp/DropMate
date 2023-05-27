@@ -9,12 +9,10 @@ import tqs.dropmate.dropmate_backend.exceptions.InvalidCredentialsException;
 import tqs.dropmate.dropmate_backend.exceptions.ResourceNotFoundException;
 import tqs.dropmate.dropmate_backend.repositories.AssociatedCollectionPointRepository;
 import tqs.dropmate.dropmate_backend.repositories.ParcelRepository;
-import tqs.dropmate.dropmate_backend.utils.SuccessfulRequest;
 
 import java.sql.Date;
 import java.time.LocalDate;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class ACPService {

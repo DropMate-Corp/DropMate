@@ -13,12 +13,14 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import tqs.dropmate.dropmate_backend.datamodel.AssociatedCollectionPoint;
 import tqs.dropmate.dropmate_backend.datamodel.Parcel;
 import tqs.dropmate.dropmate_backend.datamodel.Status;
+import tqs.dropmate.dropmate_backend.exceptions.InvalidCredentialsException;
 import tqs.dropmate.dropmate_backend.exceptions.ResourceNotFoundException;
 import tqs.dropmate.dropmate_backend.repositories.AssociatedCollectionPointRepository;
 import tqs.dropmate.dropmate_backend.repositories.ParcelRepository;
 import tqs.dropmate.dropmate_backend.services.ACPService;
 
 import java.sql.Date;
+import java.time.LocalDate;
 import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -221,9 +223,58 @@ class ACPService_UnitTest {
         this.verifyACPFindByIdIsCalled();
     }
 
+    @Test
+    void whenDoingCheckIn_existingParcel_validDeliveryCode_thenReturnParcel() throws InvalidCredentialsException, ResourceNotFoundException {
+        // Set up Expectations
+        when(parcelRepository.findById(Mockito.any())).thenReturn(Optional.ofNullable(allParcels.get(0)));
+
+        // Verify the result is as expected
+        Parcel updatedParcel = acpService.checkInProcess(1, "DEL123");
+        assertThat(updatedParcel.getDeliveryCode()).isEqualTo("DEL123");
+        assertThat(updatedParcel.getParcelStatus()).isEqualTo(Status.WAITING_FOR_PICKUP);
+        assertThat(updatedParcel.getDeliveryDate()).isEqualTo(Date.valueOf(LocalDate.now()));
+
+        // Mockito verifications
+        this.verifyParcelFindByIdIsCalled();
+        Mockito.verify(parcelRepository, VerificationModeFactory.times(1)).save(updatedParcel);
+    }
+
+    @Test
+    void whenDoingCheckIn_existingParcel_invalidDeliveryCode_thenThrowException(){
+        // Set up Expectations
+        when(parcelRepository.findById(Mockito.any())).thenReturn(Optional.ofNullable(allParcels.get(0)));
+
+        // Verify the result is as expected
+        assertThatThrownBy(() -> {
+            acpService.checkInProcess(1, "WRONGCODE");
+        }).isInstanceOf(InvalidCredentialsException.class).hasMessageContainingAll("Request denied. Delivery code inputted by Operator doesn't match the code of the parcel.");
+
+        // Mockito verifications
+        this.verifyParcelFindByIdIsCalled();
+    }
+
+    @Test
+    void whenDoingCheckIn_nonExistingParcel_thenThrowException(){
+
+        // Set up Expectations
+        when(parcelRepository.findById(-1)).thenReturn(Optional.empty());
+
+        // Verify the result is as expected
+        assertThatThrownBy(() -> {
+            acpService.checkInProcess(-1, "DEL123");
+        }).isInstanceOf(ResourceNotFoundException.class).hasMessageContainingAll("Couldn't find ACP with the ID -1!");
+
+        // Mockito verifications
+        this.verifyParcelFindByIdIsCalled();
+    }
+
     // Auxilliary Functions
     private void verifyACPFindByIdIsCalled(){
         Mockito.verify(acpRepository, VerificationModeFactory.times(1)).findById(Mockito.any());
+    }
+
+    private void verifyParcelFindByIdIsCalled(){
+        Mockito.verify(parcelRepository, VerificationModeFactory.times(1)).findById(Mockito.any());
     }
 
     private void verifyFindAllParcels(){
