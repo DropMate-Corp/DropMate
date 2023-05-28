@@ -13,10 +13,8 @@ import org.springframework.test.context.TestPropertySource;
 import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
-import tqs.dropmate.dropmate_backend.datamodel.AssociatedCollectionPoint;
-import tqs.dropmate.dropmate_backend.datamodel.Parcel;
-import tqs.dropmate.dropmate_backend.datamodel.Status;
-import tqs.dropmate.dropmate_backend.datamodel.Store;
+import tqs.dropmate.dropmate_backend.datamodel.*;
+import tqs.dropmate.dropmate_backend.repositories.ACPOperatorRepository;
 import tqs.dropmate.dropmate_backend.repositories.AssociatedCollectionPointRepository;
 import tqs.dropmate.dropmate_backend.repositories.ParcelRepository;
 import tqs.dropmate.dropmate_backend.repositories.StoreRepository;
@@ -25,6 +23,7 @@ import java.sql.Date;
 import java.time.LocalDate;
 
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasItems;
 
 
@@ -42,6 +41,8 @@ class ACPController_IntegrationTest {
     ParcelRepository parcelRepository;
     @Autowired
     StoreRepository storeRepository;
+    @Autowired
+    ACPOperatorRepository acpOperatorRepository;
 
     @LocalServerPort
     private int randomServerPort;
@@ -76,12 +77,22 @@ class ACPController_IntegrationTest {
         parcelRepository.saveAndFlush(new Parcel("DEL367", "PCK803", 2.2, new Date(2023, 5, 22), null, Status.WAITING_FOR_PICKUP, testACP, testStore));
         parcelRepository.saveAndFlush(new Parcel("DEL000", "PCK257", 1.5, new Date(2023, 5, 22), new Date(2023, 5, 28), Status.DELIVERED, testACP, testStore));
         parcelRepository.saveAndFlush(new Parcel("DEL843", "PCK497", 1.6, new Date(2023, 5, 22), new Date(2023, 5, 29), Status.DELIVERED, testACP, testStore));
+
+        // System admin
+        ACPOperator user = new ACPOperator();
+        user.setName("User");
+        user.setEmail("user@email.com");
+        user.setPassword("password");
+        user.setAcpId(testACP);
+
+        acpOperatorRepository.saveAndFlush(user);
     }
 
     @AfterEach
     public void resetDB(){
         acpRepository.deleteAll();
         parcelRepository.deleteAll();
+        acpOperatorRepository.deleteAll();
     }
 
     @Test
@@ -201,5 +212,79 @@ class ACPController_IntegrationTest {
         RestAssured.with().contentType("application/json")
                 .when().put(BASE_URI + randomServerPort + "/dropmate/acp_api/parcel/-534/checkin?deliveryCode=DEL123")
                 .then().statusCode(404);
+    }
+
+    @Test
+    @Order(14)
+    void whenDoingCheckOut_existingParcel_validPickupCode_thenReturn_statusOK() throws Exception {
+        RestAssured.with().contentType("application/json")
+                .when().put(BASE_URI + randomServerPort + "/dropmate/acp_api/parcel/81/checkout?pickupCode=PCK356")
+                .then().statusCode(200)
+                .body("pickupCode", is("PCK356")).and()
+                .body("parcelStatus", is(Status.DELIVERED.toString())).and()
+                .body("pickupDate", is(Date.valueOf(LocalDate.now()).toString()));
+    }
+
+    @Test
+    @Order(15)
+    void whenDoingCheckOut_existingParcel_invalidPickupCode_thenReturn_statusNotFound() throws Exception {
+        RestAssured.with().contentType("application/json")
+                .when().put(BASE_URI + randomServerPort + "/dropmate/acp_api/parcel/86/checkout?pickupCode=WRONGCODE")
+                .then().statusCode(401);
+    }
+
+    @Test
+    @Order(16)
+    void whenDoingCheckOut_nonExistingParcel_thenReturn_statusNotFound() throws Exception {
+        RestAssured.with().contentType("application/json")
+                .when().put(BASE_URI + randomServerPort + "/dropmate/acp_api/parcel/1/checkout?pickupCode=PCK356")
+                .then().statusCode(404);
+    }
+
+    @Test
+    @Order(17)
+    void whenGetParcelInfo_withValidID_thenReturn_statusOK() throws Exception {
+        RestAssured.with().contentType("application/json")
+                .when().get(BASE_URI + randomServerPort + "/dropmate/acp_api/parcel/101")
+                .then().statusCode(200)
+                .body("pickupCode", is("PCK257")).and()
+                .body("parcelStatus", is(Status.DELIVERED.toString()));
+    }
+
+    @Test
+    @Order(18)
+    void whenGetParcelInfo_withInvalidID_thenReturn_statusNotFound() throws Exception {
+        RestAssured.with().contentType("application/json")
+                .when().get(BASE_URI + randomServerPort + "/dropmate/acp_api/parcel/-101")
+                .then().statusCode(404);
+    }
+
+    @Test
+    @Order(19)
+    void whenLoginValidUser_thenReturnUser_andStatus200() {
+        RestAssured.with().contentType("application/json")
+                .when().post(BASE_URI + randomServerPort + "/dropmate/acp_api/login?email=" + "user@email.com" + "&password=" + "password")
+                .then().statusCode(200)
+                .assertThat().body("name", equalTo("User"))
+                .assertThat().body("email", equalTo("user@email.com"))
+                .assertThat().body("password", equalTo("password"));
+    }
+
+    @Test
+    @Order(20)
+    void whenLoginWithInvalidEmail_thenReturnStatus401() {
+        RestAssured.with().contentType("application/json")
+                .when().post(BASE_URI + randomServerPort + "/dropmate/acp_api/login?email=" + "invalidemail@email.com" + "&password=" + "password")
+                .then().statusCode(401)
+                .assertThat().body("message", equalTo("Invalid login credentials"));
+    }
+
+    @Test
+    @Order(21)
+    void whenLoginWithInvalidPassword_thenReturnStatus401() {
+        RestAssured.with().contentType("application/json")
+                .when().post(BASE_URI + randomServerPort + "/dropmate/acp_api/login?email=" + "user@email.com" + "&password=" + "invalidPassword")
+                .then().statusCode(401)
+                .assertThat().body("message", equalTo("Invalid login credentials"));
     }
 }

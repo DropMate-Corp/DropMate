@@ -177,7 +177,6 @@ public class AdminController_IntegrationTest {
                 .body("size()", is(2)).and()
                 .body("city", hasItems("Aveiro", "Porto")).and()
                 .body("[1].email", is("pickuptwo@mail.pt"));
-
     }
 
     @Test
@@ -374,7 +373,7 @@ public class AdminController_IntegrationTest {
     @Test
     @Order(26)
     void whenAddNewPendingACP_thenReturn_correspondingACP() throws Exception {
-        RestAssured.given().log().all().contentType(ContentType.JSON)
+        RestAssured.given().contentType(ContentType.JSON)
                 .when().post(BASE_URI + randomServerPort + "/dropmate/admin/acp/pending?city=" + "Aveiro"
                 + "&address=" + "Fake Street no 1, Aveiro" + "&name=" + "Test New ACP"
                         + "&email=" + "newacp@mail.pt" + "&telephoneNumber=" + "000000000"
@@ -383,7 +382,7 @@ public class AdminController_IntegrationTest {
                 .body("city", is("Aveiro")).and()
                 .body("address", is("Fake Street no 1, Aveiro")).and()
                 .body("email", is("newacp@mail.pt")).and()
-                .body("acpId", is(51)).and()
+                .body("acpId", is(53)).and()
                 .body("status", is(0));
     }
 
@@ -446,6 +445,18 @@ public class AdminController_IntegrationTest {
                 .when().post(BASE_URI + randomServerPort + "/dropmate/admin/login?email=" + "user@email.com" + "&password=" + "invalidPassword")
                 .then().statusCode(401)
                 .assertThat().body("message", equalTo("Invalid login credentials"));
+    }
+
+    @Test
+    @Order(26)
+    void whenGetAllPendingACP_thenReturn_statusOK() throws Exception {
+        RestAssured.with().contentType("application/json")
+                .when().get(BASE_URI + randomServerPort + "/dropmate/admin/acp/pending")
+                .then().statusCode(200)
+                .body("size()", is(2)).and()
+                .body("city", hasItems("Aveiro")).and()
+                .body("[1].email", is("newacp@mail.pt"));
+
     }
 
 }

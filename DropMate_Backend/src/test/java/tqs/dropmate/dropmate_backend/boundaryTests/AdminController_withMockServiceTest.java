@@ -117,6 +117,27 @@ class AdminController_withMockServiceTest {
     }
 
     @Test
+    void whenGetAllPendingACP_thenReturn_statusOK() throws Exception {
+        PendingACP candidateACP = new PendingACP();
+        candidateACP.setName("Test New ACP");
+        candidateACP.setEmail("newacp@mail.pt");
+        candidateACP.setCity("Aveiro");
+        candidateACP.setAddress("Fake Street no 1, Aveiro");
+        candidateACP.setTelephoneNumber("000000000");
+        candidateACP.setDescription("I am a totally legit pickup point");
+        candidateACP.setStatus(0);
+        candidateACP.setAcpId(1);
+
+        when(adminService.getAllPendingACP()).thenReturn(List.of(candidateACP));
+
+        mockMvc.perform(
+                        get("/dropmate/admin/acp/pending").contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].city", is("Aveiro")))
+                .andExpect(jsonPath("$[0].address", is("Fake Street no 1, Aveiro")));
+    }
+
+    @Test
     void whenGetAllStores_thenReturn_statusOK() throws Exception {
         // Creating Fake Stores
         List<Store> allStores = new ArrayList<>();

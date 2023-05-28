@@ -10,11 +10,10 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.internal.verification.VerificationModeFactory;
 import org.mockito.junit.jupiter.MockitoExtension;
-import tqs.dropmate.dropmate_backend.datamodel.AssociatedCollectionPoint;
-import tqs.dropmate.dropmate_backend.datamodel.Parcel;
-import tqs.dropmate.dropmate_backend.datamodel.Status;
+import tqs.dropmate.dropmate_backend.datamodel.*;
 import tqs.dropmate.dropmate_backend.exceptions.InvalidCredentialsException;
 import tqs.dropmate.dropmate_backend.exceptions.ResourceNotFoundException;
+import tqs.dropmate.dropmate_backend.repositories.ACPOperatorRepository;
 import tqs.dropmate.dropmate_backend.repositories.AssociatedCollectionPointRepository;
 import tqs.dropmate.dropmate_backend.repositories.ParcelRepository;
 import tqs.dropmate.dropmate_backend.services.ACPService;
@@ -25,7 +24,7 @@ import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 
 @ExtendWith(MockitoExtension.class)
@@ -34,6 +33,8 @@ class ACPService_UnitTest {
     private AssociatedCollectionPointRepository acpRepository;
     @Mock(lenient = true)
     private ParcelRepository parcelRepository;
+    @Mock(lenient = true)
+    private ACPOperatorRepository acpOperatorRepository;
 
     @InjectMocks
     private ACPService acpService;
@@ -266,6 +267,138 @@ class ACPService_UnitTest {
 
         // Mockito verifications
         this.verifyParcelFindByIdIsCalled();
+    }
+
+    @Test
+    void whenDoingCheckOut_existingParcel_validPickupCode_thenReturnParcel() throws InvalidCredentialsException, ResourceNotFoundException {
+        // Set up Expectations
+        when(parcelRepository.findById(Mockito.any())).thenReturn(Optional.ofNullable(allParcels.get(2)));
+
+        // Verify the result is as expected
+        Parcel updatedParcel = acpService.checkOutProcess(1, "PCK356");
+        assertThat(updatedParcel.getPickupCode()).isEqualTo("PCK356");
+        assertThat(updatedParcel.getParcelStatus()).isEqualTo(Status.DELIVERED);
+        assertThat(updatedParcel.getPickupDate()).isEqualTo(Date.valueOf(LocalDate.now()));
+
+        // Mockito verifications
+        this.verifyParcelFindByIdIsCalled();
+        Mockito.verify(parcelRepository, VerificationModeFactory.times(1)).save(updatedParcel);
+    }
+
+    @Test
+    void whenDoingCheckOut_existingParcel_invalidPickupCode_thenThrowException(){
+        // Set up Expectations
+        when(parcelRepository.findById(Mockito.any())).thenReturn(Optional.ofNullable(allParcels.get(2)));
+
+        // Verify the result is as expected
+        assertThatThrownBy(() -> {
+            acpService.checkOutProcess(1, "WRONGCODE");
+        }).isInstanceOf(InvalidCredentialsException.class).hasMessageContainingAll("Request denied. Pickup code inputted by Operator doesn't match the code of the parcel.");
+
+        // Mockito verifications
+        this.verifyParcelFindByIdIsCalled();
+    }
+
+    @Test
+    void whenDoingCheckOut_nonExistingParcel_thenThrowException(){
+        // Set up Expectations
+        when(parcelRepository.findById(-1)).thenReturn(Optional.empty());
+
+        // Verify the result is as expected
+        assertThatThrownBy(() -> {
+            acpService.checkOutProcess(-1, "PCK356");
+        }).isInstanceOf(ResourceNotFoundException.class).hasMessageContainingAll("Couldn't find ACP with the ID -1!");
+
+        // Mockito verifications
+        this.verifyParcelFindByIdIsCalled();
+    }
+
+    @Test
+    void whenGetParcelInfo_withValidID_thenReturnParcel() throws ResourceNotFoundException {
+        // Set up Expectations
+        when(parcelRepository.findById(Mockito.any())).thenReturn(Optional.ofNullable(allParcels.get(2)));
+
+        // Verify the result is as expected
+        Parcel updatedParcel = acpService.getParcelInfo(1);
+        assertThat(updatedParcel.getPickupCode()).isEqualTo("PCK356");
+        assertThat(updatedParcel.getParcelStatus()).isEqualTo(Status.WAITING_FOR_PICKUP);
+        assertThat(updatedParcel.getDeliveryDate()).isEqualTo(new java.sql.Date(2023, 5, 22));
+
+        // Mockito verifications
+        this.verifyParcelFindByIdIsCalled();
+    }
+
+    @Test
+    void whenGetParcelInfo_withInvalidID_thenThrowException(){
+        // Set up Expectations
+        when(parcelRepository.findById(-1)).thenReturn(Optional.empty());
+
+        // Verify the result is as expected
+        assertThatThrownBy(() -> {
+            acpService.getParcelInfo(-1);
+        }).isInstanceOf(ResourceNotFoundException.class).hasMessageContainingAll("Couldn't find ACP with the ID -1!");
+
+        // Mockito verifications
+        this.verifyParcelFindByIdIsCalled();
+    }
+
+    @Test
+    void whenLoginValidUser_thenReturnUser () throws InvalidCredentialsException {
+        // Set Up Expectations
+        ACPOperator operator = new ACPOperator();
+        operator.setName("User");
+        operator.setEmail("user@email.com");
+        operator.setPassword("password");
+
+        when(acpOperatorRepository.findByEmail(operator.getEmail())).thenReturn(operator);
+        ACPOperator loggedUser = acpService.processOperatorLogin(operator.getEmail(), operator.getPassword());
+
+        // Verify the result is as expected
+        assertThat(loggedUser).isNotNull();
+        assertThat(loggedUser.getName()).isEqualTo(operator.getName());
+        assertThat(loggedUser.getEmail()).isEqualTo(operator.getEmail());
+        assertThat(loggedUser.getPassword()).isEqualTo(operator.getPassword());
+
+        // Mockito verifications
+        verify(acpOperatorRepository, times(1)).findByEmail(operator.getEmail());
+    }
+
+    @Test
+    void whenLoginWithInvalidEmail_thenThrowInvalidCredentialsException () {
+        // Set Up Expectations
+        ACPOperator operator = new ACPOperator();
+        operator.setName("User");
+        operator.setEmail("user@email.com");
+        operator.setPassword("password");
+
+        when(acpOperatorRepository.findByEmail(operator.getEmail())).thenReturn(null);
+
+        // Verify the result is as expected
+        assertThatThrownBy(() -> acpService.processOperatorLogin(operator.getEmail(), operator.getPassword()))
+                .isInstanceOf(InvalidCredentialsException.class)
+                .hasMessageContaining("Invalid login credentials");
+
+        // Mockito verifications
+        verify(acpOperatorRepository, times(1)).findByEmail(operator.getEmail());
+    }
+
+    @Test
+    void whenLoginWithInvalidPassword_thenThrowInvalidCredentialsException () {
+        // Set Up Expectations
+        ACPOperator operator = new ACPOperator();
+        operator.setName("User");
+        operator.setEmail("user@email.com");
+        operator.setPassword("password");
+
+        when(acpOperatorRepository.findByEmail(operator.getEmail())).thenReturn(operator);
+
+        // Verify the result is as expected
+        assertThatThrownBy(() -> acpService.processOperatorLogin(operator.getEmail(), "invalidPassword"))
+                .isInstanceOf(InvalidCredentialsException.class)
+                .hasMessageContaining("Invalid login credentials");
+
+        // Mockito verifications
+        verify(acpOperatorRepository, times(1)).findByEmail(operator.getEmail());
     }
 
     // Auxilliary Functions
