@@ -134,7 +134,7 @@ public class AdminController {
 
     /** Gets all of the candidate ACP's  */
     @GetMapping("/acp/pending")
-    public ResponseEntity<List<PendingACP>> getPendingACP(){return null;}
+    public ResponseEntity<List<PendingACP>> getPendingACP(){return ResponseEntity.ok().body(adminService.getAllPendingACP());}
 
     /** Changes the status of a candidate ACP */
     @PutMapping("/acp/pending/{acpID}/status")

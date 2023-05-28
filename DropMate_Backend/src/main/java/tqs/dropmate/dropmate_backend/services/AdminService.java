@@ -254,6 +254,12 @@ public class AdminService {
         return new SuccessfulRequest("Request rejected!");
     }
 
+    /** This method returns all the Pending ACP's associated with the Platform */
+    public List<PendingACP> getAllPendingACP(){
+        return pendingACPRepository.findAll();
+    }
+
+
 
     // Auxilliary functions
 
