@@ -11,7 +11,7 @@ import tqs.dropmate.dropmate_backend.functionalTests.webpages.AdminPage;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @ExtendWith(SeleniumJupiter.class)
-public class AdminPage_FunctionalTest {
+public class Admin_FunctionalTest {
     @Test
     @Disabled
     public void testCheckIfRegisteredACPsTableIsDisplayed(FirefoxDriver driver) {
