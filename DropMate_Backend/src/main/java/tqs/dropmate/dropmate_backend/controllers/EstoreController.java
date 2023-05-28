@@ -15,10 +15,13 @@ import java.util.Map;
 @RequestMapping("dropmate/estore_api")
 @CrossOrigin
 public class EstoreController {
-    @Autowired
     private StoreService storeService;
-    @Autowired
     private AdminService adminService;
+
+    public EstoreController(StoreService storeService, AdminService adminService) {
+        this.storeService = storeService;
+        this.adminService = adminService;
+    }
 
     /** Used to post a new order placed by a Client of the partner E-Store */
     @PostMapping("/parcel")

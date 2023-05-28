@@ -1,6 +1,5 @@
 package tqs.dropmate.dropmate_backend.controllers;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import tqs.dropmate.dropmate_backend.datamodel.ACPOperator;
@@ -8,7 +7,6 @@ import tqs.dropmate.dropmate_backend.datamodel.Parcel;
 import tqs.dropmate.dropmate_backend.exceptions.InvalidCredentialsException;
 import tqs.dropmate.dropmate_backend.exceptions.ResourceNotFoundException;
 import tqs.dropmate.dropmate_backend.services.ACPService;
-import tqs.dropmate.dropmate_backend.utils.SuccessfulRequest;
 
 import java.util.List;
 
@@ -16,14 +14,18 @@ import java.util.List;
 @RequestMapping("dropmate/acp_api")
 @CrossOrigin
 public class ACPController {
-    @Autowired
+
     private ACPService acpService;
+
+    public ACPController(ACPService acpService) {
+        this.acpService = acpService;
+    }
 
     /** Method for the ACP Operator login. */
     @PostMapping("/login")
     public ResponseEntity<ACPOperator> operatorLogin(@RequestParam(name = "email") String email,
-                                                     @RequestParam(name = "password") String password){
-        return null;
+                                                     @RequestParam(name = "password") String password) throws InvalidCredentialsException {
+        return ResponseEntity.ok().body(acpService.processOperatorLogin(email, password));
     }
 
     /** Get all parcels belonging to the ACP in the "In delivery" state */
@@ -53,15 +55,15 @@ public class ACPController {
 
     /** Used to check-out a parcel when it reaches the Pickup Point */
     @PutMapping("/parcel/{parcelID}/checkout")
-    public ResponseEntity<SuccessfulRequest> checkOutParcel(@PathVariable(name = "parcelID") Integer parcelID,
-                                                           @RequestParam(name = "pickupCode") String pickupCode){
-        return null;
+    public ResponseEntity<Parcel> checkOutParcel(@PathVariable(name = "parcelID") Integer parcelID,
+                                                 @RequestParam(name = "pickupCode") String pickupCode) throws ResourceNotFoundException, InvalidCredentialsException {
+        return ResponseEntity.ok().body(acpService.checkOutProcess(parcelID, pickupCode));
     }
 
     /** Returns the details of a Parcel */
     @GetMapping("/parcel/{parcelID}")
-    public ResponseEntity<Parcel> getParcelInfo(@PathVariable(name = "parcelID") Integer parcelID){
-        return null;
+    public ResponseEntity<Parcel> getParcelInfo(@PathVariable(name = "parcelID") Integer parcelID) throws ResourceNotFoundException {
+        return ResponseEntity.ok().body(acpService.getParcelInfo(parcelID));
     }
 
     /** Returns the current Delivery Limit for the ACP */

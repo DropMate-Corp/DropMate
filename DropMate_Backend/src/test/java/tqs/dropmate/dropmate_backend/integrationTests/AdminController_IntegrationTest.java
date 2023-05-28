@@ -374,7 +374,7 @@ public class AdminController_IntegrationTest {
     @Test
     @Order(26)
     void whenAddNewPendingACP_thenReturn_correspondingACP() throws Exception {
-        RestAssured.given().log().all().contentType(ContentType.JSON)
+        RestAssured.given().contentType(ContentType.JSON)
                 .when().post(BASE_URI + randomServerPort + "/dropmate/admin/acp/pending?city=" + "Aveiro"
                 + "&address=" + "Fake Street no 1, Aveiro" + "&name=" + "Test New ACP"
                         + "&email=" + "newacp@mail.pt" + "&telephoneNumber=" + "000000000"
