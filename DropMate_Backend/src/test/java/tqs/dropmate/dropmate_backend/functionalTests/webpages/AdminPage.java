@@ -25,6 +25,11 @@ public class AdminPage {
         return wait.until(ExpectedConditions.visibilityOfElementLocated(locator));
     }
 
+    public WebElement waitForElementToBeClickable(By locator) {
+        WebDriverWait wait = new WebDriverWait(driver, DEFAULT_TIMEOUT);
+        return wait.until(ExpectedConditions.elementToBeClickable(locator));
+    }
+
     public boolean isRegisteredACPsTableDisplayed() {
         WebElement table = waitForElement(By.id("registeredACPsTable"));
         return table.isDisplayed();
@@ -97,5 +102,49 @@ public class AdminPage {
     public boolean checkIfACPStatisticsTableIsDisplayed() {
         WebElement table = waitForElement(By.id("ACPStatisticsTable"));
         return table.isDisplayed();
+    }
+
+    public boolean reviewACPRequest(String acpId) {
+        // Check if table is displayed
+        WebElement table = waitForElement(By.id("acpReviewTable"));
+        if (!table.isDisplayed()) {
+            Logger.getLogger(AdminPage.class.getName()).log(Level.SEVERE, "ACP Review Table not displayed");
+            return false;
+        }
+
+        // Check if row is displayed wait for it to be displayed
+        String rowId = "acpReviewRow-" + acpId;
+        WebElement row = waitForElement(By.id(rowId));
+        if (!row.isDisplayed()) {
+            Logger.getLogger(AdminPage.class.getName()).log(Level.SEVERE, "ACP Review Row not displayed");
+            return false;
+        }
+
+        // Click on the review button of the row wait for it to be displayed
+        String buttonId = "acpReviewButton-" + acpId;
+        WebElement reviewButton = waitForElementToBeClickable(By.id(buttonId));
+        reviewButton.click();
+
+        // Check if modal is displayed
+        WebElement modal = waitForElement(By.id("acpReviewModal"));
+        if (!modal.isDisplayed()) {
+            Logger.getLogger(AdminPage.class.getName()).log(Level.SEVERE, "ACP Review Modal not displayed");
+            return false;
+        }
+
+        return true;
+    }
+
+    public boolean checkIfACPWasApproved(String acpId) {
+        // Check if ACP was approved
+        WebElement table = waitForElement(By.id("acpReviewTable"));
+        assert table.isDisplayed();
+
+        // Check if column status changed to approved
+        String rowId = "acpReviewRow-" + acpId;
+        WebElement row = table.findElement(By.id(rowId));
+        List<WebElement> columns = row.findElements(By.tagName("td"));
+        String status = columns.get(5).getText();
+        return status.equals("Approved");
     }
 }

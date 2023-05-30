@@ -38,9 +38,9 @@ public class ACPOperatorPage {
         PageFactory.initElements(driver, this);
     }
 
-    private WebElement waitForElement(By locator) {
+    private void waitForElement(By locator) {
         WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
-        return wait.until(ExpectedConditions.visibilityOfElementLocated(locator));
+        wait.until(ExpectedConditions.visibilityOfElementLocated(locator));
     }
 
     public boolean checkListOfParcelsInDelivery() {

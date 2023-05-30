@@ -36,8 +36,8 @@ public class AssociatedCollectionPoint {
     @Column(nullable = false)
     private String telephoneNumber;
 
-    @Column(name = "delivery_limit", nullable = false, columnDefinition = "INT DEFAULT 0")
-    private Integer deliveryLimit;
+    @Column(name = "delivery_limit", nullable = false, columnDefinition = "INT DEFAULT 10")
+    private Integer deliveryLimit = 10;
 
     @Column
     private String managerContact;

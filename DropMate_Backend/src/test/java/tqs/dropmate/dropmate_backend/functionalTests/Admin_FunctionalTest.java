@@ -98,11 +98,22 @@ public class Admin_FunctionalTest {
 
     @Test
     @Disabled
-    public void testCheckACPStaticticsTable(FirefoxDriver driver) {
+    public void testCheckStatisticsTable(FirefoxDriver driver) {
         AdminPage adminPage = new AdminPage(driver);
 
         // Check if ACP statistics table is displayed
         assertTrue(adminPage.checkIfACPStatisticsTableIsDisplayed());
+
+        driver.quit();
+    }
+
+    @Test
+    @Disabled
+    public void testReviewACPRequest(FirefoxDriver driver) {
+        AdminPage adminPage = new AdminPage(driver);
+
+        // Check if ACP statistics table is displayed
+        assertTrue(adminPage.reviewACPRequest("2"));
 
         driver.quit();
     }
