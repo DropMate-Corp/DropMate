@@ -9,6 +9,7 @@ import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.TestPropertySource;
+import org.testcontainers.containers.MSSQLServerContainer;
 import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -50,7 +51,15 @@ public class AdminController_IntegrationTest {
     private AssociatedCollectionPoint testACP2;
     private Store testStore;
 
+    String jdbcUrl;
 
+    @Container
+    private static final MSSQLServerContainer<?> sqlServerContainer = new MSSQLServerContainer<>("mcr.microsoft.com/mssql/server:2019-latest")
+            .withDatabaseName("DropMate")
+            .withUsername("springuser")
+            .withPassword("password");
+
+    /*
     @Container
     public static MySQLContainer container = new MySQLContainer("mysql:latest")
             .withUsername("springuser")
@@ -63,9 +72,14 @@ public class AdminController_IntegrationTest {
         registry.add("spring.datasource.password", container::getPassword);
         registry.add("spring.datasource.username", container::getUsername);
     }
+    
+     */
 
     @BeforeEach
     public void setUp(){
+        // Use the SQL Server container in your test logic
+        jdbcUrl = sqlServerContainer.getJdbcUrl();
+        
         testACP = new AssociatedCollectionPoint("PickUpPointOne", "pickupone@mail.pt", "Aveiro", "Fake address 1, Aveiro", "953339994", 10 );
         testACP2 = new AssociatedCollectionPoint("PickUpPointTwo", "pickuptwo@mail.pt", "Porto", "Fake address 2, Porto", "935264901", 15 );
 
@@ -133,7 +147,7 @@ public class AdminController_IntegrationTest {
     @Order(1)
     void whenGetSpecificOperationStatistics_withValidID_thenReturn_statusOK() {
         RestAssured.with().contentType("application/json")
-                .when().get(BASE_URI + randomServerPort + "/dropmate/admin/acp/1/statistics")
+                .when().get(jdbcUrl+ "/dropmate/admin/acp/1/statistics")
                 .then().statusCode(200)
                 .body("total_parcels", is(10)).and()
                 .body("parcels_waiting_pickup", is(3)).and()
@@ -145,7 +159,7 @@ public class AdminController_IntegrationTest {
     @Order(2)
     void whenGetSpecificOperationStatistics_withInvalidID_thenReturn_statusNotFound() {
         RestAssured.with().contentType("application/json")
-                .when().get(BASE_URI + randomServerPort + "/dropmate/admin/acp/-21/statistics")
+                .when().get(jdbcUrl+ "/dropmate/admin/acp/-21/statistics")
                 .then().statusCode(404);
     }
 
@@ -153,7 +167,7 @@ public class AdminController_IntegrationTest {
     @Order(3)
     void whenGetSpecificACPDetails_withValidID_thenReturn_statusOK() {
         RestAssured.with().contentType("application/json")
-                .when().get(BASE_URI + randomServerPort + "/dropmate/admin/acp/5")
+                .when().get(jdbcUrl+ "/dropmate/admin/acp/5")
                 .then().statusCode(200)
                 .body("city", is("Aveiro")).and()
                 .body("address", is("Fake address 1, Aveiro")).and()
@@ -164,7 +178,7 @@ public class AdminController_IntegrationTest {
     @Order(4)
     void whenGetSpecificACPDetails_withInvalidID_thenReturn_statusNotFound() {
         RestAssured.with().contentType("application/json")
-                .when().get(BASE_URI + randomServerPort + "/dropmate/admin/acp/-21")
+                .when().get(jdbcUrl+ "/dropmate/admin/acp/-21")
                 .then().statusCode(404);
     }
 
@@ -172,7 +186,7 @@ public class AdminController_IntegrationTest {
     @Order(5)
     void whenGetAllACP_thenReturn_statusOK() throws Exception {
         RestAssured.with().contentType("application/json")
-                .when().get(BASE_URI + randomServerPort + "/dropmate/admin/acp")
+                .when().get(jdbcUrl+ "/dropmate/admin/acp")
                 .then().statusCode(200)
                 .body("size()", is(2)).and()
                 .body("city", hasItems("Aveiro", "Porto")).and()
@@ -190,7 +204,7 @@ public class AdminController_IntegrationTest {
         parcelRepository.saveAndFlush(new Parcel("DEL843", "PCK497", 1.6, new Date(2023, 5, 22), new Date(2023, 5, 29), Status.DELIVERED, testACP, testStore));
 
         RestAssured.with().contentType("application/json")
-                .when().get(BASE_URI + randomServerPort + "/dropmate/admin/parcels/all/delivery")
+                .when().get(jdbcUrl+ "/dropmate/admin/parcels/all/delivery")
                 .then().statusCode(200)
                 .body("size()", is(2)).and()
                 .body("parcelStatus", hasItems(Status.IN_DELIVERY.toString())).and()
@@ -208,7 +222,7 @@ public class AdminController_IntegrationTest {
         parcelRepository.saveAndFlush(new Parcel("DEL843", "PCK497", 1.6, new Date(2023, 5, 22), new Date(2023, 5, 29), Status.DELIVERED, testACP, testStore));
 
         RestAssured.with().contentType("application/json")
-                .when().get(BASE_URI + randomServerPort + "/dropmate/admin/parcels/all/pickup")
+                .when().get(jdbcUrl+ "/dropmate/admin/parcels/all/pickup")
                 .then().statusCode(200)
                 .body("size()", is(2)).and()
                 .body("parcelStatus", hasItems(Status.WAITING_FOR_PICKUP.toString())).and()
@@ -226,7 +240,7 @@ public class AdminController_IntegrationTest {
         parcelRepository.saveAndFlush(new Parcel("DEL843", "PCK497", 1.6, new Date(2023, 5, 22), new Date(2023, 5, 29), Status.DELIVERED, testACP2, testStore));
 
         RestAssured.with().contentType("application/json")
-                .when().get(BASE_URI + randomServerPort + "/dropmate/admin/parcels/15/delivery")
+                .when().get(jdbcUrl+ "/dropmate/admin/parcels/15/delivery")
                 .then().statusCode(200)
                 .body("size()", is(1)).and()
                 .body("parcelStatus", hasItems(Status.IN_DELIVERY.toString())).and()
@@ -244,7 +258,7 @@ public class AdminController_IntegrationTest {
         parcelRepository.saveAndFlush(new Parcel("DEL843", "PCK497", 1.6, new Date(2023, 5, 22), new Date(2023, 5, 29), Status.DELIVERED, testACP2, testStore));
 
         RestAssured.with().contentType("application/json")
-                .when().get(BASE_URI + randomServerPort + "/dropmate/admin/parcels/17/pickup")
+                .when().get(jdbcUrl+ "/dropmate/admin/parcels/17/pickup")
                 .then().statusCode(200)
                 .body("size()", is(1)).and()
                 .body("parcelStatus", hasItems(Status.WAITING_FOR_PICKUP.toString())).and()
@@ -255,7 +269,7 @@ public class AdminController_IntegrationTest {
     @Order(10)
     void whenGetParcelsWaitingDelivery_atSpecificACP_withInvalidID_thenReturn_statusNotFound() throws Exception {
         RestAssured.with().contentType("application/json")
-                .when().get(BASE_URI + randomServerPort + "/dropmate/admin/parcels/-5/delivery")
+                .when().get(jdbcUrl+ "/dropmate/admin/parcels/-5/delivery")
                 .then().statusCode(404);
     }
 
@@ -263,7 +277,7 @@ public class AdminController_IntegrationTest {
     @Order(11)
     void whenGetParcelsWaitingPickup_atSpecificACP_withInvalidID_thenReturn_statusNotFound() throws Exception {
         RestAssured.with().contentType("application/json")
-                .when().get(BASE_URI + randomServerPort + "/dropmate/admin/parcels/-5/pickup")
+                .when().get(jdbcUrl+ "/dropmate/admin/parcels/-5/pickup")
                 .then().statusCode(404);
     }
 
@@ -272,7 +286,7 @@ public class AdminController_IntegrationTest {
     void whenGetAllACPOperationalStatistics_thenReturn_statusOK() throws Exception {
         // Doing the test
         io.restassured.path.json.JsonPath path  = RestAssured.with().contentType("application/json")
-                .when().get(BASE_URI + randomServerPort + "/dropmate/admin/acp/statistics")
+                .when().get(jdbcUrl+ "/dropmate/admin/acp/statistics")
                 .then().statusCode(200)
                 .extract().response().jsonPath();
 
@@ -295,7 +309,7 @@ public class AdminController_IntegrationTest {
                 .param("telephone", "000000000")
                 .param("city", "Lalaland")
                 .param("address", "Nevermore")
-                .when().put(BASE_URI + randomServerPort + "/dropmate/admin/acp/26")
+                .when().put(jdbcUrl+ "/dropmate/admin/acp/26")
                 .then().statusCode(200)
                 .body("city", is("Lalaland")).and()
                 .body("address", is("Nevermore")).and()
@@ -309,7 +323,7 @@ public class AdminController_IntegrationTest {
         RestAssured.given().contentType("application/json")
                 .param("city", "Lalaland")
                 .param("address", "Nevermore")
-                .when().put(BASE_URI + randomServerPort + "/dropmate/admin/acp/28")
+                .when().put(jdbcUrl+ "/dropmate/admin/acp/28")
                 .then().statusCode(200)
                 .body("city", is("Lalaland")).and()
                 .body("address", is("Nevermore")).and()
@@ -323,7 +337,7 @@ public class AdminController_IntegrationTest {
         RestAssured.given().contentType("application/json")
                 .param("city", "Lalaland")
                 .param("address", "Nevermore")
-                .when().put(BASE_URI + randomServerPort + "/dropmate/admin/acp/-28")
+                .when().put(jdbcUrl+ "/dropmate/admin/acp/-28")
                 .then().statusCode(404);
     }
 
@@ -332,7 +346,7 @@ public class AdminController_IntegrationTest {
     void reviewCandidateACP_withValidID_notReviewedBefore_thenAcceptACP() throws Exception {
         // Making the call
         RestAssured.with().contentType("application/json")
-                .when().put(BASE_URI + randomServerPort + "/dropmate/admin/acp/pending/32/status?newStatus=" + "2")
+                .when().put(jdbcUrl+ "/dropmate/admin/acp/pending/32/status?newStatus=" + "2")
                 .then().statusCode(200)
                 .assertThat().body("message", equalTo("Operation denied, as this candidate request has already been reviewed!"));
 
@@ -344,7 +358,7 @@ public class AdminController_IntegrationTest {
         // Performing the call
         RestAssured.given().contentType("application/json")
                 .param("newStatus", "1")
-                .when().put(BASE_URI + randomServerPort + "/dropmate/admin/acp/pending/33/status")
+                .when().put(jdbcUrl+ "/dropmate/admin/acp/pending/33/status")
                 .then().statusCode(200)
                 .body("message", is("Request rejected!"));
     }
@@ -355,7 +369,7 @@ public class AdminController_IntegrationTest {
         // Performing the call
         RestAssured.given().contentType("application/json")
                 .param("newStatus", "2")
-                .when().put(BASE_URI + randomServerPort + "/dropmate/admin/acp/pending/36/status")
+                .when().put(jdbcUrl+ "/dropmate/admin/acp/pending/36/status")
                 .then().statusCode(200)
                 .body("message", is("Operation denied, as this candidate request has already been reviewed!"));
     }
@@ -366,7 +380,7 @@ public class AdminController_IntegrationTest {
         // Performing the call
         RestAssured.given().contentType("application/json")
                 .param("newStatus", "1")
-                .when().put(BASE_URI + randomServerPort + "/dropmate/admin/acp/pending/-6/status")
+                .when().put(jdbcUrl+ "/dropmate/admin/acp/pending/-6/status")
                 .then().statusCode(404);
     }
 
@@ -374,7 +388,7 @@ public class AdminController_IntegrationTest {
     @Order(26)
     void whenAddNewPendingACP_thenReturn_correspondingACP() throws Exception {
         RestAssured.given().contentType(ContentType.JSON)
-                .when().post(BASE_URI + randomServerPort + "/dropmate/admin/acp/pending?city=" + "Aveiro"
+                .when().post(jdbcUrl+ "/dropmate/admin/acp/pending?city=" + "Aveiro"
                 + "&address=" + "Fake Street no 1, Aveiro" + "&name=" + "Test New ACP"
                         + "&email=" + "newacp@mail.pt" + "&telephoneNumber=" + "000000000"
                         + "&description=" + "I am a totally legit pickup point")
@@ -391,7 +405,7 @@ public class AdminController_IntegrationTest {
     void deleteACP_withValidID_thenACPDeleted() throws Exception {
         // Performing the call
         RestAssured.given().contentType("application/json")
-                .when().delete(BASE_URI + randomServerPort + "/dropmate/admin/acp/40")
+                .when().delete(jdbcUrl+ "/dropmate/admin/acp/40")
                 .then().statusCode(200)
                 .body("message", is("ACP succesfully deleted!"));
     }
@@ -402,7 +416,7 @@ public class AdminController_IntegrationTest {
         // Performing the call
         RestAssured.given().contentType("application/json")
                 .param("newStatus", "1")
-                .when().put(BASE_URI + randomServerPort + "/dropmate/admin/acp/-41")
+                .when().put(jdbcUrl+ "/dropmate/admin/acp/-41")
                 .then().statusCode(404);
     }
 
@@ -410,7 +424,7 @@ public class AdminController_IntegrationTest {
     @Order(22)
     void whenGetAllStores_thenReturn_statusOK() throws Exception {
         RestAssured.with().contentType("application/json")
-                .when().get(BASE_URI + randomServerPort + "/dropmate/admin/estores")
+                .when().get(jdbcUrl+ "/dropmate/admin/estores")
                 .then().statusCode(200)
                 .body("size()", is(1)).and()
                 .body("city", hasItems("Porto")).and()
@@ -422,7 +436,7 @@ public class AdminController_IntegrationTest {
     @Order(23)
     void whenLoginValidUser_thenReturnUser_andStatus200() {
         RestAssured.with().contentType("application/json")
-                .when().post(BASE_URI + randomServerPort + "/dropmate/admin/login?email=" + "user@email.com" + "&password=" + "password")
+                .when().post(jdbcUrl+ "/dropmate/admin/login?email=" + "user@email.com" + "&password=" + "password")
                 .then().statusCode(200)
                 .assertThat().body("name", equalTo("User"))
                 .assertThat().body("email", equalTo("user@email.com"))
@@ -433,7 +447,7 @@ public class AdminController_IntegrationTest {
     @Order(24)
     void whenLoginWithInvalidEmail_thenReturnStatus401() {
         RestAssured.with().contentType("application/json")
-                .when().post(BASE_URI + randomServerPort + "/dropmate/admin/login?email=" + "invalidemail@email.com" + "&password=" + "password")
+                .when().post(jdbcUrl+ "/dropmate/admin/login?email=" + "invalidemail@email.com" + "&password=" + "password")
                 .then().statusCode(401)
                 .assertThat().body("message", equalTo("Invalid login credentials"));
     }
@@ -442,7 +456,7 @@ public class AdminController_IntegrationTest {
     @Order(25)
     void whenLoginWithInvalidPassword_thenReturnStatus401() {
         RestAssured.with().contentType("application/json")
-                .when().post(BASE_URI + randomServerPort + "/dropmate/admin/login?email=" + "user@email.com" + "&password=" + "invalidPassword")
+                .when().post(jdbcUrl+ "/dropmate/admin/login?email=" + "user@email.com" + "&password=" + "invalidPassword")
                 .then().statusCode(401)
                 .assertThat().body("message", equalTo("Invalid login credentials"));
     }
@@ -451,7 +465,7 @@ public class AdminController_IntegrationTest {
     @Order(26)
     void whenGetAllPendingACP_thenReturn_statusOK() throws Exception {
         RestAssured.with().contentType("application/json")
-                .when().get(BASE_URI + randomServerPort + "/dropmate/admin/acp/pending")
+                .when().get(jdbcUrl+ "/dropmate/admin/acp/pending")
                 .then().statusCode(200)
                 .body("size()", is(2)).and()
                 .body("city", hasItems("Aveiro")).and()
