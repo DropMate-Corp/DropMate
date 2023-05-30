@@ -13,7 +13,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("dropmate/admin")
-@CrossOrigin
+@CrossOrigin(origins = "https://dropmate-corp.github.io/DropMate-UI/")
 public class AdminController {
     private AdminService adminService;
 

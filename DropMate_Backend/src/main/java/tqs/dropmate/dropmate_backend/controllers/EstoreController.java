@@ -13,7 +13,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("dropmate/estore_api")
-@CrossOrigin
+@CrossOrigin(origins = "https://dropmate-corp.github.io/DropMate-UI/")
 public class EstoreController {
     private StoreService storeService;
     private AdminService adminService;

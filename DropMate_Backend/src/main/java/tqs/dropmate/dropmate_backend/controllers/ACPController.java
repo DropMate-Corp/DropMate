@@ -12,7 +12,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("dropmate/acp_api")
-@CrossOrigin
+@CrossOrigin(origins = "https://dropmate-corp.github.io/DropMate-UI/")
 public class ACPController {
 
     private ACPService acpService;
