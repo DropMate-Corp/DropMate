@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
+  build-analyze:
     runs-on: ubuntu-latest
 
     steps:
@@ -21,14 +21,16 @@ jobs:
         with:
           java-version: '17'
 
-      - name: Build with Maven
-        run: mvn clean install
+      - name: Build with Maven and Run Sonar Cloud Scan
+        run:
+          cd DropMate_Backend
+          mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=DropMate-Corp_DropMate -Dmaven.compiler.release=17
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v2
         with:
           name: java-app
-          path: '${{ github.workspace }}/target/*.jar'
+          path: '${{ github.workspace }}/DropMate_Backend/target/*.jar'
 
   deploy:
     runs-on: ubuntu-latest
