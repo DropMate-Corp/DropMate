@@ -23,7 +23,7 @@ jobs:
 
       - name: Build with Maven and Run Sonar Cloud Scan
         run:
-          cd DropMate_Backend
+          cd DropMate_Backend  # Change directory to the "DropMate_Backend" folder
           mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=DropMate-Corp_DropMate -Dmaven.compiler.release=17
 
       - name: Upload artifact for deployment job
