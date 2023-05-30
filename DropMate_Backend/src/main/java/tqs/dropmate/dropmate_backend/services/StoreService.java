@@ -1,7 +1,5 @@
 package tqs.dropmate.dropmate_backend.services;
 
-import jakarta.persistence.criteria.CriteriaBuilder;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import tqs.dropmate.dropmate_backend.datamodel.AssociatedCollectionPoint;
 import tqs.dropmate.dropmate_backend.datamodel.Parcel;
@@ -19,12 +17,16 @@ import java.util.*;
 
 @Service
 public class StoreService {
-    @Autowired
+
     AssociatedCollectionPointRepository acpRepository;
-    @Autowired
     StoreRepository storeRepository;
-    @Autowired
     ParcelRepository parcelRepository;
+
+    public StoreService(AssociatedCollectionPointRepository acpRepository, StoreRepository storeRepository, ParcelRepository parcelRepository) {
+        this.acpRepository = acpRepository;
+        this.storeRepository = storeRepository;
+        this.parcelRepository = parcelRepository;
+    }
 
     /** Used to post a new order placed by a Client of the partner E-Store
      * @param acpID - ID of the ACP selected by the user in the database

@@ -93,7 +93,7 @@ public class AdminService {
         if(admin != null && admin.getPassword().equals(password)){
             return admin;
         }
-        throw new InvalidCredentialsException();
+        throw new InvalidCredentialsException("Invalid login credentials");
     }
 
 
@@ -253,6 +253,12 @@ public class AdminService {
 
         return new SuccessfulRequest("Request rejected!");
     }
+
+    /** This method returns all the Pending ACP's associated with the Platform */
+    public List<PendingACP> getAllPendingACP(){
+        return pendingACPRepository.findAll();
+    }
+
 
 
     // Auxilliary functions

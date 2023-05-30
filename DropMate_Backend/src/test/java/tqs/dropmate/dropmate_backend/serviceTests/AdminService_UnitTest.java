@@ -125,6 +125,32 @@ class AdminService_UnitTest {
     }
 
     @Test
+    void whenGetAllPendingAcp_thenReturnAllPendingAcp(){
+        // Set up Expectations
+        PendingACP candidateACP = new PendingACP();
+        candidateACP.setName("Test New ACP");
+        candidateACP.setEmail("newacp@mail.pt");
+        candidateACP.setCity("Aveiro");
+        candidateACP.setAddress("Fake Street no 1, Aveiro");
+        candidateACP.setTelephoneNumber("000000000");
+        candidateACP.setDescription("I am a totally legit pickup point");
+        candidateACP.setStatus(0);
+        candidateACP.setAcpId(1);
+
+
+        when(pendingACPRepository.findAll()).thenReturn(List.of(candidateACP));
+
+        // Verify the result is as expected
+        List<PendingACP> returnedACP = adminService.getAllPendingACP();
+        assertThat(returnedACP)
+                .hasSize(1)
+                .extracting(PendingACP::getCity).contains("Aveiro");
+
+        // Mockito verifications
+        Mockito.verify(pendingACPRepository, VerificationModeFactory.times(1)).findAll();
+    }
+
+    @Test
     void whenGetAllStores_thenReturnAllStores(){
         // Creating Fake Stores
         List<Store> allStores = new ArrayList<>();
@@ -531,7 +557,7 @@ class AdminService_UnitTest {
         // Verify the result is as expected
         assertThatThrownBy(() -> adminService.processAdminLogin(admin.getEmail(), admin.getPassword()))
                 .isInstanceOf(InvalidCredentialsException.class)
-                .hasMessageContaining("Invalid login credentials.");
+                .hasMessageContaining("Invalid login credentials");
 
         // Mockito verifications
         verify(systemAdministratorRepository, times(1)).findByEmail(admin.getEmail());
@@ -550,7 +576,7 @@ class AdminService_UnitTest {
         // Verify the result is as expected
         assertThatThrownBy(() -> adminService.processAdminLogin(admin.getEmail(), "invalidPassword"))
                 .isInstanceOf(InvalidCredentialsException.class)
-                .hasMessageContaining("Invalid login credentials.");
+                .hasMessageContaining("Invalid login credentials");
 
         // Mockito verifications
         verify(systemAdministratorRepository, times(1)).findByEmail(admin.getEmail());

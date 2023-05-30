@@ -9,20 +9,23 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import tqs.dropmate.dropmate_backend.controllers.ACPController;
+import tqs.dropmate.dropmate_backend.datamodel.ACPOperator;
 import tqs.dropmate.dropmate_backend.datamodel.Parcel;
 import tqs.dropmate.dropmate_backend.datamodel.Status;
+import tqs.dropmate.dropmate_backend.exceptions.InvalidCredentialsException;
 import tqs.dropmate.dropmate_backend.exceptions.ResourceNotFoundException;
 import tqs.dropmate.dropmate_backend.services.ACPService;
 
 import java.sql.Date;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.hasSize;
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -38,6 +41,7 @@ class ACPController_withMockServiceTest {
     private List<Parcel> parcelsWaitingDelivery;
     private List<Parcel> parcelsWaitingPickup;
     private List<Parcel> parcelsDelivered;
+    private ACPOperator user;
 
     @BeforeEach
     public void setUp(){
@@ -62,6 +66,12 @@ class ACPController_withMockServiceTest {
         parcelsDelivered = new ArrayList<>();
         parcelsDelivered.add(parcelDoneOne);
         parcelsDelivered.add(parcelDoneTwo);
+
+        // ACP Operator
+        user = new ACPOperator();
+        user.setName("User");
+        user.setEmail("user@email.com");
+        user.setPassword("password");
     }
 
     @AfterEach
@@ -185,5 +195,151 @@ class ACPController_withMockServiceTest {
                         get("/dropmate/acp_api/parcel/all/delivered").contentType(MediaType.APPLICATION_JSON)
                                 .param("acpID", "-2"))
                 .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void whenDoingCheckIn_existingParcel_validDeliveryCode_thenReturn_statusOK() throws Exception {
+        Parcel testParcel = parcelsWaitingDelivery.get(0);
+        testParcel.setParcelStatus(Status.WAITING_FOR_PICKUP);
+        testParcel.setDeliveryDate(Date.valueOf(LocalDate.now()));
+
+        when(acpService.checkInProcess(1, "DEL123")).thenReturn(testParcel);
+
+        mockMvc.perform(
+                        put("/dropmate/acp_api/parcel/1/checkin").contentType(MediaType.APPLICATION_JSON)
+                                .param("deliveryCode", "DEL123"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.deliveryCode", is("DEL123")))
+                .andExpect(jsonPath("$.parcelStatus", is(Status.WAITING_FOR_PICKUP.toString())))
+                .andExpect(jsonPath("$.deliveryDate", is(Date.valueOf(LocalDate.now()).toString())));
+    }
+
+    @Test
+    void whenDoingCheckIn_existingParcel_invalidDeliveryCode_thenReturn_statusNotFound() throws Exception {
+        when(acpService.checkInProcess(1, "WRONGCODE")).thenThrow(new InvalidCredentialsException("Request denied. Delivery code inputted by Operator doesn't match the code of the parcel."));
+
+        mockMvc.perform(
+                        put("/dropmate/acp_api/parcel/1/checkin").contentType(MediaType.APPLICATION_JSON)
+                                .param("deliveryCode", "WRONGCODE"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void whenDoingCheckIn_nonExistingParcel_thenReturn_statusNotFound() throws Exception {
+        when(acpService.checkInProcess(-1, "DEL123")).thenThrow(new ResourceNotFoundException("Couldn't find ACP with the ID -1!"));
+
+        mockMvc.perform(
+                        put("/dropmate/acp_api/parcel/-1/checkin").contentType(MediaType.APPLICATION_JSON)
+                                .param("deliveryCode", "DEL123"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void whenDoingCheckOut_existingParcel_validPickupCode_thenReturn_statusOK() throws Exception {
+        Parcel testParcel = parcelsWaitingPickup.get(0);
+        testParcel.setParcelStatus(Status.DELIVERED);
+        testParcel.setPickupDate(Date.valueOf(LocalDate.now()));
+
+        when(acpService.checkOutProcess(1, "PCK356")).thenReturn(testParcel);
+
+        mockMvc.perform(
+                        put("/dropmate/acp_api/parcel/1/checkout").contentType(MediaType.APPLICATION_JSON)
+                                .param("pickupCode", "PCK356"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.pickupCode", is("PCK356")))
+                .andExpect(jsonPath("$.parcelStatus", is(Status.DELIVERED.toString())))
+                .andExpect(jsonPath("$.pickupDate", is(Date.valueOf(LocalDate.now()).toString())));
+    }
+
+    @Test
+    void whenDoingCheckOut_existingParcel_invalidPickupCode_thenReturn_statusNotFound() throws Exception {
+        when(acpService.checkOutProcess(1, "WRONGCODE")).thenThrow(new InvalidCredentialsException("Request denied. Pickup code inputted by Operator doesn't match the code of the parcel."));
+
+        mockMvc.perform(
+                        put("/dropmate/acp_api/parcel/1/checkout").contentType(MediaType.APPLICATION_JSON)
+                                .param("pickupCode", "WRONGCODE"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void whenDoingCheckOut_nonExistingParcel_thenReturn_statusNotFound() throws Exception {
+        when(acpService.checkOutProcess(-1, "PCK356")).thenThrow(new ResourceNotFoundException("Couldn't find ACP with the ID -1!"));
+
+        mockMvc.perform(
+                        put("/dropmate/acp_api/parcel/-1/checkout").contentType(MediaType.APPLICATION_JSON)
+                                .param("pickupCode", "PCK356"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void whenGetParcelInfo_withValidID_thenReturn_statusOK() throws Exception {
+        Parcel testParcel = parcelsDelivered.get(0);
+
+        when(acpService.getParcelInfo(1)).thenReturn(testParcel);
+
+        mockMvc.perform(
+                        get("/dropmate/acp_api/parcel/1").contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.deliveryCode", is("DEL123")))
+                .andExpect(jsonPath("$.parcelStatus", is(Status.DELIVERED.toString())));
+    }
+
+    @Test
+    void whenGetParcelInfo_withInvalidID_thenReturn_statusNotFound() throws Exception {
+        when(acpService.getParcelInfo(-1)).thenThrow(new ResourceNotFoundException("Couldn't find ACP with the ID -1!"));
+
+        mockMvc.perform(
+                        get("/dropmate/acp_api/parcel/-1").contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void whenLoginValidUser_thenReturnUser_andStatus200() throws Exception {
+        when(acpService.processOperatorLogin(user.getEmail(), user.getPassword()))
+                .thenReturn(user);
+
+        mockMvc.perform(
+                        post("/dropmate/acp_api/login")
+                                .param("email", user.getEmail())
+                                .param("password", user.getPassword()).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.name").value(user.getName()))
+                .andExpect(jsonPath("$.email").value(user.getEmail()))
+                .andExpect(jsonPath("$.password").value(user.getPassword()));
+
+        verify(acpService, times(1)).processOperatorLogin(user.getEmail(), user.getPassword());
+    }
+
+    @Test
+    void whenLoginWithInvalidPassword_thenReturnStatus401() throws Exception {
+        String wrongPassword = "wrongPassword";
+        when(acpService.processOperatorLogin(user.getEmail(), wrongPassword))
+                .thenThrow(new InvalidCredentialsException("Invalid login credentials"));
+
+        mockMvc.perform(
+                        post("/dropmate/acp_api/login")
+                                .param("email", user.getEmail())
+                                .param("password", wrongPassword).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.message").value("Invalid login credentials"));
+
+        verify(acpService, times(1)).processOperatorLogin(user.getEmail(), wrongPassword);
+    }
+
+    @Test
+    void whenLoginWithInvalidEmail_thenReturnStatus401() throws Exception {
+        String wrongEmail = "wrongEmail@mail.com";
+
+        when(acpService.processOperatorLogin(wrongEmail, user.getPassword()))
+                .thenThrow(new InvalidCredentialsException("Invalid login credentials"));
+
+        mockMvc.perform(
+                        post("/dropmate/acp_api/login")
+                                .param("email", wrongEmail)
+                                .param("password", user.getPassword()).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.message").value("Invalid login credentials"));
+
+        verify(acpService, times(1)).processOperatorLogin(wrongEmail, user.getPassword());
     }
 }
