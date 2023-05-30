@@ -37,7 +37,7 @@ CREATE TABLE `acp_operational_details` (
 
 LOCK TABLES `acp_operational_details` WRITE;
 /*!40000 ALTER TABLE `acp_operational_details` DISABLE KEYS */;
-INSERT INTO `acp_operational_details` VALUES (1,1,'parcels_in_delivery'),(1,1,'parcels_waiting_pickup'),(1,3,'total_parcels'),(2,5,'parcels_in_delivery'),(2,7,'parcels_waiting_pickup'),(2,15,'total_parcels'),(3,12,'parcels_in_delivery'),(3,0,'parcels_waiting_pickup'),(3,24,'total_parcels'),(4,0,'parcels_in_delivery'),(4,0,'parcels_waiting_pickup'),(4,0,'total_parcels'),(5,13,'parcels_in_delivery'),(5,2,'parcels_waiting_pickup'),(5,123,'total_parcels'),(6,2,'parcels_in_delivery'),(6,2,'parcels_waiting_pickup'),(6,45,'total_parcels'),(7,14,'parcels_in_delivery'),(7,2,'parcels_waiting_pickup'),(7,23,'total_parcels'),(8,3,'parcels_in_delivery'),(8,2,'parcels_waiting_pickup'),(8,9,'total_parcels'),(9,0,'parcels_in_delivery'),(9,0,'parcels_waiting_pickup'),(9,0,'total_parcels');
+INSERT INTO `acp_operational_details` VALUES (1,1,'parcels_in_delivery'),(1,1,'parcels_waiting_pickup'),(1,3,'total_parcels'),(2,5,'parcels_in_delivery'),(2,7,'parcels_waiting_pickup'),(2,12,'total_parcels'),(3,12,'parcels_in_delivery'),(3,0,'parcels_waiting_pickup'),(3,12,'total_parcels'),(4,0,'parcels_in_delivery'),(4,0,'parcels_waiting_pickup'),(4,0,'total_parcels'),(5,0,'parcels_in_delivery'),(5,0,'parcels_waiting_pickup'),(5,0,'total_parcels'),(6,2,'parcels_in_delivery'),(6,3,'parcels_waiting_pickup'),(6,5,'total_parcels'),(7,4,'parcels_in_delivery'),(7,2,'parcels_waiting_pickup'),(7,6,'total_parcels'),(8,0,'parcels_in_delivery'),(8,0,'parcels_waiting_pickup'),(8,0,'total_parcels'),(9,0,'parcels_in_delivery'),(9,0,'parcels_waiting_pickup'),(9,0,'total_parcels');
 /*!40000 ALTER TABLE `acp_operational_details` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -67,7 +67,7 @@ CREATE TABLE `associated_collection_points` (
 
 LOCK TABLES `associated_collection_points` WRITE;
 /*!40000 ALTER TABLE `associated_collection_points` DISABLE KEYS */;
-INSERT INTO `associated_collection_points` VALUES (1,'Av. Dom Frei Miguel de Bulhões e Sousa, 3810-164','Aveiro',10,'flores@mail.pt','234 195 919','Pracinha das Flores','234 195 919'),(2,'R. do Buragal 216, 3810-382 Aradas','Aveiro',22,'mercadao@mail.pt','234 427 229','Mercadão das Flores','234 427 229'),(3,'Praça do Marquês de Pombal, 3810-164 Aveiro','Aveiro',30,'dart@mail.pt','234 427 229','D\'Art E Flor','234 427 229'),(4,'Av. Cap. Silva Pereira 151, 3500-102 Viseu','Viseu',30,'crava@mail.pt','273 583 894','Crava E Canela','273 583 894'),(5,'Largo da Lapa 38, 4050-069 Porto','Porto',30,'porto@mail.pt','225 508 873','Porto Flores','225 508 873'),(6,'R. Dr. António José de Almeida 327 A, 3000-045 Coimbra','Coimbra',30,'tina@mail.pt','914 423 374','Florista Tina','914 423 374'),(7,'Urbanização Nova Leiria, R. Porto de Mós 19 loja c, 2415-784 Leiria','Leiria',30,'floraria@mail.pt','916 261 025','Floraria','916 261 025'),(8,'Av. António Macedo, Edifício Lyons Club nº242 - Loja 3, 4700-413 Braga','Braga',30,'celeste@mail.pt','253 271 534','Jardim da Celeste','253 271 534'),(9,'3740-255 Sever do Vouga','Sever do Vouga',30,'petals@mail.pt','938 412 334','Petalas da Rosa','938 412 334');
+INSERT INTO `associated_collection_points` VALUES (1,'Av. Dom Frei Miguel de Bulhões e Sousa, 3810-164','Aveiro',10,'flores@mail.pt','234 195 919','Pracinha das Flores','234 195 919'),(2,'R. do Buragal 216, 3810-382 Aradas','Aveiro',22,'mercadao@mail.pt','234 427 229','Mercadão das Flores','234 427 229'),(3,'Praça do Marquês de Pombal, 3810-164 Aveiro','Aveiro',15,'dart@mail.pt','234 427 229','D\'Art E Flor','234 427 229'),(4,'Av. Cap. Silva Pereira 151, 3500-102 Viseu','Viseu',30,'crava@mail.pt','273 583 894','Crava E Canela','273 583 894'),(5,'Largo da Lapa 38, 4050-069 Porto','Porto',30,'porto@mail.pt','225 508 873','Porto Flores','225 508 873'),(6,'R. Dr. António José de Almeida 327 A, 3000-045 Coimbra','Coimbra',5,'tina@mail.pt','914 423 374','Florista Tina','914 423 374'),(7,'Urbanização Nova Leiria, R. Porto de Mós 19 loja c, 2415-784 Leiria','Leiria',30,'floraria@mail.pt','916 261 025','Floraria','916 261 025'),(8,'Av. António Macedo, Edifício Lyons Club nº242 - Loja 3, 4700-413 Braga','Braga',30,'celeste@mail.pt','253 271 534','Jardim da Celeste','253 271 534'),(9,'3740-255 Sever do Vouga','Sever do Vouga',30,'petals@mail.pt','938 412 334','Petalas da Rosa','938 412 334');
 /*!40000 ALTER TABLE `associated_collection_points` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -154,7 +154,7 @@ CREATE TABLE `parcels` (
   KEY `FKu20j636jg5jcvryspi6ubl1x` (`store_id`),
   CONSTRAINT `FK2orccd344k6vsxqpad5gcew4m` FOREIGN KEY (`acp_id`) REFERENCES `associated_collection_points` (`acp_id`),
   CONSTRAINT `FKu20j636jg5jcvryspi6ubl1x` FOREIGN KEY (`store_id`) REFERENCES `stores` (`store_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=39 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -163,7 +163,7 @@ CREATE TABLE `parcels` (
 
 LOCK TABLES `parcels` WRITE;
 /*!40000 ALTER TABLE `parcels` DISABLE KEYS */;
-INSERT INTO `parcels` VALUES (1,'DEL_123','2023-06-06',1,'PIC_123',NULL,4.3,1,1),(2,'DEL_456','2023-06-08',3,'PIC_456','2023-06-08',7.2,1,1),(3,'DEL_789','2023-06-07',2,'PIC_789',NULL,2.3,1,1);
+INSERT INTO `parcels` VALUES (1,'AMKH3759','2023-06-06',1,'QUTI2655',NULL,4.3,1,1),(2,'DKGJ2950','2023-06-08',3,'MMAJ3902','2023-06-08',7.2,1,1),(3,'DELD3853','2023-06-07',2,'OMIK5836',NULL,2.3,1,1),(4,'DELF5823','2023-06-07',1,'KFMB4838',NULL,5,2,1),(5,'AMKG8372','2023-06-07',1,'AVOW3805',NULL,5,2,1),(6,'LVNE7395','2023-06-07',1,'DMNK3750',NULL,5,2,1),(7,'AAAA9473','2023-06-07',1,'DMRO4739',NULL,5,2,1),(8,'DNMH0048','2023-06-07',1,'AMKO8472',NULL,5,2,1),(9,'HHBF7499','2023-05-31',2,'AAAF8535',NULL,5,2,1),(10,'DNAW8903','2023-05-30',2,'VMDN3750',NULL,5,2,1),(11,'MMJK3385','2023-05-31',2,'WQUU3222',NULL,5,2,1),(12,'OOOO0000','2023-05-30',2,'BNOE2476',NULL,5,2,1),(13,'ANDM3885','2023-05-31',2,'ANNM4729',NULL,5,2,1),(14,'AMKF2228','2023-05-31',2,'AMOV8985',NULL,5,2,1),(15,'AMMN3888','2023-05-31',2,'AOPO2995',NULL,5,2,1),(16,'AAAA0000','2023-06-07',1,'KKKK0000',NULL,5,3,1),(17,'AAAA1111','2023-06-07',1,'KKKK1111',NULL,5,3,1),(18,'AAAA2222','2023-06-07',1,'KKKK2222',NULL,5,3,1),(19,'AAAA3333','2023-06-07',1,'KKKK3333',NULL,5,3,1),(20,'AAAA4444','2023-06-07',1,'KKKK4444',NULL,5,3,1),(21,'AAAA5555','2023-06-07',1,'KKKK5555',NULL,5,3,1),(22,'AAAA6666','2023-06-07',1,'KKKK6666',NULL,5,3,1),(23,'AAAA7777','2023-06-07',1,'KKKK7777',NULL,5,3,1),(24,'AAAA8888','2023-06-07',1,'KKKK8888',NULL,5,3,1),(25,'AAAA9999','2023-06-07',1,'KKKK9999',NULL,5,3,1),(26,'VVVV9999','2023-06-05',1,'MMMM0000',NULL,5,3,1),(27,'VVVV0000','2023-06-08',1,'MMMM1111',NULL,5,3,1),(28,'YYYY1111','2023-06-08',1,'QQQQ5555',NULL,5,6,1),(29,'YYYY2222','2023-06-12',1,'QQQQ6666',NULL,5,6,1),(30,'YYYY3333','2023-05-24',2,'QQQQ7777','2023-05-30',5,6,1),(31,'YYYY4444','2023-05-24',2,'QQQQ8888','2023-05-30',5,6,1),(32,'YYYY5555','2023-05-25',2,'QQQQ9999','2023-05-31',5,6,1),(33,'GGHH2222','2023-06-07',1,'KKHH7666',NULL,5,7,1),(34,'GGHH4444','2023-06-08',1,'KKHH9999',NULL,5,7,1),(35,'GGHH7777','2023-06-10',1,'KKHH0011',NULL,5,7,1),(36,'GGHH8888','2023-06-09',1,'KKHH3344',NULL,5,7,1),(37,'GGHH9999','2023-05-29',2,'KKHH7745','2023-05-31',5,7,1),(38,'GGHH0000','2023-05-26',2,'KKHH3588','2023-05-31',5,7,1);
 /*!40000 ALTER TABLE `parcels` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -233,4 +233,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2023-05-25 17:11:31
+-- Dump completed on 2023-05-30 15:09:35
