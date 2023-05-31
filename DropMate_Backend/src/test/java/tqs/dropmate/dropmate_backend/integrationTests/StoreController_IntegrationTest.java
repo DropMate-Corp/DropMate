@@ -10,7 +10,6 @@ import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.TestPropertySource;
-import org.testcontainers.containers.MSSQLServerContainer;
 import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -52,15 +51,6 @@ public class StoreController_IntegrationTest {
     private AssociatedCollectionPoint testACP;
     private Store testStore;
 
-    String jdbcUrl;
-
-    @Container
-    private static final MSSQLServerContainer<?> sqlServerContainer = new MSSQLServerContainer<>("mcr.microsoft.com/mssql/server:2019-latest")
-            .withDatabaseName("DropMate")
-            .withUsername("springuser")
-            .withPassword("password");
-
-    /*
     @Container
     public static MySQLContainer container = new MySQLContainer("mysql:latest")
             .withUsername("springuser")
@@ -69,18 +59,15 @@ public class StoreController_IntegrationTest {
 
     @DynamicPropertySource
     static void properties(DynamicPropertyRegistry registry){
-        registry.add("spring.datasource.url", container::getJdbcUrl);
+        registry.add("spring.datasource.url", container::getJdbcUrl );
         registry.add("spring.datasource.password", container::getPassword);
         registry.add("spring.datasource.username", container::getUsername);
     }
-    
-     */
+
 
     @BeforeEach
     public void setUp(){
         // Use the SQL Server container in your test logic
-        jdbcUrl = sqlServerContainer.getJdbcUrl();
-        
         testACP = new AssociatedCollectionPoint("PickUpPointOne", "pickupone@mail.pt", "Aveiro", "Fake address 1, Aveiro", "953339994", 10 );
         AssociatedCollectionPoint testACP2 = new AssociatedCollectionPoint("PickUpPointTwo", "pickuptwo@mail.pt", "Porto", "Fake address 2, Porto", "935264901", 15 );
         AssociatedCollectionPoint pickupPointThree = new AssociatedCollectionPoint();
@@ -136,7 +123,7 @@ public class StoreController_IntegrationTest {
     @Order(1)
     void whenGettingAvailableACP_withValidParameters_thenReturnOnlyACPSUnderLimit_statusOK() throws Exception {
         RestAssured.given().contentType(ContentType.JSON)
-                .when().get(jdbcUrl+ "/dropmate/estore_api/acp?storeID=" + "1")
+                .when().get(BASE_URI + randomServerPort + "/dropmate/estore_api/acp?storeID=" + "1")
                 .then().statusCode(200)
                 .body("size()", is(2)).and()
                 .body("city", hasItems("Aveiro", "Viseu")).and()
@@ -147,7 +134,7 @@ public class StoreController_IntegrationTest {
     @Order(2)
     void whenGettingAvailableACP__withInvalidStoreID_statusNotFound() throws Exception {
         RestAssured.given().contentType(ContentType.JSON)
-                .when().get(jdbcUrl+ "/dropmate/estore_api/acp?storeID=" + "1")
+                .when().get(BASE_URI + randomServerPort + "/dropmate/estore_api/acp?storeID=" + "1")
                 .then().statusCode(404);
     }
 
@@ -155,7 +142,7 @@ public class StoreController_IntegrationTest {
     @Order(3)
     void whenCreatingOrder_withValidParameters_thenReturn_statusOK() {
         RestAssured.given().contentType(ContentType.JSON)
-                .when().post(jdbcUrl+ "/dropmate/estore_api/parcel?acpID=" + "7"
+                .when().post(BASE_URI + randomServerPort + "/dropmate/estore_api/parcel?acpID=" + "7"
                         + "&storeID=" + "3")
                 .then().statusCode(200)
                 .body("delivery_date", Matchers.notNullValue()).and()
@@ -167,7 +154,7 @@ public class StoreController_IntegrationTest {
     @Order(4)
     void whenCreatingOrder_withInvalidStoreID_thenReturn_statusNotFound() throws Exception {
         RestAssured.given().contentType(ContentType.JSON)
-                .when().post(jdbcUrl+ "/dropmate/estore_api/parcel?acpID=" + "10"
+                .when().post(BASE_URI + randomServerPort + "/dropmate/estore_api/parcel?acpID=" + "10"
                         + "&storeID=" + "-1")
                 .then().statusCode(404);
     }
@@ -176,7 +163,7 @@ public class StoreController_IntegrationTest {
     @Order(5)
     void whenCreatingOrder_withInvalidACPID_thenReturn_statusNotFound() throws Exception {
         RestAssured.given().contentType(ContentType.JSON)
-                .when().post(jdbcUrl+ "/dropmate/estore_api/parcel?acpID=" + "-1"
+                .when().post(BASE_URI + randomServerPort + "/dropmate/estore_api/parcel?acpID=" + "-1"
                         + "&storeID=" + "4")
                 .then().statusCode(404);
     }
@@ -185,7 +172,7 @@ public class StoreController_IntegrationTest {
     @Order(6)
     void whenGetParcelStatus_withValidPickupCode_thenReturnStatusOK() throws Exception {
         RestAssured.given().contentType(ContentType.JSON)
-                .when().get(jdbcUrl+ "/dropmate/estore_api/parcel/PCKD3674")
+                .when().get(BASE_URI + randomServerPort + "/dropmate/estore_api/parcel/PCKD3674")
                 .then().statusCode(200)
                 .body("status", is(Status.DELIVERED.toString())).and()
                 .body("delivery_date", is(Date.valueOf(LocalDate.now().plusDays(5)).toString())).and()
@@ -196,7 +183,7 @@ public class StoreController_IntegrationTest {
     @Order(7)
     void whenGetParcelStatus_withInvalidPickupCode_statusNotFound() throws Exception {
         RestAssured.given().contentType(ContentType.JSON)
-                .when().get(jdbcUrl+ "/dropmate/estore_api/parcel/NOCODE")
+                .when().get(BASE_URI + randomServerPort + "/dropmate/estore_api/parcel/NOCODE")
                 .then().statusCode(404);
     }
 
@@ -204,7 +191,7 @@ public class StoreController_IntegrationTest {
     @Order(8)
     void whenGetACPDetails_withValidID_thenReturn_statusOK() {
         RestAssured.with().contentType("application/json")
-                .when().get(jdbcUrl+ "/dropmate/estore_api/acp/22")
+                .when().get(BASE_URI + randomServerPort + "/dropmate/estore_api/acp/22")
                 .then().statusCode(200)
                 .body("city", is("Aveiro")).and()
                 .body("address", is("Fake address 1, Aveiro")).and()
@@ -215,7 +202,7 @@ public class StoreController_IntegrationTest {
     @Order(9)
     void whenGetACPDetails_withInvalidID_thenReturn_statusNotFound() {
         RestAssured.with().contentType("application/json")
-                .when().get(jdbcUrl+ "/dropmate/estore_api/acp/-21")
+                .when().get(BASE_URI + randomServerPort + "/dropmate/estore_api/acp/-21")
                 .then().statusCode(404);
     }
 }

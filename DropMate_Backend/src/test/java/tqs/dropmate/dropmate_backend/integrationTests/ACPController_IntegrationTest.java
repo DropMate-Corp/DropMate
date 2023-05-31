@@ -10,7 +10,6 @@ import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.TestPropertySource;
-import org.testcontainers.containers.MSSQLServerContainer;
 import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -31,7 +30,7 @@ import static org.hamcrest.Matchers.hasItems;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @Testcontainers
-//@TestPropertySource(properties = "spring.jpa.hibernate.ddl-auto=create-drop")
+@TestPropertySource(properties = "spring.jpa.hibernate.ddl-auto=create-drop")
 //@TestPropertySource(locations = "classpath:application-test.properties")
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class ACPController_IntegrationTest {
@@ -51,28 +50,23 @@ class ACPController_IntegrationTest {
 
     private AssociatedCollectionPoint testACP;
 
-    String jdbcUrl;
-
     @Container
-    private static final MSSQLServerContainer<?> sqlServerContainer = new MSSQLServerContainer<>("mcr.microsoft.com/mssql/server:2019-latest")
-            .withDatabaseName("DropMate")
+    public static MySQLContainer container = new MySQLContainer("mysql:latest")
             .withUsername("springuser")
-            .withPassword("password");
+            .withPassword("password")
+            .withDatabaseName("DropMate");
 
-    /*
     @DynamicPropertySource
     static void properties(DynamicPropertyRegistry registry){
         registry.add("spring.datasource.url", container::getJdbcUrl);
         registry.add("spring.datasource.password", container::getPassword);
         registry.add("spring.datasource.username", container::getUsername);
     }
-     */
+
 
     @BeforeEach
     public void setUp(){
         // Use the SQL Server container in your test logic
-        jdbcUrl = sqlServerContainer.getJdbcUrl();
-
         testACP = new AssociatedCollectionPoint("PickUpPointOne", "pickupone@mail.pt", "Aveiro", "Fake address 1, Aveiro", "953339994", 10 );
         acpRepository.saveAndFlush(testACP);
 
@@ -108,7 +102,7 @@ class ACPController_IntegrationTest {
     @Order(1)
     void whenGetAllAParcelsWaitDelivery_thenReturn_statusOK() {
         RestAssured.with().contentType("application/json")
-                .when().get(jdbcUrl+ "/dropmate/acp_api/parcel/all/delivery?acpID=1")
+                .when().get(BASE_URI + randomServerPort + "/dropmate/acp_api/parcel/all/delivery?acpID=1")
                 .then().statusCode(200)
                 .body("size()", is(2)).and()
                 .body("parcelStatus", hasItems(Status.IN_DELIVERY.toString())).and()
@@ -119,7 +113,7 @@ class ACPController_IntegrationTest {
     @Order(2)
     void whenGetAllAParcelsWaitPickup_thenReturn_statusOK() {
         RestAssured.with().contentType("application/json")
-                .when().get(jdbcUrl+ "/dropmate/acp_api/parcel/all/pickup?acpID=2")
+                .when().get(BASE_URI + randomServerPort + "/dropmate/acp_api/parcel/all/pickup?acpID=2")
                 .then().statusCode(200)
                 .body("size()", is(2)).and()
                 .body("parcelStatus", hasItems(Status.WAITING_FOR_PICKUP.toString())).and()
@@ -130,7 +124,7 @@ class ACPController_IntegrationTest {
     @Order(3)
     void whenGetAllAParcelsDelivered_thenReturn_statusOK() {
         RestAssured.with().contentType("application/json")
-                .when().get(jdbcUrl+ "/dropmate/acp_api/parcel/all/delivered?acpID=3")
+                .when().get(BASE_URI + randomServerPort + "/dropmate/acp_api/parcel/all/delivered?acpID=3")
                 .then().statusCode(200)
                 .body("size()", is(2)).and()
                 .body("parcelStatus", hasItems(Status.DELIVERED.toString())).and()
@@ -141,7 +135,7 @@ class ACPController_IntegrationTest {
     @Order(4)
     void whenGetACPDelivery_withValidID_thenReturn_StatusOK() {
         RestAssured.with().contentType("application/json")
-                .when().get(jdbcUrl+ "/dropmate/acp_api/limit?acpID=4")
+                .when().get(BASE_URI + randomServerPort + "/dropmate/acp_api/limit?acpID=4")
                 .then().statusCode(200)
                 .body(Matchers.equalTo("10"));
     }
@@ -151,7 +145,7 @@ class ACPController_IntegrationTest {
     @Order(5)
     void whenGetACPDelivery_withInvalidID_thenReturn_StatusNotFound() {
         RestAssured.given().contentType(ContentType.JSON)
-                .when().get(jdbcUrl+ "/dropmate/acp_api/limit?acpID=-1")
+                .when().get(BASE_URI + randomServerPort + "/dropmate/acp_api/limit?acpID=-1")
                 .then().statusCode(404);
     }
 
@@ -159,7 +153,7 @@ class ACPController_IntegrationTest {
     @Order(6)
     void whenUpdateACPDelivery_withValidID_thenReturn_StatusOK() {
         RestAssured.with().contentType("application/json")
-                .when().put(jdbcUrl+ "/dropmate/acp_api/limit?acpID=6&deliveryLimit=50")
+                .when().put(BASE_URI + randomServerPort + "/dropmate/acp_api/limit?acpID=6&deliveryLimit=50")
                 .then().statusCode(200)
                 .body(Matchers.equalTo("50"));
     }
@@ -168,7 +162,7 @@ class ACPController_IntegrationTest {
     @Order(7)
     void whenUpdateACPDelivery_withInvalidID_thenReturn_StatusNotFound() {
         RestAssured.given().contentType(ContentType.JSON)
-                .when().put(jdbcUrl+ "/dropmate/acp_api/limit?acpID=-1&deliveryLimit=50")
+                .when().put(BASE_URI + randomServerPort + "/dropmate/acp_api/limit?acpID=-1&deliveryLimit=50")
                 .then().statusCode(404);
     }
 
@@ -176,7 +170,7 @@ class ACPController_IntegrationTest {
     @Order(8)
     void whenGetParcelsWaitingDelivery_atSpecificACP_withInvalidID_thenReturn_statusNotFound() {
         RestAssured.with().contentType("application/json")
-                .when().get(jdbcUrl+ "/dropmate/acp_api/parcel/all/pickup?acpID=1")
+                .when().get(BASE_URI + randomServerPort + "/dropmate/acp_api/parcel/all/pickup?acpID=1")
                 .then().statusCode(404);
     }
 
@@ -184,7 +178,7 @@ class ACPController_IntegrationTest {
     @Order(9)
     void whenGetParcelsWaitingPickup_atSpecificACP_withInvalidID_thenReturn_statusNotFound() {
         RestAssured.with().contentType("application/json")
-                .when().get(jdbcUrl+ "/dropmate/acp_api/parcel/all/delivery?acpID=1")
+                .when().get(BASE_URI + randomServerPort + "/dropmate/acp_api/parcel/all/delivery?acpID=1")
                 .then().statusCode(404);
     }
 
@@ -192,7 +186,7 @@ class ACPController_IntegrationTest {
     @Order(10)
     void whenGetParcelsDelivered_atSpecificACP_withInvalidID_thenReturn_statusNotFound() {
         RestAssured.with().contentType("application/json")
-                .when().get(jdbcUrl+ "/dropmate/acp_api/parcel/all/delivered?acpID=1")
+                .when().get(BASE_URI + randomServerPort + "/dropmate/acp_api/parcel/all/delivered?acpID=1")
                 .then().statusCode(404);
     }
 
@@ -200,7 +194,7 @@ class ACPController_IntegrationTest {
     @Order(11)
     void whenDoingCheckIn_existingParcel_validDeliveryCode_thenReturn_statusOK() {
         RestAssured.with().contentType("application/json")
-                .when().put(jdbcUrl+ "/dropmate/acp_api/parcel/61/checkin?deliveryCode=DEL123")
+                .when().put(BASE_URI + randomServerPort + "/dropmate/acp_api/parcel/61/checkin?deliveryCode=DEL123")
                 .then().statusCode(200)
                 .body("deliveryCode", is("DEL123")).and()
                 .body("parcelStatus", is(Status.WAITING_FOR_PICKUP.toString())).and()
@@ -211,7 +205,7 @@ class ACPController_IntegrationTest {
     @Order(12)
     void whenDoingCheckIn_existingParcel_invalidDeliveryCode_thenReturn_statusNotFound() throws Exception {
         RestAssured.with().contentType("application/json")
-                .when().put(jdbcUrl+ "/dropmate/acp_api/parcel/67/checkin?deliveryCode=WRONGCODE")
+                .when().put(BASE_URI + randomServerPort + "/dropmate/acp_api/parcel/67/checkin?deliveryCode=WRONGCODE")
                 .then().statusCode(401);
     }
 
@@ -219,7 +213,7 @@ class ACPController_IntegrationTest {
     @Order(13)
     void whenDoingCheckIn_nonExistingParcel_thenReturn_statusNotFound() throws Exception {
         RestAssured.with().contentType("application/json")
-                .when().put(jdbcUrl+ "/dropmate/acp_api/parcel/-534/checkin?deliveryCode=DEL123")
+                .when().put(BASE_URI + randomServerPort + "/dropmate/acp_api/parcel/-534/checkin?deliveryCode=DEL123")
                 .then().statusCode(404);
     }
 
@@ -227,7 +221,7 @@ class ACPController_IntegrationTest {
     @Order(14)
     void whenDoingCheckOut_existingParcel_validPickupCode_thenReturn_statusOK() throws Exception {
         RestAssured.with().contentType("application/json")
-                .when().put(jdbcUrl+ "/dropmate/acp_api/parcel/81/checkout?pickupCode=PCK356")
+                .when().put(BASE_URI + randomServerPort + "/dropmate/acp_api/parcel/81/checkout?pickupCode=PCK356")
                 .then().statusCode(200)
                 .body("pickupCode", is("PCK356")).and()
                 .body("parcelStatus", is(Status.DELIVERED.toString())).and()
@@ -238,7 +232,7 @@ class ACPController_IntegrationTest {
     @Order(15)
     void whenDoingCheckOut_existingParcel_invalidPickupCode_thenReturn_statusNotFound() throws Exception {
         RestAssured.with().contentType("application/json")
-                .when().put(jdbcUrl+ "/dropmate/acp_api/parcel/86/checkout?pickupCode=WRONGCODE")
+                .when().put(BASE_URI + randomServerPort + "/dropmate/acp_api/parcel/86/checkout?pickupCode=WRONGCODE")
                 .then().statusCode(401);
     }
 
@@ -246,7 +240,7 @@ class ACPController_IntegrationTest {
     @Order(16)
     void whenDoingCheckOut_nonExistingParcel_thenReturn_statusNotFound() throws Exception {
         RestAssured.with().contentType("application/json")
-                .when().put(jdbcUrl+ "/dropmate/acp_api/parcel/1/checkout?pickupCode=PCK356")
+                .when().put(BASE_URI + randomServerPort + "/dropmate/acp_api/parcel/1/checkout?pickupCode=PCK356")
                 .then().statusCode(404);
     }
 
@@ -254,7 +248,7 @@ class ACPController_IntegrationTest {
     @Order(17)
     void whenGetParcelInfo_withValidID_thenReturn_statusOK() throws Exception {
         RestAssured.with().contentType("application/json")
-                .when().get(jdbcUrl+ "/dropmate/acp_api/parcel/101")
+                .when().get(BASE_URI + randomServerPort + "/dropmate/acp_api/parcel/101")
                 .then().statusCode(200)
                 .body("pickupCode", is("PCK257")).and()
                 .body("parcelStatus", is(Status.DELIVERED.toString()));
@@ -264,7 +258,7 @@ class ACPController_IntegrationTest {
     @Order(18)
     void whenGetParcelInfo_withInvalidID_thenReturn_statusNotFound() throws Exception {
         RestAssured.with().contentType("application/json")
-                .when().get(jdbcUrl+ "/dropmate/acp_api/parcel/-101")
+                .when().get(BASE_URI + randomServerPort + "/dropmate/acp_api/parcel/-101")
                 .then().statusCode(404);
     }
 
@@ -272,7 +266,7 @@ class ACPController_IntegrationTest {
     @Order(19)
     void whenLoginValidUser_thenReturnUser_andStatus200() {
         RestAssured.with().contentType("application/json")
-                .when().post(jdbcUrl+ "/dropmate/acp_api/login?email=" + "user@email.com" + "&password=" + "password")
+                .when().post(BASE_URI + randomServerPort + "/dropmate/acp_api/login?email=" + "user@email.com" + "&password=" + "password")
                 .then().statusCode(200)
                 .assertThat().body("name", equalTo("User"))
                 .assertThat().body("email", equalTo("user@email.com"))
@@ -283,7 +277,7 @@ class ACPController_IntegrationTest {
     @Order(20)
     void whenLoginWithInvalidEmail_thenReturnStatus401() {
         RestAssured.with().contentType("application/json")
-                .when().post(jdbcUrl+ "/dropmate/acp_api/login?email=" + "invalidemail@email.com" + "&password=" + "password")
+                .when().post(BASE_URI + randomServerPort + "/dropmate/acp_api/login?email=" + "invalidemail@email.com" + "&password=" + "password")
                 .then().statusCode(401)
                 .assertThat().body("message", equalTo("Invalid login credentials"));
     }
@@ -292,7 +286,7 @@ class ACPController_IntegrationTest {
     @Order(21)
     void whenLoginWithInvalidPassword_thenReturnStatus401() {
         RestAssured.with().contentType("application/json")
-                .when().post(jdbcUrl+ "/dropmate/acp_api/login?email=" + "user@email.com" + "&password=" + "invalidPassword")
+                .when().post(BASE_URI + randomServerPort + "/dropmate/acp_api/login?email=" + "user@email.com" + "&password=" + "invalidPassword")
                 .then().statusCode(401)
                 .assertThat().body("message", equalTo("Invalid login credentials"));
     }
