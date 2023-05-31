@@ -376,6 +376,8 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 
+.database/dbdata
+
 # End of https://www.toptal.com/developers/gitignore/api/visualstudiocode,pycharm,intellij,webstorm,macos,linux,windows,react
 
 target

@@ -1,6 +1,5 @@
 package tqs.dropmate.dropmate_backend.controllers;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import tqs.dropmate.dropmate_backend.datamodel.AssociatedCollectionPoint;
@@ -13,7 +12,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("dropmate/estore_api")
-@CrossOrigin(origins = "https://dropmate-corp.github.io/DropMate-UI/")
+@CrossOrigin(origins = {"https://dropmate-corp.github.io/DropMate-UI/","https://floralfiestaapi.azurewebsites.net/"})
 public class EstoreController {
     private StoreService storeService;
     private AdminService adminService;
